@@ -7,19 +7,30 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Plus, Send, X } from 'lucide-react';
+import { Loader2, Plus, Send, X, Lightbulb, Puzzle, MessageSquare } from 'lucide-react';
 
 interface PuzzlePiece {
   id: string;
   text: string;
   order: number;
   position: { x: number; y: number };
+  color: string;
 }
 
 interface PuzzleGameProps {
   initialPrompt?: string;
   onComplete?: (response: string) => void;
 }
+
+// Array of vibrant colors for the blocks
+const blockColors = [
+  'bg-emerald-500',   // Green
+  'bg-sky-500',       // Blue
+  'bg-amber-500',     // Yellow/Orange
+  'bg-purple-500',    // Purple
+  'bg-rose-500',      // Pink
+  'bg-indigo-500',    // Indigo
+];
 
 const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", onComplete }: PuzzleGameProps) => {
   const [pieces, setPieces] = useState<PuzzlePiece[]>([]);
@@ -87,11 +98,15 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
+    // Assign a random color from our colors array
+    const randomColor = blockColors[Math.floor(Math.random() * blockColors.length)];
+    
     const newPiece: PuzzlePiece = {
       id: `piece-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       text: word,
       order: pieces.length,
-      position: { x, y }
+      position: { x, y },
+      color: randomColor
     };
     
     setPieces([...pieces, newPiece]);
@@ -208,53 +223,72 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
   };
 
   return (
-    <Card className="p-6">
-      <h2 className="text-xl font-bold mb-4 text-center">Puzzle Game</h2>
-      <p className="text-center mb-6 text-muted-foreground">{initialPrompt}</p>
+    <Card className="p-6 border-4 border-kid-pink rounded-2xl shadow-lg bg-white/95">
+      <h2 className="text-2xl font-bold mb-4 text-center text-kid-blue">Puzzle Builder</h2>
+      <p className="text-center mb-6 text-violet-600 font-medium">{initialPrompt}</p>
       
       {/* Knowledge Box */}
-      <div className="mb-6">
-        <h3 className="text-lg font-medium mb-2">Knowledge Box</h3>
+      <div className="mb-6 bg-kid-yellow rounded-xl p-4 border-2 border-amber-400 shadow-md">
+        <h3 className="text-lg font-medium mb-2 flex items-center gap-2 text-amber-700">
+          <Lightbulb className="h-5 w-5" />
+          Word Collection
+        </h3>
         <div className="flex gap-2 mb-3">
           <Input
             placeholder="Add a new word"
             value={newWord}
             onChange={(e) => setNewWord(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAddWord()}
+            className="border-2 border-amber-300 focus:border-amber-500 rounded-xl font-medium"
           />
-          <Button onClick={handleAddWord} variant="outline" size="icon">
+          <Button 
+            onClick={handleAddWord} 
+            className="bg-amber-400 hover:bg-amber-500 text-white rounded-xl"
+            size="icon"
+          >
             <Plus className="h-4 w-4" />
           </Button>
         </div>
         
-        <div className="bg-muted p-3 rounded-lg min-h-20 flex flex-wrap gap-2">
-          {knowledgeWords.map((word) => (
-            <div
-              key={word}
-              draggable
-              onDragStart={(e) => handleWordDragStart(e, word)}
-              className="bg-muted-foreground/20 px-3 py-1 rounded-lg cursor-move flex items-center gap-1 hover:bg-muted-foreground/30 transition-colors"
-            >
-              {word}
-              <button 
-                onClick={() => handleRemoveWord(word)}
-                className="text-muted-foreground hover:text-destructive ml-1"
+        <div className="bg-amber-50 p-3 rounded-xl min-h-20 flex flex-wrap gap-2 border-2 border-amber-200">
+          {knowledgeWords.map((word, index) => {
+            // Cycle through colors for variety
+            const colorIndex = index % blockColors.length;
+            const blockColor = blockColors[colorIndex]; 
+            
+            return (
+              <div
+                key={word}
+                draggable
+                onDragStart={(e) => handleWordDragStart(e, word)}
+                className={`${blockColor} px-4 py-2 rounded-lg cursor-move flex items-center gap-1 text-white shadow-md 
+                            hover:brightness-110 transition-all relative font-medium
+                            before:content-[''] before:absolute before:left-0 before:top-0 before:h-1/2 before:w-full 
+                            before:bg-white/20 before:rounded-t-lg`}
               >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
+                {word}
+                <button 
+                  onClick={() => handleRemoveWord(word)}
+                  className="ml-1 flex items-center justify-center w-5 h-5 bg-white/20 rounded-full 
+                              hover:bg-white/30"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            );
+          })}
           {knowledgeWords.length === 0 && (
-            <p className="text-muted-foreground text-sm">Add words to your knowledge box!</p>
+            <p className="text-amber-600 text-sm">Add words to your collection!</p>
           )}
         </div>
-        <p className="text-xs text-muted-foreground mt-1">Drag words from here to the editor below</p>
+        <p className="text-xs text-amber-700 mt-1 italic">Drag words from here to the puzzle area below</p>
       </div>
       
       {/* Puzzle Editor */}
       <div 
         ref={containerRef}
-        className="relative border-2 border-dashed border-muted-foreground/30 rounded-lg h-64 mb-6 p-4 overflow-hidden"
+        className="relative border-4 border-dashed border-kid-green rounded-xl h-64 mb-6 p-4 overflow-hidden
+                   bg-gradient-to-br from-kid-green/30 to-kid-green/10"
         onDragOver={handleDragOver}
         onDrop={handleWordDrop}
       >
@@ -263,7 +297,10 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
             key={piece.id}
             draggable
             onDragStart={() => handleDragStart(piece.id)}
-            className="absolute bg-kid-blue text-white px-3 py-1 rounded-lg cursor-move shadow-md flex items-center gap-1"
+            className={`absolute ${piece.color} px-4 py-2 text-white rounded-lg cursor-move shadow-md flex items-center gap-1
+                        transition-all font-medium
+                        before:content-[''] before:absolute before:left-0 before:top-0 before:h-1/2 before:w-full 
+                        before:bg-white/20 before:rounded-t-lg`}
             style={{
               left: `${piece.position.x}px`,
               top: `${piece.position.y}px`,
@@ -275,27 +312,35 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
             {piece.text}
             <button 
               onClick={() => handleRemovePiece(piece.id)}
-              className="text-white/80 hover:text-white ml-1"
+              className="ml-1 flex items-center justify-center w-5 h-5 bg-white/20 rounded-full 
+                        hover:bg-white/30"
             >
               <X className="h-3 w-3" />
             </button>
           </div>
         ))}
         {pieces.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-            Drag words here to form a question
+          <div className="absolute inset-0 flex items-center justify-center text-teal-700/70 pointer-events-none">
+            <div className="flex flex-col items-center">
+              <Puzzle className="w-12 h-12 mb-2 animate-bounce-light" />
+              <span>Drag words here to form a question</span>
+            </div>
           </div>
         )}
       </div>
       
-      <div className="mb-6">
+      <div className="mb-6 bg-sky-50 rounded-xl p-4 border-2 border-sky-200">
         <div className="flex justify-between items-center mb-2">
-          <p className="text-sm text-muted-foreground">Current arrangement:</p>
+          <p className="text-sm text-sky-700 font-medium flex items-center gap-1">
+            <MessageSquare className="h-4 w-4" />
+            Current arrangement:
+          </p>
           <Button 
             variant="outline" 
             size="sm"
             onClick={validateSentence}
             disabled={isValidating || pieces.length === 0}
+            className="bg-cyan-500 hover:bg-cyan-600 text-white border-0 rounded-full shadow-sm"
           >
             {isValidating ? (
               <>
@@ -307,50 +352,52 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
             )}
           </Button>
         </div>
-        <div className="bg-muted p-3 rounded-lg min-h-12">
+        <div className="bg-white p-3 rounded-lg min-h-12 border-2 border-sky-100 text-sky-800 font-medium">
           {getCurrentQuestion() || "Start dragging the words!"}
         </div>
         
         {aiValidation && (
-          <div className={`mt-2 p-2 rounded-lg text-sm ${aiValidation.startsWith("VALID") ? "bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300" : "bg-amber-100 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300"}`}>
+          <div className={`mt-3 p-3 rounded-lg text-sm ${aiValidation.startsWith("VALID") 
+                ? "bg-green-100 text-green-800 border-2 border-green-200" 
+                : "bg-amber-100 text-amber-800 border-2 border-amber-200"}`}>
             {aiValidation.replace(/^(VALID|INVALID)/, '').trim()}
           </div>
         )}
       </div>
       
-      <div className="mb-6">
-        <Label htmlFor="custom-question">Or type your own question:</Label>
+      <div className="mb-6 bg-purple-50 rounded-xl p-4 border-2 border-purple-200">
+        <Label htmlFor="custom-question" className="text-purple-700 font-medium">Or type your own question:</Label>
         <Input
           id="custom-question"
           value={customQuestion}
           onChange={(e) => setCustomQuestion(e.target.value)}
           placeholder="Enter a question for the AI..."
-          className="mt-1"
+          className="mt-2 border-2 border-purple-200 focus:border-purple-400 rounded-xl"
         />
       </div>
       
       <Button 
         onClick={handleSubmitPuzzle} 
         disabled={isSubmitting || (pieces.length === 0 && !customQuestion)}
-        className="w-full bg-kid-blue hover:bg-kid-blue/80 text-white"
+        className="w-full bg-gradient-to-r from-kid-blue to-sky-500 hover:brightness-110 text-white rounded-xl py-6 font-bold text-lg shadow-lg transition-all"
       >
         {isSubmitting ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             <span>Getting Answer...</span>
           </>
         ) : (
           <>
-            <Send className="mr-2 h-4 w-4" />
+            <Send className="mr-2 h-5 w-5" />
             <span>Ask Question</span>
           </>
         )}
       </Button>
       
       {aiResponse && (
-        <div className="mt-6 bg-muted p-4 rounded-lg animate-fade-in">
-          <h3 className="text-lg font-medium mb-2">Answer:</h3>
-          <p className="text-muted-foreground">{aiResponse}</p>
+        <div className="mt-6 bg-gradient-to-br from-purple-100 to-sky-100 p-5 rounded-xl border-2 border-purple-200 animate-fade-in shadow-md">
+          <h3 className="text-lg font-medium mb-2 text-purple-700">Answer:</h3>
+          <p className="text-sky-800">{aiResponse}</p>
         </div>
       )}
     </Card>
