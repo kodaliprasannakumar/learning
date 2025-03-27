@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/hooks/useAuth';
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 const AuthPage: React.FC = () => {
   const [email, setEmail] = useState('');
