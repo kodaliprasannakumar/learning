@@ -30,17 +30,22 @@ const DoodlePage = () => {
     try {
       setIsSaving(true);
       
-      // Upload the doodle image to Supabase Storage
-      const fileName = `doodle-${Date.now()}.png`;
+      // Create a unique filename
+      const timestamp = Date.now();
+      const fileName = `${user.id}/doodle-${timestamp}.png`;
+      
+      // Convert the data URL to a file
+      const imageBlob = await fetch(doodleImage).then(res => res.blob());
+      
+      // Upload the image to Supabase Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('doodles')
-        .upload(fileName, 
-          // Convert the data URL to a file
-          await fetch(doodleImage).then(res => res.blob()), 
-          { contentType: 'image/png', upsert: true }
-        );
+        .upload(fileName, imageBlob, { contentType: 'image/png', upsert: true });
       
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        throw uploadError;
+      }
       
       // Get the public URL for the uploaded image
       const { data: publicUrlData } = supabase.storage
@@ -48,19 +53,31 @@ const DoodlePage = () => {
         .getPublicUrl(fileName);
       
       const imageUrl = publicUrlData.publicUrl;
+      console.log("Image uploaded, public URL:", imageUrl);
       
       // Save the doodle metadata to the database
-      const { error: insertError } = await supabase
+      const { data: doodleData, error: insertError } = await supabase
         .from('doodles')
         .insert({
           user_id: user.id,
           image_url: imageUrl,
-          title: `Doodle ${new Date().toLocaleString()}`,
-        });
+          title: `Doodle ${new Date().toLocaleDateString()}`,
+        })
+        .select();
       
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error("Insert error:", insertError);
+        throw insertError;
+      }
       
+      console.log("Doodle saved:", doodleData);
       toast.success("Doodle saved successfully!");
+      
+      // Navigate to home page to see the saved doodle
+      setTimeout(() => {
+        navigate('/');
+      }, 1500);
+      
     } catch (error) {
       console.error("Error saving doodle:", error);
       toast.error("Failed to save doodle. Please try again.");
@@ -77,13 +94,12 @@ const DoodlePage = () => {
     
     setIsGenerating(true);
     
-    // Simulate video generation (in a real app, this would call an API)
+    // Simulate video generation (no API key needed)
     setTimeout(() => {
-      // For demo purposes, we'll just use a placeholder
       setIsGenerating(false);
       toast.success("Video generated successfully!");
       
-      // Set a placeholder video URL - no API key needed
+      // Set a placeholder video URL (using an SVG for demo)
       setVideoUrl("/placeholder.svg");
     }, 2000);
   };
