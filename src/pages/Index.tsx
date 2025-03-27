@@ -16,7 +16,7 @@ export default function Index() {
         </p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-16">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-16">
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 p-8 rounded-2xl shadow-sm border border-blue-100 dark:border-blue-900">
           <div className="h-40 mb-6 flex items-center justify-center">
             <img src="/placeholder.svg" alt="Doodle illustration" className="h-full" />
@@ -43,6 +43,21 @@ export default function Index() {
           <Link to="/story">
             <Button className="bg-kid-orange hover:bg-kid-orange/80 text-white w-full">
               Create a Story
+            </Button>
+          </Link>
+        </div>
+
+        <div className="bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-950/20 dark:to-teal-950/20 p-8 rounded-2xl shadow-sm border border-green-100 dark:border-green-900">
+          <div className="h-40 mb-6 flex items-center justify-center">
+            <img src="/placeholder.svg" alt="Puzzle illustration" className="h-full" />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">Puzzle Challenge</h2>
+          <p className="mb-6 text-muted-foreground">
+            Solve interactive puzzles and get creative AI-powered responses.
+          </p>
+          <Link to="/puzzle">
+            <Button className="bg-kid-green hover:bg-kid-green/80 text-white w-full">
+              Start Puzzling
             </Button>
           </Link>
         </div>
