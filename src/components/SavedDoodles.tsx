@@ -6,13 +6,14 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 
 type Doodle = {
   id: string;
   title: string;
   image_url: string;
+  video_url: string | null;
   created_at: string;
 };
 
@@ -56,14 +57,13 @@ export default function SavedDoodles() {
     try {
       // Extract the filename from the URL
       const urlParts = imageUrl.split('/');
-      const filename = urlParts[urlParts.length - 1];
-      const filePath = `${user.id}/${filename}`;
+      const filename = `${user.id}/${urlParts[urlParts.length - 1]}`;
       
       // Delete the image from storage
       const { error: storageError } = await supabase
         .storage
         .from('doodles')
-        .remove([filePath]);
+        .remove([filename]);
         
       if (storageError) throw storageError;
       
@@ -115,12 +115,18 @@ export default function SavedDoodles() {
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
       {doodles.map((doodle) => (
         <Card key={doodle.id} className="overflow-hidden flex flex-col">
-          <div className="aspect-square overflow-hidden">
+          <div className="aspect-square overflow-hidden relative group">
             <img 
               src={doodle.image_url} 
               alt={doodle.title} 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform group-hover:scale-105"
             />
+            {doodle.video_url && (
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Eye className="h-10 w-10 text-white" />
+                <span className="text-white font-medium ml-2">Has Video</span>
+              </div>
+            )}
           </div>
           <div className="p-4 flex justify-between items-start">
             <div>

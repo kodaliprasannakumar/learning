@@ -1,10 +1,12 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
 interface DoodleCanvasProps {
-  onDoodleComplete: (imageDataUrl: string) => void;
+  onDoodleComplete: (imageDataUrl: string, doodleName: string) => void;
 }
 
 const DoodleCanvas = ({ onDoodleComplete }: DoodleCanvasProps) => {
@@ -14,6 +16,7 @@ const DoodleCanvas = ({ onDoodleComplete }: DoodleCanvasProps) => {
   const [lineWidth, setLineWidth] = useState(5);
   const [canUndo, setCanUndo] = useState(false);
   const [canClear, setCanClear] = useState(false);
+  const [doodleName, setDoodleName] = useState('');
   const historyRef = useRef<ImageData[]>([]);
   const currentStepRef = useRef(-1);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -178,13 +181,18 @@ const DoodleCanvas = ({ onDoodleComplete }: DoodleCanvasProps) => {
   };
 
   const handleComplete = () => {
+    if (!doodleName.trim()) {
+      toast.error("Please name your doodle first!");
+      return;
+    }
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     
     // Get data URL from canvas
     const dataUrl = canvas.toDataURL('image/png');
-    onDoodleComplete(dataUrl);
-    toast("Doodle saved!");
+    onDoodleComplete(dataUrl, doodleName);
+    toast.success("Doodle saved!");
   };
 
   const colors = [
@@ -207,6 +215,17 @@ const DoodleCanvas = ({ onDoodleComplete }: DoodleCanvasProps) => {
 
   return (
     <div className="flex flex-col space-y-4">
+      <div className="mb-4">
+        <Label htmlFor="doodle-name" className="mb-2 block">Name your doodle</Label>
+        <Input
+          id="doodle-name"
+          placeholder="What are you drawing?"
+          value={doodleName}
+          onChange={(e) => setDoodleName(e.target.value)}
+          className="w-full"
+        />
+      </div>
+      
       <div className="flex flex-wrap gap-2 justify-center mb-2">
         {colors.map((colorOption) => (
           <button

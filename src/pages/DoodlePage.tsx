@@ -7,18 +7,26 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 
 const DoodlePage = () => {
   const [doodleImage, setDoodleImage] = useState<string | null>(null);
+  const [doodleName, setDoodleName] = useState<string>('');
+  const [aiImage, setAiImage] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [videoDescription, setVideoDescription] = useState<string | null>(null);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const handleDoodleComplete = (imageDataUrl: string) => {
+  const handleDoodleComplete = (imageDataUrl: string, name: string) => {
     setDoodleImage(imageDataUrl);
+    setDoodleName(name);
+    setAiImage(null);
     setVideoUrl(null);
+    setVideoDescription(null);
   };
 
   const handleSaveDoodle = async () => {
@@ -55,13 +63,36 @@ const DoodlePage = () => {
       const imageUrl = publicUrlData.publicUrl;
       console.log("Image uploaded, public URL:", imageUrl);
       
+      let aiImageUrl = null;
+      if (aiImage) {
+        // Save the AI-generated image if available
+        const aiFileName = `${user.id}/ai-doodle-${timestamp}.png`;
+        const aiImageBlob = await fetch(aiImage).then(res => res.blob());
+        
+        const { data: aiUploadData, error: aiUploadError } = await supabase.storage
+          .from('doodles')
+          .upload(aiFileName, aiImageBlob, { contentType: 'image/png', upsert: true });
+        
+        if (aiUploadError) {
+          console.error("AI image upload error:", aiUploadError);
+          // Continue even if AI image upload fails
+        } else {
+          const { data: aiPublicUrlData } = supabase.storage
+            .from('doodles')
+            .getPublicUrl(aiFileName);
+          
+          aiImageUrl = aiPublicUrlData.publicUrl;
+        }
+      }
+      
       // Save the doodle metadata to the database
       const { data: doodleData, error: insertError } = await supabase
         .from('doodles')
         .insert({
           user_id: user.id,
           image_url: imageUrl,
-          title: `Doodle ${new Date().toLocaleDateString()}`,
+          video_url: videoUrl || null,
+          title: doodleName || `Doodle ${new Date().toLocaleDateString()}`,
         })
         .select();
       
@@ -86,27 +117,83 @@ const DoodlePage = () => {
     }
   };
 
-  const handleGenerateVideo = () => {
+  const handleGenerateRealisticImage = async () => {
     if (!doodleImage) {
       toast.error("Please complete a doodle first!");
       return;
     }
     
-    setIsGenerating(true);
+    setIsGeneratingImage(true);
+    toast.info("Generating realistic image from your doodle...");
     
-    // Simulate video generation (no API key needed)
-    setTimeout(() => {
-      setIsGenerating(false);
-      toast.success("Video generated successfully!");
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-media', {
+        body: {
+          doodleImage,
+          doodleName,
+          mode: 'image'
+        }
+      });
       
-      // Set a placeholder video URL (using an SVG for demo)
-      setVideoUrl("/placeholder.svg");
-    }, 2000);
+      if (error) throw error;
+      
+      if (data.error) {
+        console.error("Image generation error:", data.error);
+        throw new Error(data.error);
+      }
+      
+      setAiImage(data.imageUrl);
+      toast.success("Realistic image generated successfully!");
+    } catch (error) {
+      console.error("Error generating realistic image:", error);
+      toast.error("Failed to generate realistic image. Please try again.");
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
+  const handleGenerateVideo = async () => {
+    if (!doodleImage) {
+      toast.error("Please complete a doodle first!");
+      return;
+    }
+    
+    setIsGeneratingVideo(true);
+    toast.info("Generating video based on your doodle...");
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-media', {
+        body: {
+          doodleImage: aiImage || doodleImage,
+          doodleName,
+          mode: 'video'
+        }
+      });
+      
+      if (error) throw error;
+      
+      if (data.error) {
+        console.error("Video generation error:", data.error);
+        throw new Error(data.error);
+      }
+      
+      setVideoUrl(data.videoUrl);
+      setVideoDescription(data.description);
+      toast.success("Video generated successfully!");
+    } catch (error) {
+      console.error("Error generating video:", error);
+      toast.error("Failed to generate video. Please try again.");
+    } finally {
+      setIsGeneratingVideo(false);
+    }
   };
 
   const handleNewDoodle = () => {
     setDoodleImage(null);
+    setDoodleName('');
+    setAiImage(null);
     setVideoUrl(null);
+    setVideoDescription(null);
   };
 
   return (
@@ -114,7 +201,7 @@ const DoodlePage = () => {
       <div className="text-center mb-10 animate-fade-in">
         <h1 className="text-4xl font-bold mb-4">Doodle to Video</h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Draw anything you can imagine and watch it transform into a short animated video!
+          Draw anything you can imagine and watch it transform into a realistic image and video!
         </p>
       </div>
       
@@ -124,14 +211,14 @@ const DoodlePage = () => {
             <h2 className="text-2xl font-semibold mb-6 text-center">Create Your Doodle</h2>
             <DoodleCanvas onDoodleComplete={handleDoodleComplete} />
           </>
-        ) : !videoUrl ? (
+        ) : !aiImage && !videoUrl ? (
           <div className="flex flex-col items-center">
-            <h2 className="text-2xl font-semibold mb-6 text-center">Your Doodle</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-center">Your Doodle: {doodleName}</h2>
             
             <div className="w-full max-w-md mb-8 rounded-xl overflow-hidden border shadow-md">
               <img 
                 src={doodleImage} 
-                alt="Your doodle" 
+                alt={`Your doodle of ${doodleName}`} 
                 className="w-full h-auto"
               />
             </div>
@@ -151,8 +238,70 @@ const DoodlePage = () => {
               >
                 {isSaving ? (
                   <>
-                    <span className="mr-2">Saving...</span>
-                    <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  "Save Doodle"
+                )}
+              </Button>
+              <Button 
+                onClick={handleGenerateRealisticImage}
+                disabled={isGeneratingImage}
+                className="bg-kid-blue hover:bg-kid-blue/80 text-white btn-bounce"
+              >
+                {isGeneratingImage ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <span>Generating Image...</span>
+                  </>
+                ) : (
+                  "Generate Realistic Image"
+                )}
+              </Button>
+            </div>
+          </div>
+        ) : !videoUrl ? (
+          <div className="flex flex-col items-center">
+            <h2 className="text-2xl font-semibold mb-6 text-center">Your AI-Enhanced Image</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full mb-8">
+              <div className="rounded-xl overflow-hidden border shadow-md">
+                <h3 className="text-center py-2 bg-muted font-medium">Original Doodle</h3>
+                <img 
+                  src={doodleImage} 
+                  alt={`Your doodle of ${doodleName}`} 
+                  className="w-full h-auto"
+                />
+              </div>
+              
+              <div className="rounded-xl overflow-hidden border shadow-md">
+                <h3 className="text-center py-2 bg-muted font-medium">AI-Enhanced Image</h3>
+                <img 
+                  src={aiImage} 
+                  alt={`AI version of ${doodleName}`} 
+                  className="w-full h-auto"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-4 flex-wrap justify-center">
+              <Button 
+                variant="outline" 
+                onClick={handleNewDoodle}
+                className="btn-bounce"
+              >
+                New Doodle
+              </Button>
+              <Button 
+                onClick={handleSaveDoodle}
+                disabled={isSaving}
+                className="bg-kid-blue hover:bg-kid-blue/80 text-white btn-bounce"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <span>Saving...</span>
                   </>
                 ) : (
                   "Save Doodle"
@@ -160,13 +309,13 @@ const DoodlePage = () => {
               </Button>
               <Button 
                 onClick={handleGenerateVideo}
-                disabled={isGenerating}
+                disabled={isGeneratingVideo}
                 className="bg-kid-blue hover:bg-kid-blue/80 text-white btn-bounce"
               >
-                {isGenerating ? (
+                {isGeneratingVideo ? (
                   <>
-                    <span className="mr-2">Generating...</span>
-                    <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <span>Generating Video...</span>
                   </>
                 ) : (
                   "Generate Video"
@@ -179,10 +328,9 @@ const DoodlePage = () => {
             <h2 className="text-2xl font-semibold mb-6 text-center">Your Video</h2>
             
             <div className="w-full mb-8 rounded-xl overflow-hidden shadow-md border aspect-video bg-muted flex items-center justify-center">
-              {/* In a real app, this would be the video player */}
-              <div className="text-center p-10">
+              <div className="text-center p-10 max-w-xl mx-auto">
                 <p className="text-muted-foreground mb-4">
-                  [Your animation would play here in a production app]
+                  {videoDescription || "Your animated video would play here."}
                 </p>
                 <img 
                   src={videoUrl} 
@@ -201,10 +349,18 @@ const DoodlePage = () => {
                 Create Another
               </Button>
               <Button 
+                onClick={handleSaveDoodle}
+                disabled={isSaving}
                 className="bg-kid-blue hover:bg-kid-blue/80 text-white btn-bounce"
-                onClick={() => toast.success("Video downloaded successfully!")}
               >
-                Download Video
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  "Save Doodle & Video"
+                )}
               </Button>
             </div>
           </div>
@@ -218,8 +374,8 @@ const DoodlePage = () => {
             <div className="w-12 h-12 bg-kid-blue/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-kid-blue font-bold">1</span>
             </div>
-            <h3 className="font-medium mb-2">Draw Your Doodle</h3>
-            <p className="text-muted-foreground text-sm">Use our canvas to create any doodle you can imagine.</p>
+            <h3 className="font-medium mb-2">Draw & Name Your Doodle</h3>
+            <p className="text-muted-foreground text-sm">Use our canvas to create and name any doodle you can imagine.</p>
           </div>
           
           <div className="bg-background rounded-lg p-6 text-center">
@@ -227,15 +383,15 @@ const DoodlePage = () => {
               <span className="text-kid-blue font-bold">2</span>
             </div>
             <h3 className="font-medium mb-2">AI Transformation</h3>
-            <p className="text-muted-foreground text-sm">Our AI processes your drawing and brings it to life.</p>
+            <p className="text-muted-foreground text-sm">Our AI transforms your drawing into a realistic image.</p>
           </div>
           
           <div className="bg-background rounded-lg p-6 text-center">
             <div className="w-12 h-12 bg-kid-blue/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-kid-blue font-bold">3</span>
             </div>
-            <h3 className="font-medium mb-2">Watch & Share</h3>
-            <p className="text-muted-foreground text-sm">View your animation and share it with friends and family.</p>
+            <h3 className="font-medium mb-2">Generate Video</h3>
+            <p className="text-muted-foreground text-sm">Turn your image into a short animated video clip.</p>
           </div>
         </div>
       </div>
