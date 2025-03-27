@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Send } from 'lucide-react';
+import { Loader2, Plus, Send, X } from 'lucide-react';
 
 interface PuzzlePiece {
   id: string;
@@ -23,47 +23,27 @@ interface PuzzleGameProps {
 
 const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", onComplete }: PuzzleGameProps) => {
   const [pieces, setPieces] = useState<PuzzlePiece[]>([]);
+  const [knowledgeWords, setKnowledgeWords] = useState<string[]>([]);
+  const [newWord, setNewWord] = useState('');
   const [draggedPiece, setDraggedPiece] = useState<string | null>(null);
   const [customQuestion, setCustomQuestion] = useState('');
   const [aiResponse, setAiResponse] = useState('');
+  const [aiValidation, setAiValidation] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Initialize puzzle pieces
   useEffect(() => {
     const generatePieces = () => {
-      const samplePieces = [
-        "What happens",
-        "when",
-        "animals",
-        "learn",
-        "to talk",
-        "?",
-        "How do",
-        "rainbows",
-        "form",
-        "in the sky",
-        "?",
-        "Why do",
-        "stars",
-        "twinkle",
-        "at night",
-        "?"
-      ];
+      // Start with sample words in the knowledge box instead of pre-made pieces
+      setKnowledgeWords([
+        "What", "happens", "when", "animals", "learn", "to", "talk",
+        "How", "do", "rainbows", "form", "in", "the", "sky",
+        "Why", "stars", "twinkle", "at", "night"
+      ]);
       
-      // Shuffle the pieces
-      const shuffled = [...samplePieces].sort(() => Math.random() - 0.5);
-      
-      return shuffled.map((text, index) => ({
-        id: `piece-${index}`,
-        text,
-        order: index,
-        position: {
-          x: Math.random() * 200,
-          y: Math.random() * 100
-        }
-      }));
+      return [];
     };
     
     setPieces(generatePieces());
@@ -94,10 +74,96 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
     setDraggedPiece(null);
   };
 
+  const handleWordDragStart = (e: React.DragEvent, word: string) => {
+    e.dataTransfer.setData('text/plain', word);
+  };
+
+  const handleWordDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!containerRef.current) return;
+    
+    const word = e.dataTransfer.getData('text/plain');
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const newPiece: PuzzlePiece = {
+      id: `piece-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      text: word,
+      order: pieces.length,
+      position: { x, y }
+    };
+    
+    setPieces([...pieces, newPiece]);
+    setAiValidation(null); // Clear previous validation when changing the sentence
+  };
+
+  const handleAddWord = () => {
+    if (newWord.trim()) {
+      setKnowledgeWords([...knowledgeWords, newWord.trim()]);
+      setNewWord('');
+      toast.success("Word added to knowledge box!");
+    }
+  };
+
+  const handleRemoveWord = (wordToRemove: string) => {
+    setKnowledgeWords(knowledgeWords.filter(word => word !== wordToRemove));
+  };
+
+  const handleRemovePiece = (idToRemove: string) => {
+    setPieces(pieces.filter(piece => piece.id !== idToRemove));
+    setAiValidation(null); // Clear previous validation when changing the sentence
+  };
+
   const getCurrentQuestion = () => {
     // Sort pieces by x position to create a sentence
     const sortedPieces = [...pieces].sort((a, b) => a.position.x - b.position.x);
     return sortedPieces.map(piece => piece.text).join(' ');
+  };
+
+  const validateSentence = async () => {
+    const question = getCurrentQuestion();
+    if (!question.trim()) {
+      toast.error("Please arrange some words to form a question");
+      return;
+    }
+    
+    setIsValidating(true);
+    setAiValidation(null);
+    
+    try {
+      // Get AI validation
+      const { data, error } = await supabase.functions.invoke('generate-media', {
+        body: {
+          mode: 'text',
+          prompt: `I'm a child using an app to form questions by arranging words. Here's my current arrangement: "${question}". 
+          Is this a well-formed, meaningful question? If yes, just respond with "VALID". 
+          If no, respond with "INVALID" followed by a very brief, child-friendly suggestion on how to improve it. Keep your response under 100 characters.`,
+          max_tokens: 100
+        }
+      });
+      
+      if (error) throw error;
+      
+      if (data.error) {
+        console.error("AI validation error:", data.error);
+        throw new Error(data.error);
+      }
+      
+      const validationResponse = data.response || "";
+      setAiValidation(validationResponse);
+      
+      if (validationResponse.startsWith("VALID")) {
+        toast.success("Your question looks good!");
+      } else {
+        toast.info("Your question needs improvement");
+      }
+    } catch (error) {
+      console.error("Error validating sentence:", error);
+      toast.error("Failed to validate. Please try again.");
+    } finally {
+      setIsValidating(false);
+    }
   };
 
   const handleSubmitPuzzle = async () => {
@@ -146,18 +212,58 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
       <h2 className="text-xl font-bold mb-4 text-center">Puzzle Game</h2>
       <p className="text-center mb-6 text-muted-foreground">{initialPrompt}</p>
       
+      {/* Knowledge Box */}
+      <div className="mb-6">
+        <h3 className="text-lg font-medium mb-2">Knowledge Box</h3>
+        <div className="flex gap-2 mb-3">
+          <Input
+            placeholder="Add a new word"
+            value={newWord}
+            onChange={(e) => setNewWord(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddWord()}
+          />
+          <Button onClick={handleAddWord} variant="outline" size="icon">
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        <div className="bg-muted p-3 rounded-lg min-h-20 flex flex-wrap gap-2">
+          {knowledgeWords.map((word) => (
+            <div
+              key={word}
+              draggable
+              onDragStart={(e) => handleWordDragStart(e, word)}
+              className="bg-muted-foreground/20 px-3 py-1 rounded-lg cursor-move flex items-center gap-1 hover:bg-muted-foreground/30 transition-colors"
+            >
+              {word}
+              <button 
+                onClick={() => handleRemoveWord(word)}
+                className="text-muted-foreground hover:text-destructive ml-1"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+          {knowledgeWords.length === 0 && (
+            <p className="text-muted-foreground text-sm">Add words to your knowledge box!</p>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">Drag words from here to the editor below</p>
+      </div>
+      
+      {/* Puzzle Editor */}
       <div 
         ref={containerRef}
         className="relative border-2 border-dashed border-muted-foreground/30 rounded-lg h-64 mb-6 p-4 overflow-hidden"
         onDragOver={handleDragOver}
-        onDrop={handleDrop}
+        onDrop={handleWordDrop}
       >
         {pieces.map((piece) => (
           <div
             key={piece.id}
             draggable
             onDragStart={() => handleDragStart(piece.id)}
-            className="absolute bg-kid-blue text-white px-3 py-1 rounded-lg cursor-move shadow-md"
+            className="absolute bg-kid-blue text-white px-3 py-1 rounded-lg cursor-move shadow-md flex items-center gap-1"
             style={{
               left: `${piece.position.x}px`,
               top: `${piece.position.y}px`,
@@ -167,15 +273,49 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
             }}
           >
             {piece.text}
+            <button 
+              onClick={() => handleRemovePiece(piece.id)}
+              className="text-white/80 hover:text-white ml-1"
+            >
+              <X className="h-3 w-3" />
+            </button>
           </div>
         ))}
+        {pieces.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+            Drag words here to form a question
+          </div>
+        )}
       </div>
       
       <div className="mb-6">
-        <p className="mb-2 text-sm text-muted-foreground">Current arrangement:</p>
-        <div className="bg-muted p-3 rounded-lg min-h-12">
-          {getCurrentQuestion() || "Start dragging the pieces!"}
+        <div className="flex justify-between items-center mb-2">
+          <p className="text-sm text-muted-foreground">Current arrangement:</p>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={validateSentence}
+            disabled={isValidating || pieces.length === 0}
+          >
+            {isValidating ? (
+              <>
+                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                <span>Checking...</span>
+              </>
+            ) : (
+              <span>Check Sentence</span>
+            )}
+          </Button>
         </div>
+        <div className="bg-muted p-3 rounded-lg min-h-12">
+          {getCurrentQuestion() || "Start dragging the words!"}
+        </div>
+        
+        {aiValidation && (
+          <div className={`mt-2 p-2 rounded-lg text-sm ${aiValidation.startsWith("VALID") ? "bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300" : "bg-amber-100 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300"}`}>
+            {aiValidation.replace(/^(VALID|INVALID)/, '').trim()}
+          </div>
+        )}
       </div>
       
       <div className="mb-6">
@@ -191,7 +331,7 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
       
       <Button 
         onClick={handleSubmitPuzzle} 
-        disabled={isSubmitting}
+        disabled={isSubmitting || (pieces.length === 0 && !customQuestion)}
         className="w-full bg-kid-blue hover:bg-kid-blue/80 text-white"
       >
         {isSubmitting ? (
