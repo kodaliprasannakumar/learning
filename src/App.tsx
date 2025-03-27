@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import DoodlePage from "./pages/DoodlePage";
 import StoryPage from "./pages/StoryPage";
+import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -26,6 +27,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/doodle" element={<DoodlePage />} />
               <Route path="/story" element={<StoryPage />} />
+              <Route path="/auth" element={<AuthPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
