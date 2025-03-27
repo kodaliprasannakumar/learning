@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import ImageWithFallback from './ImageWithFallback';
 import { cn } from '@/lib/utils';
+import { Sparkles, Wand2 } from 'lucide-react';
 
 // Types for our story elements
 interface StoryElement {
@@ -98,12 +99,13 @@ const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
   return (
     <div className="flex flex-col space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-medium">Story Elements</h3>
+        <h3 className="text-xl font-medium text-amber-600">Story Elements</h3>
         <Button 
           variant="outline" 
           onClick={handleRandomize}
-          className="btn-bounce"
+          className="rounded-xl border-2 border-amber-300 hover:bg-amber-50 btn-bounce flex gap-2 items-center"
         >
+          <Wand2 className="h-4 w-4" />
           Randomize
         </Button>
       </div>
@@ -112,15 +114,24 @@ const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {['character', 'setting', 'object'].map((type) => {
           const selected = selectedElements.find(e => e.type === type);
+          const colors = {
+            character: 'amber-400',
+            setting: 'kid-green',
+            object: 'kid-purple'
+          };
+          const borderColor = colors[type as keyof typeof colors] || 'amber-200';
+          
           return (
             <Card key={type} className={cn(
-              "flex flex-col items-center p-4 transition-all duration-300",
-              selected ? "glass-card shadow-md" : "border-dashed"
+              "flex flex-col items-center p-4 transition-all duration-300 rounded-2xl",
+              selected 
+                ? `bg-white shadow-md border-4 border-${borderColor}/40` 
+                : "border-4 border-dashed border-amber-200/50 bg-amber-50/50"
             )}>
-              <h4 className="text-lg font-medium mb-2 capitalize">{type}</h4>
+              <h4 className="text-lg font-medium mb-2 capitalize text-amber-600">{type}</h4>
               {selected ? (
                 <div className="w-full">
-                  <div className="relative w-full aspect-square mb-2 overflow-hidden rounded-md">
+                  <div className="relative w-full aspect-square mb-2 overflow-hidden rounded-xl border-2 border-amber-200">
                     <ImageWithFallback
                       src={selected.image}
                       fallbackSrc="/placeholder.svg"
@@ -129,12 +140,12 @@ const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
                     />
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="font-medium">{selected.name}</span>
+                    <span className="font-medium text-foreground">{selected.name}</span>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleRemoveElement(selected.id)}
-                      className="text-xs"
+                      className="text-xs hover:bg-amber-50 text-amber-600"
                     >
                       Remove
                     </Button>
@@ -142,10 +153,10 @@ const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
                 </div>
               ) : (
                 <div 
-                  className="flex flex-col items-center justify-center w-full h-32 bg-muted/50 rounded-md cursor-pointer hover:bg-muted transition-colors"
+                  className="flex flex-col items-center justify-center w-full h-32 bg-amber-50/80 rounded-xl cursor-pointer hover:bg-amber-100/80 transition-colors border-2 border-amber-100"
                   onClick={() => setActiveCategory(type as any)}
                 >
-                  <span className="text-muted-foreground">Select a {type}</span>
+                  <span className="text-amber-600">Select a {type}</span>
                 </div>
               )}
             </Card>
@@ -154,15 +165,15 @@ const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
       </div>
       
       {/* Category Tabs */}
-      <div className="flex border-b">
+      <div className="flex border-b-4 border-amber-200">
         {['character', 'setting', 'object'].map((category) => (
           <button
             key={category}
             className={cn(
-              "flex-1 py-2 px-4 text-center transition-colors border-b-2",
+              "flex-1 py-3 px-4 text-center transition-colors border-b-4 -mb-1 rounded-t-xl font-medium",
               activeCategory === category 
-                ? "border-primary text-foreground" 
-                : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted"
+                ? "border-amber-500 text-amber-600 bg-amber-50" 
+                : "border-transparent text-muted-foreground hover:text-amber-600 hover:border-amber-200 hover:bg-amber-50/50"
             )}
             onClick={() => setActiveCategory(category as any)}
           >
@@ -172,15 +183,15 @@ const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
       </div>
       
       {/* Element Selection Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4 bg-amber-50/50 rounded-2xl border-2 border-amber-100">
         {storyElements[activeCategory].map((element) => {
           const isSelected = selectedElements.some(e => e.id === element.id);
           return (
             <Card 
               key={element.id} 
               className={cn(
-                "overflow-hidden cursor-pointer transition-all duration-300 card-hover",
-                isSelected && "ring-2 ring-primary"
+                "overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 rounded-xl",
+                isSelected ? "ring-4 ring-amber-400 shadow-lg border-amber-300" : "border-amber-200 shadow-sm hover:shadow-md"
               )}
               onClick={() => handleSelectElement(element)}
             >
@@ -192,7 +203,7 @@ const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="p-3">
+              <div className="p-3 bg-white">
                 <h4 className="font-medium text-center">{element.name}</h4>
               </div>
             </Card>
@@ -202,10 +213,11 @@ const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
       
       <div className="flex justify-center mt-6">
         <Button 
-          className="bg-kid-blue hover:bg-kid-blue/80 text-white btn-bounce px-8"
+          className="bg-amber-500 hover:bg-amber-500/80 text-white rounded-xl border-2 border-amber-500 shadow-md btn-bounce px-8 py-6 text-lg flex gap-2 items-center"
           disabled={selectedElements.length < 3}
           onClick={handleGenerateStory}
         >
+          <Sparkles className="h-5 w-5" />
           Generate Story
         </Button>
       </div>
