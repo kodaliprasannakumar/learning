@@ -4,15 +4,69 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import DoodleCanvas from '@/components/DoodleCanvas';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 const DoodlePage = () => {
   const [doodleImage, setDoodleImage] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleDoodleComplete = (imageDataUrl: string) => {
     setDoodleImage(imageDataUrl);
     setVideoUrl(null);
+  };
+
+  const handleSaveDoodle = async () => {
+    if (!doodleImage || !user) {
+      toast.error("Cannot save doodle. Make sure you're logged in.");
+      return;
+    }
+    
+    try {
+      setIsSaving(true);
+      
+      // Upload the doodle image to Supabase Storage
+      const fileName = `doodle-${Date.now()}.png`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('doodles')
+        .upload(fileName, 
+          // Convert the data URL to a file
+          await fetch(doodleImage).then(res => res.blob()), 
+          { contentType: 'image/png', upsert: true }
+        );
+      
+      if (uploadError) throw uploadError;
+      
+      // Get the public URL for the uploaded image
+      const { data: publicUrlData } = supabase.storage
+        .from('doodles')
+        .getPublicUrl(fileName);
+      
+      const imageUrl = publicUrlData.publicUrl;
+      
+      // Save the doodle metadata to the database
+      const { error: insertError } = await supabase
+        .from('doodles')
+        .insert({
+          user_id: user.id,
+          image_url: imageUrl,
+          title: `Doodle ${new Date().toLocaleString()}`,
+        });
+      
+      if (insertError) throw insertError;
+      
+      toast.success("Doodle saved successfully!");
+    } catch (error) {
+      console.error("Error saving doodle:", error);
+      toast.error("Failed to save doodle. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleGenerateVideo = () => {
@@ -25,13 +79,13 @@ const DoodlePage = () => {
     
     // Simulate video generation (in a real app, this would call an API)
     setTimeout(() => {
-      // For demo purposes, we'll just show a placeholder message
+      // For demo purposes, we'll just use a placeholder
       setIsGenerating(false);
       toast.success("Video generated successfully!");
       
-      // In a real implementation, this would be the returned video URL
+      // Set a placeholder video URL - no API key needed
       setVideoUrl("/placeholder.svg");
-    }, 3000);
+    }, 2000);
   };
 
   const handleNewDoodle = () => {
@@ -66,13 +120,27 @@ const DoodlePage = () => {
               />
             </div>
             
-            <div className="flex gap-4">
+            <div className="flex gap-4 flex-wrap justify-center">
               <Button 
                 variant="outline" 
                 onClick={handleNewDoodle}
                 className="btn-bounce"
               >
                 New Doodle
+              </Button>
+              <Button 
+                onClick={handleSaveDoodle}
+                disabled={isSaving}
+                className="bg-kid-blue hover:bg-kid-blue/80 text-white btn-bounce"
+              >
+                {isSaving ? (
+                  <>
+                    <span className="mr-2">Saving...</span>
+                    <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+                  </>
+                ) : (
+                  "Save Doodle"
+                )}
               </Button>
               <Button 
                 onClick={handleGenerateVideo}
@@ -98,7 +166,7 @@ const DoodlePage = () => {
               {/* In a real app, this would be the video player */}
               <div className="text-center p-10">
                 <p className="text-muted-foreground mb-4">
-                  [In a real app, your animation would play here]
+                  [Your animation would play here in a production app]
                 </p>
                 <img 
                   src={videoUrl} 
