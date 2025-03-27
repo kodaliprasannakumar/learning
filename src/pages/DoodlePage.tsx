@@ -3,11 +3,14 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import DoodleCanvas from '@/components/DoodleCanvas';
+import StyleSelector from '@/components/StyleSelector';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+
+type StyleOption = "realistic" | "cartoon" | "watercolor" | "pixel";
 
 const DoodlePage = () => {
   const [doodleImage, setDoodleImage] = useState<string | null>(null);
@@ -18,6 +21,7 @@ const DoodlePage = () => {
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedStyle, setSelectedStyle] = useState<StyleOption>("realistic");
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -44,6 +48,18 @@ const DoodlePage = () => {
       
       // Convert the data URL to a file
       const imageBlob = await fetch(doodleImage).then(res => res.blob());
+      
+      // Create storage bucket if it doesn't exist
+      const { data: bucketData, error: bucketError } = await supabase.storage.getBucket('doodles');
+      if (bucketError && bucketError.message.includes('does not exist')) {
+        const { error: createBucketError } = await supabase.storage.createBucket('doodles', {
+          public: true,
+          fileSizeLimit: 5242880 // 5MB limit
+        });
+        if (createBucketError) {
+          throw createBucketError;
+        }
+      }
       
       // Upload the image to Supabase Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
@@ -85,13 +101,38 @@ const DoodlePage = () => {
         }
       }
       
+      // Process videoUrl if it exists and is a full URL
+      let processedVideoUrl = videoUrl;
+      if (videoUrl && videoUrl.startsWith('http')) {
+        try {
+          // Fetch the video image and upload it
+          const videoBlob = await fetch(videoUrl).then(res => res.blob());
+          const videoFileName = `${user.id}/video-doodle-${timestamp}.png`;
+          
+          const { data: videoUploadData, error: videoUploadError } = await supabase.storage
+            .from('doodles')
+            .upload(videoFileName, videoBlob, { contentType: 'image/png', upsert: true });
+            
+          if (!videoUploadError) {
+            const { data: videoPublicUrlData } = supabase.storage
+              .from('doodles')
+              .getPublicUrl(videoFileName);
+              
+            processedVideoUrl = videoPublicUrlData.publicUrl;
+          }
+        } catch (videoProcessError) {
+          console.error("Error processing video URL:", videoProcessError);
+          // Continue with original URL if processing fails
+        }
+      }
+      
       // Save the doodle metadata to the database
       const { data: doodleData, error: insertError } = await supabase
         .from('doodles')
         .insert({
           user_id: user.id,
-          image_url: imageUrl,
-          video_url: videoUrl || null,
+          image_url: aiImageUrl || imageUrl, // Prefer AI image if available
+          video_url: processedVideoUrl,
           title: doodleName || `Doodle ${new Date().toLocaleDateString()}`,
         })
         .select();
@@ -124,14 +165,15 @@ const DoodlePage = () => {
     }
     
     setIsGeneratingImage(true);
-    toast.info("Generating realistic image from your doodle...");
+    toast.info(`Generating ${selectedStyle} image from your doodle...`);
     
     try {
       const { data, error } = await supabase.functions.invoke('generate-media', {
         body: {
           doodleImage,
           doodleName,
-          mode: 'image'
+          mode: 'image',
+          style: selectedStyle
         }
       });
       
@@ -143,10 +185,10 @@ const DoodlePage = () => {
       }
       
       setAiImage(data.imageUrl);
-      toast.success("Realistic image generated successfully!");
+      toast.success(`${selectedStyle} image generated successfully!`);
     } catch (error) {
       console.error("Error generating realistic image:", error);
-      toast.error("Failed to generate realistic image. Please try again.");
+      toast.error("Failed to generate image. Please try again.");
     } finally {
       setIsGeneratingImage(false);
     }
@@ -166,7 +208,8 @@ const DoodlePage = () => {
         body: {
           doodleImage: aiImage || doodleImage,
           doodleName,
-          mode: 'video'
+          mode: 'video',
+          style: selectedStyle
         }
       });
       
@@ -201,7 +244,7 @@ const DoodlePage = () => {
       <div className="text-center mb-10 animate-fade-in">
         <h1 className="text-4xl font-bold mb-4">Doodle to Video</h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Draw anything you can imagine and watch it transform into a realistic image and video!
+          Draw anything you can imagine and watch it transform into a stylized image and video!
         </p>
       </div>
       
@@ -223,7 +266,12 @@ const DoodlePage = () => {
               />
             </div>
             
-            <div className="flex gap-4 flex-wrap justify-center">
+            <StyleSelector 
+              selectedStyle={selectedStyle}
+              onStyleSelect={setSelectedStyle}
+            />
+            
+            <div className="flex gap-4 flex-wrap justify-center mt-6">
               <Button 
                 variant="outline" 
                 onClick={handleNewDoodle}
@@ -256,7 +304,7 @@ const DoodlePage = () => {
                     <span>Generating Image...</span>
                   </>
                 ) : (
-                  "Generate Realistic Image"
+                  `Generate ${selectedStyle.charAt(0).toUpperCase() + selectedStyle.slice(1)} Image`
                 )}
               </Button>
             </div>
@@ -276,7 +324,7 @@ const DoodlePage = () => {
               </div>
               
               <div className="rounded-xl overflow-hidden border shadow-md">
-                <h3 className="text-center py-2 bg-muted font-medium">AI-Enhanced Image</h3>
+                <h3 className="text-center py-2 bg-muted font-medium">{selectedStyle.charAt(0).toUpperCase() + selectedStyle.slice(1)} Version</h3>
                 <img 
                   src={aiImage} 
                   alt={`AI version of ${doodleName}`} 
@@ -327,17 +375,18 @@ const DoodlePage = () => {
           <div className="flex flex-col items-center">
             <h2 className="text-2xl font-semibold mb-6 text-center">Your Video</h2>
             
-            <div className="w-full mb-8 rounded-xl overflow-hidden shadow-md border aspect-video bg-muted flex items-center justify-center">
-              <div className="text-center p-10 max-w-xl mx-auto">
-                <p className="text-muted-foreground mb-4">
-                  {videoDescription || "Your animated video would play here."}
+            <div className="w-full mb-8 rounded-xl overflow-hidden shadow-md border">
+              <div className="bg-muted p-4 text-center">
+                <h3 className="font-medium mb-2">Video Visualization</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {videoDescription || "Your animated video would be based on this scene."}
                 </p>
-                <img 
-                  src={videoUrl} 
-                  alt="Generated video placeholder" 
-                  className="max-w-full h-auto mx-auto"
-                />
               </div>
+              <img 
+                src={videoUrl} 
+                alt="Generated video scene" 
+                className="w-full h-auto"
+              />
             </div>
             
             <div className="flex gap-4">
@@ -382,8 +431,8 @@ const DoodlePage = () => {
             <div className="w-12 h-12 bg-kid-blue/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-kid-blue font-bold">2</span>
             </div>
-            <h3 className="font-medium mb-2">AI Transformation</h3>
-            <p className="text-muted-foreground text-sm">Our AI transforms your drawing into a realistic image.</p>
+            <h3 className="font-medium mb-2">Choose Art Style</h3>
+            <p className="text-muted-foreground text-sm">Select from realistic, cartoon, watercolor, or pixel art styles.</p>
           </div>
           
           <div className="bg-background rounded-lg p-6 text-center">
@@ -391,7 +440,7 @@ const DoodlePage = () => {
               <span className="text-kid-blue font-bold">3</span>
             </div>
             <h3 className="font-medium mb-2">Generate Video</h3>
-            <p className="text-muted-foreground text-sm">Turn your image into a short animated video clip.</p>
+            <p className="text-muted-foreground text-sm">Turn your styled image into an animated video scene.</p>
           </div>
         </div>
       </div>

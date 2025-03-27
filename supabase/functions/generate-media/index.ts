@@ -14,14 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { doodleImage, doodleName, mode } = await req.json();
-
-    if (!doodleImage) {
-      return new Response(
-        JSON.stringify({ error: "No doodle image provided" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
-      );
-    }
+    const { doodleImage, doodleName, mode, style = "realistic", prompt, max_tokens = 300 } = await req.json();
 
     // Get OpenAI API key from environment variable
     const openAiApiKey = Deno.env.get("OPENAI_API_KEY");
@@ -32,10 +25,74 @@ serve(async (req) => {
       );
     }
 
-    // Mode can be "image" or "video"
-    if (mode === "image") {
-      // Generate realistic image from doodle
-      const imagePrompt = `Create a realistic interpretation of this child's drawing. The drawing is of ${doodleName || "an object"}. Keep the main concept but make it look professional and detailed.`;
+    // Mode: "image", "video", or "text" (for puzzle responses)
+    if (mode === "text") {
+      // Process text generation for puzzles
+      console.log("Generating text response for prompt:", prompt);
+      
+      const textResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${openAiApiKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            { 
+              role: "system", 
+              content: "You are a friendly, educational assistant for children. Provide engaging, age-appropriate responses that are informative but simple to understand. Include fun facts when relevant."
+            },
+            { role: "user", content: prompt }
+          ],
+          max_tokens: max_tokens
+        })
+      });
+      
+      const textData = await textResponse.json();
+      
+      if (textData.error) {
+        console.error("OpenAI text generation error:", textData.error);
+        return new Response(
+          JSON.stringify({ error: "Failed to generate text response", details: textData.error }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+        );
+      }
+      
+      return new Response(
+        JSON.stringify({ response: textData.choices[0].message.content }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    else if (mode === "image") {
+      // Validate doodle image for image generation
+      if (!doodleImage) {
+        return new Response(
+          JSON.stringify({ error: "No doodle image provided" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        );
+      }
+      
+      // Style-specific prompt modifications
+      let stylePrompt = "";
+      switch(style) {
+        case "cartoon":
+          stylePrompt = "in a colorful cartoon style with bold outlines and vibrant colors";
+          break;
+        case "watercolor":
+          stylePrompt = "in a soft watercolor style with gentle brushstrokes and blended colors";
+          break;
+        case "pixel":
+          stylePrompt = "as pixel art, with clear blocky pixels and limited color palette";
+          break;
+        default:
+          stylePrompt = "in a realistic detailed style";
+      }
+
+      // Generate styled image from doodle
+      const imagePrompt = `Create an interpretation of this child's drawing ${stylePrompt}. The drawing is of ${doodleName || "an object"}. Keep the main concept but make it look professional and visually appealing to children.`;
+      
+      console.log("Generating image with prompt:", imagePrompt);
       
       const imageResponse = await fetch("https://api.openai.com/v1/images/generations", {
         method: "POST",
@@ -67,13 +124,20 @@ serve(async (req) => {
       );
     } 
     else if (mode === "video") {
-      // For demonstration purposes, return a mock video response
-      // In a production environment, this would use OpenAI or another service to generate a video
+      // Validate doodle image for video generation
+      if (!doodleImage && !doodleName) {
+        return new Response(
+          JSON.stringify({ error: "No doodle image or name provided" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        );
+      }
       
-      // Create a short text description based on doodle name
-      const prompt = `Create a short description for an animated video about ${doodleName || "this drawing"}.`;
+      // Use OpenAI to create a short description and then generate a video
+      const videoPrompt = `Create a short description for a lively, animated 8-second video about ${doodleName || "this drawing"}. The video should be engaging for children. Focus on movements and actions.`;
       
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      console.log("Generating video description with prompt:", videoPrompt);
+      
+      const descriptionResponse = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -82,29 +146,74 @@ serve(async (req) => {
         body: JSON.stringify({
           model: "gpt-4o-mini",
           messages: [
-            { role: "system", content: "You are a creative assistant that writes short video descriptions." },
-            { role: "user", content: prompt }
+            { role: "system", content: "You are a creative assistant that writes short video descriptions for children's content." },
+            { role: "user", content: videoPrompt }
           ]
         })
       });
       
-      const data = await response.json();
-      const description = data.choices[0].message.content;
+      const descData = await descriptionResponse.json();
+      if (descData.error) {
+        console.error("OpenAI description generation error:", descData.error);
+        return new Response(
+          JSON.stringify({ error: "Failed to generate video description", details: descData.error }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+        );
+      }
       
-      // In a real implementation, you would use this description with a video generation API
-      // For now, we'll just return a placeholder with the description
-      return new Response(
-        JSON.stringify({ 
-          videoUrl: "/placeholder.svg", 
-          description: description,
-          message: "Video would be generated here with a real video generation API"
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      const description = descData.choices[0].message.content;
+      console.log("Generated description:", description);
+      
+      // Now use the description to generate a video with the Playground API
+      try {
+        // Generate a video using DALL-E 3 image as a base
+        const videoGenPrompt = `Create a fun, animated video for children about ${doodleName}. ${description}`;
+        
+        // For now, since direct video generation API is not available, we'll provide
+        // an enhanced image with movement suggestion
+        const videoImageResponse = await fetch("https://api.openai.com/v1/images/generations", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${openAiApiKey}`
+          },
+          body: JSON.stringify({
+            model: "dall-e-3",
+            prompt: `Create a single frame from an animated video that captures movement and action: ${videoGenPrompt}. Make it dynamic and visually suggest motion.`,
+            n: 1,
+            size: "1024x1024",
+          })
+        });
+
+        const videoImageData = await videoImageResponse.json();
+        
+        if (videoImageData.error) {
+          throw new Error(`Video image generation failed: ${JSON.stringify(videoImageData.error)}`);
+        }
+        
+        return new Response(
+          JSON.stringify({ 
+            videoUrl: videoImageData.data[0].url, 
+            description: description,
+            message: "Video visualization created. Actual video animation would require additional services."
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } catch (videoError) {
+        console.error("Video generation error:", videoError);
+        return new Response(
+          JSON.stringify({ 
+            error: "Failed to generate video", 
+            details: videoError.message,
+            fallbackDescription: description
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+        );
+      }
     }
     else {
       return new Response(
-        JSON.stringify({ error: "Invalid mode. Use 'image' or 'video'" }),
+        JSON.stringify({ error: "Invalid mode. Use 'image', 'video', or 'text'" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
       );
     }

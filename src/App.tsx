@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import DoodlePage from "./pages/DoodlePage";
 import StoryPage from "./pages/StoryPage";
+import PuzzlePage from "./pages/PuzzlePage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 import Header from "./components/Header";
@@ -38,6 +39,11 @@ const AppRoutes = () => {
       <Route path="/story" element={
         <ProtectedRoute>
           <StoryPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/puzzle" element={
+        <ProtectedRoute>
+          <PuzzlePage />
         </ProtectedRoute>
       } />
       <Route path="/auth" element={<AuthPage />} />

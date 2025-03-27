@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
-import { Trash2, Eye } from 'lucide-react';
+import { Trash2, Eye, FilmIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 type Doodle = {
@@ -56,16 +56,30 @@ export default function SavedDoodles() {
     
     try {
       // Extract the filename from the URL
-      const urlParts = imageUrl.split('/');
-      const filename = `${user.id}/${urlParts[urlParts.length - 1]}`;
+      const imageUrlParts = imageUrl.split('/');
+      const imageFilename = imageUrlParts[imageUrlParts.length - 1];
       
-      // Delete the image from storage
-      const { error: storageError } = await supabase
-        .storage
-        .from('doodles')
-        .remove([filename]);
+      // Delete the image from storage if it's in our bucket
+      if (imageUrl.includes('doodles')) {
+        const { error: storageError } = await supabase
+          .storage
+          .from('doodles')
+          .remove([`${user.id}/${imageFilename}`]);
+          
+        if (storageError) console.error("Error deleting image:", storageError);
+      }
+      
+      // Also try to delete the associated video if it exists
+      const doodle = doodles.find(d => d.id === id);
+      if (doodle?.video_url && doodle.video_url.includes('doodles')) {
+        const videoUrlParts = doodle.video_url.split('/');
+        const videoFilename = videoUrlParts[videoUrlParts.length - 1];
         
-      if (storageError) throw storageError;
+        await supabase
+          .storage
+          .from('doodles')
+          .remove([`${user.id}/${videoFilename}`]);
+      }
       
       // Delete the record from the database
       const { error: dbError } = await supabase
@@ -81,6 +95,13 @@ export default function SavedDoodles() {
     } catch (error) {
       console.error('Error deleting doodle:', error);
       toast.error("Failed to delete doodle");
+    }
+  };
+
+  const handleViewDetails = (doodle: Doodle) => {
+    // Show a dialog with more details about the doodle
+    if (doodle.video_url) {
+      toast.info(`💡 "${doodle.title}" has a video visualization! Click on the doodle to view it.`);
     }
   };
 
@@ -115,7 +136,10 @@ export default function SavedDoodles() {
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
       {doodles.map((doodle) => (
         <Card key={doodle.id} className="overflow-hidden flex flex-col">
-          <div className="aspect-square overflow-hidden relative group">
+          <div 
+            className="aspect-square overflow-hidden relative group cursor-pointer"
+            onClick={() => handleViewDetails(doodle)}
+          >
             <img 
               src={doodle.image_url} 
               alt={doodle.title} 
@@ -123,7 +147,7 @@ export default function SavedDoodles() {
             />
             {doodle.video_url && (
               <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <Eye className="h-10 w-10 text-white" />
+                <FilmIcon className="h-10 w-10 text-white" />
                 <span className="text-white font-medium ml-2">Has Video</span>
               </div>
             )}
