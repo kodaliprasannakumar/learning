@@ -4,6 +4,20 @@
 
 **URL**: https://lovable.dev/projects/d0af00b3-5b8f-46f3-8eca-f79600874638
 
+## OpenAI API Setup
+
+This project uses the OpenAI API for generating stories. To set up the API:
+
+1. Sign up for an OpenAI account at [https://platform.openai.com/signup](https://platform.openai.com/signup)
+2. Generate an API key at [https://platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+3. Create a `.env` file in the project root (or copy from `.env.example`) and add your API key:
+   ```
+   VITE_OPENAI_API_KEY=your_openai_api_key_here
+   ```
+4. Restart the development server if it's already running
+
+> **Note**: Keep your API key secure and never commit it to version control.
+
 ## How can I edit this code?
 
 There are several ways of editing your application.

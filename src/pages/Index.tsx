@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,15 +11,11 @@ export default function Index() {
     <div className="container mx-auto px-4 py-12">
       <div className="text-center mb-16 animate-fade-in">
         <div className="flex justify-center mb-4">
-          <div className="bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 p-4 rounded-full inline-block shadow-lg">
-            <Palette className="h-16 w-16 text-white" />
-          </div>
+          <Palette className="h-12 w-12 text-kid-blue" />
         </div>
-        <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-purple-600 via-kid-blue to-purple-500 text-transparent bg-clip-text">
-          Kids AI Studio
-        </h1>
+        <h1 className="text-4xl md:text-5xl font-bold mb-4">Welcome to Botadoodle</h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Inspire creativity and imagination with our AI-powered tools designed specially for kids.
+          Transform your doodles into amazing artwork, stories, and more with the power of AI
         </p>
       </div>
       

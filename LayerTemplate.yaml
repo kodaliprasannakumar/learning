@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  Layer:
+    Type: String
+    Description: The ARN of the lambda function layer
+Resources:
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          import json
+          import requests
+          import numpy as np
+          def handler(event, context):
+            try:
+                ip = requests.get("http://checkip.amazonaws.com/")
+                x = np.array([2,3,1,0])
+            except requests.RequestException as e:
+                raise e
+
+            return {
+                "statusCode": 200,
+                "body": json.dumps({
+                    "array[0]": ("%s" % str(x[0])),
+                    "location": ip.text.replace("\n", "")
+                }),
+            }
+      Handler: index.handler
+      Runtime: python3.7
+      MemorySize: 128
+      Timeout: 30
+      Layers:
+        - !Ref Layer
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+  LambdaExecutionRole:
+    Description: Allow Lambda to connect function to publish Lambda layers
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      # Policies:
+      # - PolicyName: AllowPublishLambdaLayer
+      #   PolicyDocument:
+      #     Version: '2012-10-17'
+      #     Statement:
+      #     - Effect: Allow
+      #       Action: lambda:PublishLayerVersion
+      #       Resource: '*'

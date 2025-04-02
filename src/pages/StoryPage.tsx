@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -6,6 +5,7 @@ import StoryGenerator from '@/components/StoryGenerator';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import { toast } from 'sonner';
 import { ArrowLeft, ArrowRight, Book, BookOpen, Sparkles } from 'lucide-react';
+import { generateStory } from '@/integrations/openai';
 
 // Types for our story elements
 interface StoryElement {
@@ -26,43 +26,33 @@ const StoryPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [storyView, setStoryView] = useState<'list' | 'book'>('list');
   const [currentPage, setCurrentPage] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleGenerateStory = (elements: StoryElement[]) => {
+  const handleGenerateStory = async (elements: StoryElement[]) => {
     setSelectedElements(elements);
     setIsGenerating(true);
+    setError(null);
     
-    // Simulate story generation (in a real app, this would call an API)
-    setTimeout(() => {
-      const character = elements.find(e => e.type === 'character')?.name || 'Hero';
-      const setting = elements.find(e => e.type === 'setting')?.name || 'Kingdom';
-      const object = elements.find(e => e.type === 'object')?.name || 'Treasure';
-      
-      // Generate a simple story with 3 pages
-      const generatedStory = [
-        {
-          text: `Once upon a time, there was a brave ${character} who lived in a beautiful ${setting}. Every day was an adventure filled with wonder and excitement.`,
-          image: '/placeholder.svg'
-        },
-        {
-          text: `One day, the ${character} discovered a mysterious ${object}. It seemed to glow with a magical energy that no one had ever seen before.`,
-          image: '/placeholder.svg'
-        },
-        {
-          text: `With the ${object} in hand, the ${character} embarked on an epic journey across the ${setting}, facing challenges and making new friends along the way.`,
-          image: '/placeholder.svg'
-        },
-      ];
+    try {
+      // Use the OpenAI API to generate the story
+      const generatedStory = await generateStory(elements);
       
       setStoryPages(generatedStory);
-      setIsGenerating(false);
       setCurrentPage(0);
       toast.success("Your story has been created!");
-    }, 3000);
+    } catch (err) {
+      console.error("Error generating story:", err);
+      setError("Failed to generate story. Please try again.");
+      toast.error("Failed to generate story. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleNewStory = () => {
     setSelectedElements([]);
     setStoryPages([]);
+    setError(null);
   };
 
   const handleNextPage = () => {
@@ -96,7 +86,15 @@ const StoryPage = () => {
                 <p className="text-lg">Weaving your magical story...</p>
               </div>
             ) : (
-              <StoryGenerator onGenerateStory={handleGenerateStory} />
+              <>
+                {error && (
+                  <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-lg">
+                    <p>{error}</p>
+                    <p className="text-sm mt-2">Tip: Make sure you have your OpenAI API key set as VITE_OPENAI_API_KEY in your environment.</p>
+                  </div>
+                )}
+                <StoryGenerator onGenerateStory={handleGenerateStory} />
+              </>
             )}
           </>
         ) : (

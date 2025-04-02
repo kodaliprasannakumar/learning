@@ -16,11 +16,7 @@ const PuzzlePage = () => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="text-center mb-8 animate-fade-in">
-        <div className="flex justify-center mb-2">
-          <div className="bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 p-3 rounded-full">
-            <Puzzle className="h-12 w-12 text-white" />
-          </div>
-        </div>
+        
         <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-blue-600 via-cyan-500 to-purple-600 text-transparent bg-clip-text">
           Word Puzzle Adventures
         </h1>

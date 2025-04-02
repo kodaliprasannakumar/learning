@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -26,26 +25,26 @@ const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
   // Placeholder data for story elements
   const storyElements: Record<string, StoryElement[]> = {
     character: [
-      { id: 'c1', name: 'Princess', type: 'character', image: '/placeholder.svg' },
-      { id: 'c2', name: 'Dragon', type: 'character', image: '/placeholder.svg' },
-      { id: 'c3', name: 'Wizard', type: 'character', image: '/placeholder.svg' },
-      { id: 'c4', name: 'Robot', type: 'character', image: '/placeholder.svg' },
-      { id: 'c5', name: 'Alien', type: 'character', image: '/placeholder.svg' },
-      { id: 'c6', name: 'Pirate', type: 'character', image: '/placeholder.svg' },
+      { id: 'c1', name: 'Princess', type: 'character', image: '/images/princess.png' },
+      { id: 'c2', name: 'Dragon', type: 'character', image: '/images/dragon.png' },
+      { id: 'c3', name: 'Wizard', type: 'character', image: '/images/wizard.png' },
+      { id: 'c4', name: 'Robot', type: 'character', image: '/images/robot.png' },
+      { id: 'c5', name: 'Alien', type: 'character', image: '/images/alien.png' },
+      { id: 'c6', name: 'Pirate', type: 'character', image: '/images/pirate.png' },
     ],
     setting: [
-      { id: 's1', name: 'Castle', type: 'setting', image: '/placeholder.svg' },
-      { id: 's2', name: 'Forest', type: 'setting', image: '/placeholder.svg' },
-      { id: 's3', name: 'Space', type: 'setting', image: '/placeholder.svg' },
-      { id: 's4', name: 'Ocean', type: 'setting', image: '/placeholder.svg' },
-      { id: 's5', name: 'Mountain', type: 'setting', image: '/placeholder.svg' },
-      { id: 's6', name: 'City', type: 'setting', image: '/placeholder.svg' },
+      { id: 's1', name: 'Castle', type: 'setting', image: '/images/castle.png' },
+      { id: 's2', name: 'Forest', type: 'setting', image: '/images/forest.png' },
+      { id: 's3', name: 'Space', type: 'setting', image: '/images/space.png' },
+      { id: 's4', name: 'Ocean', type: 'setting', image: '/images/ocean.png' },
+      { id: 's5', name: 'Mountain', type: 'setting', image: '/images/mountain.png' },
+      { id: 's6', name: 'City', type: 'setting', image: '/images/city.png' },
     ],
     object: [
-      { id: 'o1', name: 'Magic Wand', type: 'object', image: '/placeholder.svg' },
-      { id: 'o2', name: 'Treasure Chest', type: 'object', image: '/placeholder.svg' },
-      { id: 'o3', name: 'Flying Carpet', type: 'object', image: '/placeholder.svg' },
-      { id: 'o4', name: 'Time Machine', type: 'object', image: '/placeholder.svg' },
+      { id: 'o1', name: 'Magic Wand', type: 'object', image: '/images/magic-wand.png' },
+      { id: 'o2', name: 'Treasure Chest', type: 'object', image: '/images/treasure.png' },
+      { id: 'o3', name: 'Flying Carpet', type: 'object', image: '/images/flying-carpet.png' },
+      { id: 'o4', name: 'Time Machine', type: 'object', image: '/images/time-machine.png' },
       { id: 'o5', name: 'Enchanted Book', type: 'object', image: '/placeholder.svg' },
       { id: 'o6', name: 'Mystery Box', type: 'object', image: '/placeholder.svg' },
     ],

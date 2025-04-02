@@ -1,14 +1,15 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Palette, 
   PaintBucket, 
   GridIcon, 
-  Image as ImageIcon 
+  Image as ImageIcon,
+  BookOpen,
+  Pencil
 } from 'lucide-react';
 
-type StyleOption = "realistic" | "cartoon" | "watercolor" | "pixel";
+type StyleOption = "realistic" | "cartoon" | "watercolor" | "pixel" | "storybook" | "sketchy";
 
 interface StyleSelectorProps {
   onStyleSelect: (style: StyleOption) => void;
@@ -45,19 +46,31 @@ const StyleSelector = ({ onStyleSelect, selectedStyle }: StyleSelectorProps) => 
       name: "Pixel Art",
       icon: <GridIcon className="h-5 w-5" />,
       description: "Retro video game style"
+    },
+    {
+      id: "storybook",
+      name: "Storybook",
+      icon: <BookOpen className="h-5 w-5" />,
+      description: "Classic illustration style"
+    },
+    {
+      id: "sketchy",
+      name: "Sketchy",
+      icon: <Pencil className="h-5 w-5" />,
+      description: "Hand-drawn pencil look"
     }
   ];
 
   return (
     <div className="space-y-3">
       <h3 className="text-lg font-medium">Choose Art Style</h3>
-      <div className="flex flex-wrap gap-2 justify-center">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 justify-center">
         {styles.map((style) => (
           <Button
             key={style.id}
             onClick={() => onStyleSelect(style.id)}
             variant={selectedStyle === style.id ? "default" : "outline"}
-            className={`flex-col py-3 h-auto min-w-[90px] ${
+            className={`flex-col py-3 h-auto ${
               selectedStyle === style.id 
                 ? "bg-kid-blue hover:bg-kid-blue/90 text-white" 
                 : "hover:bg-muted/80"

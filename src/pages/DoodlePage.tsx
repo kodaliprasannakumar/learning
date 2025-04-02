@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -8,9 +7,11 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Wand2, Brush, ArrowLeft, Save } from 'lucide-react';
+import { Loader2, Wand2, Brush, ArrowLeft, Save, ArrowRight, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
+import confetti from 'canvas-confetti';
 
-type StyleOption = "realistic" | "cartoon" | "watercolor" | "pixel";
+type StyleOption = "realistic" | "cartoon" | "watercolor" | "pixel" | "storybook" | "sketchy";
 
 const DoodlePage = () => {
   const [doodleImage, setDoodleImage] = useState<string | null>(null);
@@ -21,7 +22,7 @@ const DoodlePage = () => {
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [selectedStyle, setSelectedStyle] = useState<StyleOption>("realistic");
+  const [selectedStyle, setSelectedStyle] = useState<StyleOption>("cartoon");
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -31,6 +32,13 @@ const DoodlePage = () => {
     setAiImage(null);
     setVideoUrl(null);
     setVideoDescription(null);
+    
+    // Trigger confetti when a doodle is completed
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
   };
 
   const handleSaveDoodle = async () => {
@@ -145,6 +153,13 @@ const DoodlePage = () => {
       console.log("Doodle saved:", doodleData);
       toast.success("Doodle saved successfully!");
       
+      // Trigger confetti celebration
+      confetti({
+        particleCount: 200,
+        spread: 100,
+        origin: { y: 0.6 }
+      });
+      
       // Navigate to home page to see the saved doodle
       setTimeout(() => {
         navigate('/');
@@ -186,6 +201,15 @@ const DoodlePage = () => {
       
       setAiImage(data.imageUrl);
       toast.success(`${selectedStyle} image generated successfully!`);
+      
+      // Trigger sparkle confetti
+      confetti({
+        particleCount: 60,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0.5, y: 0.7 },
+        colors: ['#33C3F0', '#FFDEE2', '#FEF7CD', '#F2FCE2', '#E5DEFF']
+      });
     } catch (error) {
       console.error("Error generating realistic image:", error);
       toast.error("Failed to generate image. Please try again.");
@@ -223,6 +247,14 @@ const DoodlePage = () => {
       setVideoUrl(data.videoUrl);
       setVideoDescription(data.description);
       toast.success("Video generated successfully!");
+      
+      // Trigger rainbow confetti
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#ff0000', '#ff7700', '#ffff00', '#00ff00', '#0077ff', '#8800ff']
+      });
     } catch (error) {
       console.error("Error generating video:", error);
       toast.error("Failed to generate video. Please try again.");
@@ -240,228 +272,206 @@ const DoodlePage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-5xl">
-      <div className="text-center mb-10 animate-fade-in">
-        <h1 className="text-4xl font-bold mb-4 text-kid-blue">Doodle to Video</h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Draw anything you can imagine and watch it transform into a stylized image and video!
+    <div className="container mx-auto px-4 py-12 max-w-6xl">
+      <motion.div 
+        className="text-center mb-6 md:mb-8"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <h1 className="text-3xl md:text-4xl font-bold mb-2 md:mb-4 text-kid-blue">Doodle to Story</h1>
+        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+          Draw anything you can imagine and watch it transform into a magical story!
         </p>
-      </div>
+      </motion.div>
       
-      <Card className="border-4 border-kid-pink/40 bg-gradient-to-br from-kid-blue/5 to-kid-yellow/10 p-6 md:p-8 rounded-3xl shadow-xl animate-scale-in">
-        {!doodleImage ? (
-          <>
-            <h2 className="text-2xl font-semibold mb-6 text-center text-kid-blue">Create Your Doodle</h2>
+      {!doodleImage ? (
+        <motion.div 
+          className="max-w-5xl mx-auto"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <Card className="p-4 md:p-6 shadow-lg border-4 bg-kid-blue/10 border-kid-blue/40">
             <DoodleCanvas onDoodleComplete={handleDoodleComplete} />
-          </>
-        ) : !aiImage && !videoUrl ? (
-          <div className="flex flex-col items-center">
-            <h2 className="text-2xl font-semibold mb-6 text-center text-kid-blue">Your Doodle: {doodleName}</h2>
-            
-            <div className="w-full max-w-md mb-8 rounded-xl overflow-hidden border-4 border-kid-yellow shadow-md">
-              <img 
-                src={doodleImage} 
-                alt={`Your doodle of ${doodleName}`} 
-                className="w-full h-auto"
-              />
-            </div>
-            
-            <StyleSelector 
-              selectedStyle={selectedStyle}
-              onStyleSelect={setSelectedStyle}
-            />
-            
-            <div className="flex gap-4 flex-wrap justify-center mt-6">
-              <Button 
-                variant="outline" 
-                onClick={handleNewDoodle}
-                className="rounded-xl border-2 border-kid-blue/50 hover:bg-kid-blue/10 btn-bounce flex gap-2 items-center font-medium"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                New Doodle
-              </Button>
-              <Button 
-                onClick={handleSaveDoodle}
-                disabled={isSaving}
-                className="bg-kid-green hover:bg-kid-green/80 text-foreground rounded-xl border-2 border-kid-green/50 shadow-md btn-bounce flex gap-2 items-center font-medium"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    <span>Saving...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4" />
-                    Save Doodle
-                  </>
-                )}
-              </Button>
-              <Button 
-                onClick={handleGenerateRealisticImage}
-                disabled={isGeneratingImage}
-                className="bg-kid-blue hover:bg-kid-blue/80 text-white rounded-xl border-2 border-kid-blue shadow-md btn-bounce flex gap-2 items-center font-medium"
-              >
-                {isGeneratingImage ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    <span>Generating Image...</span>
-                  </>
-                ) : (
-                  <>
-                    <Wand2 className="h-4 w-4" />
-                    {`Generate ${selectedStyle.charAt(0).toUpperCase() + selectedStyle.slice(1)} Image`}
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        ) : !videoUrl ? (
-          <div className="flex flex-col items-center">
-            <h2 className="text-2xl font-semibold mb-6 text-center text-kid-blue">Your AI-Enhanced Image</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full mb-8">
-              <div className="rounded-xl overflow-hidden border-4 border-kid-yellow shadow-md">
-                <h3 className="text-center py-2 bg-kid-yellow/20 font-medium text-foreground">Original Doodle</h3>
+          </Card>
+        </motion.div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <motion.div 
+            className="flex flex-col space-y-4"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <Card className="p-4 shadow-md border-kid-blue/20 hover:shadow-lg transition-shadow overflow-hidden">
+              <div className="text-center mb-3">
+                <h2 className="text-xl font-semibold text-foreground">{doodleName || "Your Doodle"}</h2>
+              </div>
+              
+              <div className="rounded-md overflow-hidden border border-muted">
                 <img 
                   src={doodleImage} 
-                  alt={`Your doodle of ${doodleName}`} 
-                  className="w-full h-auto"
+                  alt={doodleName || "Your doodle"} 
+                  className="w-full h-auto" 
                 />
               </div>
               
-              <div className="rounded-xl overflow-hidden border-4 border-kid-green shadow-md">
-                <h3 className="text-center py-2 bg-kid-green/20 font-medium text-foreground">{selectedStyle.charAt(0).toUpperCase() + selectedStyle.slice(1)} Version</h3>
-                <img 
-                  src={aiImage} 
-                  alt={`AI version of ${doodleName}`} 
-                  className="w-full h-auto"
-                />
+              <div className="flex flex-wrap justify-center gap-2 mt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={handleNewDoodle}
+                  className="flex items-center gap-1"
+                >
+                  <Brush className="h-4 w-4 mr-1" />
+                  New Doodle
+                </Button>
+                
+                <Button 
+                  onClick={handleSaveDoodle} 
+                  disabled={isSaving}
+                  className="flex items-center gap-1 bg-kid-blue hover:bg-kid-blue/90"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-1" />
+                      Save Doodle
+                    </>
+                  )}
+                </Button>
               </div>
-            </div>
+            </Card>
             
-            <div className="flex gap-4 flex-wrap justify-center">
-              <Button 
-                variant="outline" 
-                onClick={handleNewDoodle}
-                className="rounded-xl border-2 border-kid-blue/50 hover:bg-kid-blue/10 btn-bounce flex gap-2 items-center font-medium"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                New Doodle
-              </Button>
-              <Button 
-                onClick={handleSaveDoodle}
-                disabled={isSaving}
-                className="bg-kid-green hover:bg-kid-green/80 text-foreground rounded-xl border-2 border-kid-green/50 shadow-md btn-bounce flex gap-2 items-center font-medium"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    <span>Saving...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4" />
-                    Save Doodle
-                  </>
-                )}
-              </Button>
-              <Button 
-                onClick={handleGenerateVideo}
-                disabled={isGeneratingVideo}
-                className="bg-kid-purple hover:bg-kid-purple/80 text-white rounded-xl border-2 border-kid-purple shadow-md btn-bounce flex gap-2 items-center font-medium"
-              >
-                {isGeneratingVideo ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    <span>Generating Video...</span>
-                  </>
-                ) : (
-                  <>
-                    <Brush className="h-4 w-4" />
-                    Generate Video
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center">
-            <h2 className="text-2xl font-semibold mb-6 text-center text-kid-blue">Your Video</h2>
-            
-            <div className="w-full mb-8 rounded-xl overflow-hidden shadow-md border-4 border-kid-purple">
-              <div className="bg-kid-purple/20 p-4 text-center">
-                <h3 className="font-medium mb-2">Video Visualization</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {videoDescription || "Your animated video would be based on this scene."}
+            <Card className="p-4 shadow-md hover:shadow-lg transition-shadow">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-center mb-2">Transform Your Doodle</h3>
+                <p className="text-sm text-muted-foreground text-center">
+                  Choose a style and turn your drawing into something amazing!
                 </p>
               </div>
-              <img 
-                src={videoUrl} 
-                alt="Generated video scene" 
-                className="w-full h-auto"
+              
+              <StyleSelector
+                selectedStyle={selectedStyle}
+                onStyleSelect={setSelectedStyle}
               />
-            </div>
+              
+              <div className="flex justify-center mt-5">
+                <Button
+                  onClick={handleGenerateRealisticImage}
+                  disabled={isGeneratingImage || !doodleImage}
+                  className="bg-gradient-to-r from-kid-purple to-kid-blue text-white hover:opacity-90 transition-opacity"
+                >
+                  {isGeneratingImage ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="h-4 w-4 mr-2" />
+                      Generate {selectedStyle} Image
+                    </>
+                  )}
+                </Button>
+              </div>
+            </Card>
+          </motion.div>
+          
+          <motion.div 
+            className="flex flex-col space-y-4"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+          >
+            {aiImage && (
+              <Card className="p-4 shadow-md border-kid-blue/20 hover:shadow-lg transition-shadow overflow-hidden">
+                <div className="text-center mb-3">
+                  <h2 className="text-xl font-semibold text-foreground">
+                    {selectedStyle.charAt(0).toUpperCase() + selectedStyle.slice(1)} Version
+                  </h2>
+                </div>
+                
+                <div className="rounded-md overflow-hidden border border-muted">
+                  <img 
+                    src={aiImage} 
+                    alt={`AI-generated ${selectedStyle} image`} 
+                    className="w-full h-auto" 
+                  />
+                </div>
+                
+                <div className="flex justify-center mt-4">
+                  <Button
+                    onClick={handleGenerateVideo}
+                    disabled={isGeneratingVideo || !aiImage}
+                    className="bg-gradient-to-r from-kid-pink to-kid-purple text-white hover:opacity-90 transition-opacity"
+                  >
+                    {isGeneratingVideo ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Creating Story...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Create Story
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </Card>
+            )}
             
-            <div className="flex gap-4">
-              <Button 
-                variant="outline" 
-                onClick={handleNewDoodle}
-                className="rounded-xl border-2 border-kid-blue/50 hover:bg-kid-blue/10 btn-bounce flex gap-2 items-center font-medium"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Create Another
-              </Button>
-              <Button 
-                onClick={handleSaveDoodle}
-                disabled={isSaving}
-                className="bg-kid-green hover:bg-kid-green/80 text-foreground rounded-xl border-2 border-kid-green/50 shadow-md btn-bounce flex gap-2 items-center font-medium"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    <span>Saving...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4" />
-                    Save Doodle & Video
-                  </>
+            {videoUrl && (
+              <Card className="p-4 shadow-md border-kid-blue/20 hover:shadow-lg transition-shadow">
+                <div className="text-center mb-3">
+                  <h2 className="text-xl font-semibold text-foreground">Your Story</h2>
+                </div>
+                
+                <div className="rounded-md overflow-hidden border border-muted aspect-video">
+                  <iframe
+                    src={videoUrl}
+                    title="Generated video"
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  ></iframe>
+                </div>
+                
+                {videoDescription && (
+                  <div className="mt-4 p-3 bg-muted/30 rounded-md">
+                    <p className="text-sm text-muted-foreground">{videoDescription}</p>
+                  </div>
                 )}
-              </Button>
-            </div>
-          </div>
-        )}
-      </Card>
-      
-      <div className="mt-16 bg-gradient-to-br from-kid-yellow/20 to-kid-green/20 rounded-3xl p-6 md:p-8 border-4 border-kid-yellow/30 shadow-lg animate-fade-in" style={{ animationDelay: "300ms" }}>
-        <h2 className="text-2xl font-semibold mb-4 text-center text-foreground">How It Works</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 text-center shadow-md border-2 border-kid-blue/20">
-            <div className="w-12 h-12 bg-kid-blue/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-kid-blue font-bold">1</span>
-            </div>
-            <h3 className="font-medium mb-2 text-kid-blue">Draw & Name Your Doodle</h3>
-            <p className="text-muted-foreground text-sm">Use our canvas to create and name any doodle you can imagine.</p>
-          </div>
-          
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 text-center shadow-md border-2 border-kid-green/20">
-            <div className="w-12 h-12 bg-kid-green/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-kid-green font-bold">2</span>
-            </div>
-            <h3 className="font-medium mb-2 text-kid-green">Choose Art Style</h3>
-            <p className="text-muted-foreground text-sm">Select from realistic, cartoon, watercolor, or pixel art styles.</p>
-          </div>
-          
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 text-center shadow-md border-2 border-kid-purple/20">
-            <div className="w-12 h-12 bg-kid-purple/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-kid-purple font-bold">3</span>
-            </div>
-            <h3 className="font-medium mb-2 text-kid-purple">Generate Video</h3>
-            <p className="text-muted-foreground text-sm">Turn your styled image into an animated video scene.</p>
-          </div>
+                
+                <div className="flex justify-center mt-4">
+                  <Button
+                    onClick={() => navigate('/puzzle')}
+                    className="bg-gradient-to-r from-kid-yellow to-kid-orange text-foreground hover:opacity-90 transition-opacity"
+                  >
+                    <ArrowRight className="h-4 w-4 mr-2" />
+                    Continue to Puzzle
+                  </Button>
+                </div>
+              </Card>
+            )}
+            
+            {!aiImage && !videoUrl && (
+              <Card className="p-6 shadow-md border-dashed border-2 border-muted flex flex-col items-center justify-center min-h-[300px] text-center">
+                <Wand2 className="h-10 w-10 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">Transform Your Doodle</h3>
+                <p className="text-muted-foreground max-w-xs">
+                  Generate an amazing {selectedStyle} version of your drawing, then create a story from it!
+                </p>
+              </Card>
+            )}
+          </motion.div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
