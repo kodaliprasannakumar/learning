@@ -43,10 +43,10 @@ const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
     object: [
       { id: 'o1', name: 'Magic Wand', type: 'object', image: '/images/magic-wand.png' },
       { id: 'o2', name: 'Treasure Chest', type: 'object', image: '/images/treasure.png' },
-      { id: 'o3', name: 'Flying Carpet', type: 'object', image: '/images/flying-carpet.png' },
-      { id: 'o4', name: 'Time Machine', type: 'object', image: '/images/time-machine.png' },
-      { id: 'o5', name: 'Enchanted Book', type: 'object', image: '/placeholder.svg' },
-      { id: 'o6', name: 'Mystery Box', type: 'object', image: '/placeholder.svg' },
+      { id: 'o3', name: 'Flying Carpet', type: 'object', image: '/images/flying_carpet.png' },
+      { id: 'o4', name: 'Time Machine', type: 'object', image: '/images/time_machine.png' },
+      { id: 'o5', name: 'Enchanted Book', type: 'object', image: '/images/enchanted_book.png' },
+      { id: 'o6', name: 'Mystery Box', type: 'object', image: '/images/mysterybox.png' },
     ],
   };
 
