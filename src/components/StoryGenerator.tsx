@@ -41,7 +41,7 @@ const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
       { id: 's6', name: 'City', type: 'setting', image: '/images/city.png' },
     ],
     object: [
-      { id: 'o1', name: 'Magic Wand', type: 'object', image: '/images/magic-wand.png' },
+      { id: 'o1', name: 'Magic Wand', type: 'object', image: '/images/magic_wand.png' },
       { id: 'o2', name: 'Treasure Chest', type: 'object', image: '/images/treasure.png' },
       { id: 'o3', name: 'Flying Carpet', type: 'object', image: '/images/flying_carpet.png' },
       { id: 'o4', name: 'Time Machine', type: 'object', image: '/images/time_machine.png' },

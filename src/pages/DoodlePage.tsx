@@ -279,7 +279,7 @@ const DoodlePage = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="text-3xl md:text-4xl font-bold mb-2 md:mb-4 text-kid-blue">Doodle to Story</h1>
+        <h1 className="text-3xl md:text-4xl font-bold mb-2 md:mb-4 text-kid-blue">Doodle to Image</h1>
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
           Draw anything you can imagine and watch it transform into a magical story!
         </p>

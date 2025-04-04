@@ -4,8 +4,10 @@ import { Card } from '@/components/ui/card';
 import StoryGenerator from '@/components/StoryGenerator';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import { toast } from 'sonner';
-import { ArrowLeft, ArrowRight, Book, BookOpen, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Book, BookOpen, Download, Sparkles } from 'lucide-react';
 import { generateStory } from '@/integrations/openai';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 // Types for our story elements
 interface StoryElement {
@@ -27,6 +29,7 @@ const StoryPage = () => {
   const [storyView, setStoryView] = useState<'list' | 'book'>('list');
   const [currentPage, setCurrentPage] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleGenerateStory = async (elements: StoryElement[]) => {
     setSelectedElements(elements);
@@ -67,6 +70,104 @@ const StoryPage = () => {
     }
   };
 
+  const handleDownloadStory = async () => {
+    if (storyPages.length === 0) return;
+    
+    setIsDownloading(true);
+    toast.info("Preparing your story for download...");
+    
+    try {
+      // Create a new PDF document
+      const pdf = new jsPDF("p", "mm", "a4");
+      
+      // Get character, setting, and object names for the title
+      const character = selectedElements.find(e => e.type === 'character')?.name || 'Hero';
+      const setting = selectedElements.find(e => e.type === 'setting')?.name || 'Kingdom';
+      const object = selectedElements.find(e => e.type === 'object')?.name || 'Treasure';
+      
+      // Add a title page
+      pdf.setFontSize(24);
+      pdf.setTextColor(235, 137, 0); // amber-600 color
+      pdf.text("My Botadoodle Story", 105, 30, { align: 'center' });
+      
+      pdf.setFontSize(18);
+      pdf.text(`A tale of a ${character} in a ${setting} with a ${object}`, 105, 45, { align: 'center' });
+      
+      pdf.setFontSize(14);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text("Generated with Botadoodle", 105, 200, { align: 'center' });
+      pdf.text(new Date().toLocaleDateString(), 105, 210, { align: 'center' });
+      
+      // Add each story page to the PDF
+      for (let i = 0; i < storyPages.length; i++) {
+        // Add a new page after the title page and between story pages
+        pdf.addPage();
+        
+        // Add the page number
+        pdf.setFontSize(12);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text(`Page ${i + 1}`, 105, 15, { align: 'center' });
+        
+        // Create a temporary container for the image
+        const imageContainer = document.createElement('div');
+        imageContainer.style.width = '400px';
+        imageContainer.style.height = '400px';
+        imageContainer.style.overflow = 'hidden';
+        imageContainer.style.position = 'fixed';
+        imageContainer.style.top = '-1000px';
+        imageContainer.style.left = '-1000px';
+        
+        // Create an image element
+        const img = document.createElement('img');
+        img.src = storyPages[i].image;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'contain';
+        
+        // Append elements to the DOM
+        imageContainer.appendChild(img);
+        document.body.appendChild(imageContainer);
+        
+        // Wait for image to load
+        await new Promise(resolve => {
+          img.onload = resolve;
+          setTimeout(resolve, 1000); // Fallback if onload doesn't trigger
+        });
+        
+        // Convert the image to canvas
+        try {
+          const canvas = await html2canvas(imageContainer, { scale: 2 });
+          const imgData = canvas.toDataURL('image/jpeg', 0.9);
+          
+          // Add the image to the PDF (centered)
+          pdf.addImage(imgData, 'JPEG', 20, 25, 170, 130);
+        } catch (err) {
+          console.error("Error capturing image:", err);
+        }
+        
+        // Clean up
+        document.body.removeChild(imageContainer);
+        
+        // Add the story text
+        pdf.setFontSize(14);
+        pdf.setTextColor(0, 0, 0);
+        
+        // Add text with word wrap
+        const splitText = pdf.splitTextToSize(storyPages[i].text, 170);
+        pdf.text(splitText, 20, 170);
+      }
+      
+      // Save the PDF
+      pdf.save("botadoodle-story.pdf");
+      toast.success("Story downloaded successfully!");
+    } catch (err) {
+      console.error("Error downloading story:", err);
+      toast.error("Failed to download story. Please try again.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-12 max-w-5xl">
       <div className="text-center mb-10 animate-fade-in">
@@ -83,7 +184,13 @@ const StoryPage = () => {
             {isGenerating ? (
               <div className="flex flex-col items-center justify-center py-16">
                 <div className="h-16 w-16 rounded-full border-4 border-amber-400 border-t-transparent animate-spin mb-6"></div>
-                <p className="text-lg">Weaving your magical story...</p>
+                <p className="text-lg mb-2">Weaving your magical story...</p>
+                <p className="text-md text-muted-foreground">Creating beautiful illustrations for each page</p>
+                <div className="mt-4 flex space-x-1">
+                  <div className="w-2 h-2 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
               </div>
             ) : (
               <>
@@ -200,10 +307,20 @@ const StoryPage = () => {
               </Button>
               <Button 
                 className="bg-amber-500 hover:bg-amber-500/80 text-white rounded-xl border-2 border-amber-500 shadow-md btn-bounce flex gap-2 items-center"
-                onClick={() => toast.success("Story saved successfully!")}
+                onClick={handleDownloadStory}
+                disabled={isDownloading}
               >
-                <Sparkles className="h-4 w-4" />
-                Save Story
+                {isDownloading ? (
+                  <>
+                    <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+                    Downloading...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4" />
+                    Download Story
+                  </>
+                )}
               </Button>
             </div>
           </div>

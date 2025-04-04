@@ -26,9 +26,9 @@ export default function Index() {
               <Video className="h-14 w-14 text-kid-blue" />
             </div>
           </div>
-          <h2 className="text-2xl font-bold mb-2 text-kid-blue">Doodle to Video</h2>
+          <h2 className="text-2xl font-bold mb-2 text-kid-blue">Doodle to Image</h2>
           <p className="mb-6 text-muted-foreground">
-            Turn simple drawings into animated videos with our AI-powered doodle transformer.
+            Turn simple drawings into Images with our AI-powered doodle transformer.
           </p>
           <Link to="/doodle">
             <Button className="kid-button bg-kid-blue hover:bg-kid-blue/80 text-white w-full py-5 text-lg">
@@ -62,7 +62,7 @@ export default function Index() {
           </div>
           <h2 className="text-2xl font-bold mb-2 text-purple-600">Puzzle Challenge</h2>
           <p className="mb-6 text-muted-foreground">
-            Solve interactive puzzles and get creative AI-powered responses.
+            Solve interactive puzzles to learn sentence and get creative AI-powered responses.
           </p>
           <Link to="/puzzle">
             <Button className="kid-button bg-purple-600 hover:bg-purple-600/80 text-white w-full py-5 text-lg">
