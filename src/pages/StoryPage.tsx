@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import StoryGenerator from '@/components/StoryGenerator';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import { toast } from 'sonner';
-import { ArrowLeft, ArrowRight, Book, BookOpen, Download, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Book, BookOpen, Download, Sparkles, Volume2, VolumeX } from 'lucide-react';
 import { generateStory } from '@/integrations/openai';
+import { speak, stopSpeaking, isSpeaking } from '@/lib/textToSpeech';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -30,6 +31,30 @@ const StoryPage = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isReading, setIsReading] = useState(false);
+  const stopSpeakingRef = useRef<(() => void) | null>(null);
+
+  // Clean up speech when component unmounts
+  useEffect(() => {
+    return () => {
+      if (stopSpeakingRef.current) {
+        stopSpeakingRef.current();
+      }
+    };
+  }, []);
+
+  // Handle page change for book view
+  useEffect(() => {
+    if (storyView === 'book' && isReading) {
+      // Stop any ongoing speech
+      if (stopSpeakingRef.current) {
+        stopSpeakingRef.current();
+      }
+      
+      // Start reading the new page
+      readCurrentPage();
+    }
+  }, [currentPage, storyView]);
 
   const handleGenerateStory = async (elements: StoryElement[]) => {
     setSelectedElements(elements);
@@ -56,6 +81,12 @@ const StoryPage = () => {
     setSelectedElements([]);
     setStoryPages([]);
     setError(null);
+    
+    // Stop any ongoing speech
+    if (stopSpeakingRef.current) {
+      stopSpeakingRef.current();
+      setIsReading(false);
+    }
   };
 
   const handleNextPage = () => {
@@ -67,6 +98,48 @@ const StoryPage = () => {
   const handlePrevPage = () => {
     if (currentPage > 0) {
       setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const readCurrentPage = () => {
+    if (storyPages.length === 0 || currentPage >= storyPages.length) return;
+    
+    // Stop any ongoing speech
+    if (stopSpeakingRef.current) {
+      stopSpeakingRef.current();
+    }
+    
+    // Get the text of the current page
+    const text = storyPages[currentPage].text;
+    
+    // Start speaking
+    setIsReading(true);
+    stopSpeakingRef.current = speak(text, () => {
+      setIsReading(false);
+      
+      // Auto-advance to next page if in book view
+      if (storyView === 'book' && currentPage < storyPages.length - 1) {
+        setTimeout(() => {
+          setCurrentPage(currentPage + 1);
+        }, 500);
+      }
+    }, (error) => {
+      console.error('Speech error:', error);
+      setIsReading(false);
+      toast.error('Could not read the story. Please try again.');
+    });
+  };
+
+  const toggleReading = () => {
+    if (isReading) {
+      // Stop reading
+      if (stopSpeakingRef.current) {
+        stopSpeakingRef.current();
+        setIsReading(false);
+      }
+    } else {
+      // Start reading
+      readCurrentPage();
     }
   };
 
@@ -227,6 +300,24 @@ const StoryPage = () => {
                   <BookOpen className="h-4 w-4 mr-1" />
                   Book View
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={`rounded-xl border-2 ${isReading ? 'bg-amber-100 border-amber-300' : 'border-amber-200 hover:bg-amber-50'}`}
+                  onClick={toggleReading}
+                >
+                  {isReading ? (
+                    <>
+                      <VolumeX className="h-4 w-4 mr-1" />
+                      Stop Reading
+                    </>
+                  ) : (
+                    <>
+                      <Volume2 className="h-4 w-4 mr-1" />
+                      Read Story
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
             
@@ -248,7 +339,27 @@ const StoryPage = () => {
                     </div>
                     <div className="flex flex-col justify-center p-6 md:w-2/3">
                       <span className="text-amber-600 mb-2 font-medium">Page {index + 1}</span>
-                      <p className="text-lg">{page.text}</p>
+                      <p className="text-lg leading-relaxed">{page.text}</p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="mt-4 self-start text-amber-600 hover:bg-amber-50"
+                        onClick={() => {
+                          // Stop any ongoing speech
+                          if (stopSpeakingRef.current) {
+                            stopSpeakingRef.current();
+                          }
+                          
+                          // Start reading this page
+                          setIsReading(true);
+                          stopSpeakingRef.current = speak(page.text, () => {
+                            setIsReading(false);
+                          });
+                        }}
+                      >
+                        <Volume2 className="h-4 w-4 mr-1" />
+                        Read This Page
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -284,6 +395,23 @@ const StoryPage = () => {
                       </Button>
                       <Button
                         variant="outline"
+                        onClick={toggleReading}
+                        className="rounded-xl border-2 border-amber-200 hover:bg-amber-50 btn-bounce flex gap-2 items-center"
+                      >
+                        {isReading ? (
+                          <>
+                            <VolumeX className="h-4 w-4" />
+                            Stop Reading
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="h-4 w-4" />
+                            Read Page
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
                         onClick={handleNextPage}
                         disabled={currentPage === storyPages.length - 1}
                         className="rounded-xl border-2 border-amber-200 hover:bg-amber-50 btn-bounce flex gap-2 items-center"
@@ -297,27 +425,27 @@ const StoryPage = () => {
               </div>
             )}
             
-            <div className="flex gap-4">
-              <Button 
-                variant="outline" 
+            <div className="flex justify-center gap-4 mt-8">
+              <Button
+                variant="outline"
+                className="rounded-xl border-2 border-amber-300 hover:bg-amber-50"
                 onClick={handleNewStory}
-                className="rounded-xl border-2 border-amber-300 hover:bg-amber-50 btn-bounce"
               >
                 Create New Story
               </Button>
-              <Button 
-                className="bg-amber-500 hover:bg-amber-500/80 text-white rounded-xl border-2 border-amber-500 shadow-md btn-bounce flex gap-2 items-center"
+              <Button
+                className="bg-amber-500 hover:bg-amber-500/80 text-white rounded-xl border-2 border-amber-500 shadow-md btn-bounce"
                 onClick={handleDownloadStory}
                 disabled={isDownloading}
               >
                 {isDownloading ? (
                   <>
-                    <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
-                    Downloading...
+                    <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin mr-2"></div>
+                    Preparing...
                   </>
                 ) : (
                   <>
-                    <Download className="h-4 w-4" />
+                    <Download className="h-4 w-4 mr-2" />
                     Download Story
                   </>
                 )}

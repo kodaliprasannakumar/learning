@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Plus, Send, X, Lightbulb, Puzzle, MessageSquare, Sparkles, Wand2 } from 'lucide-react';
+import { Loader2, Plus, Send, X, Lightbulb, Puzzle, MessageSquare, Sparkles, Wand2, Volume2, VolumeX } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface PuzzlePiece {
@@ -50,6 +50,8 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
   const containerRef = useRef<HTMLDivElement>(null);
   const [magnetMode, setMagnetMode] = useState(true);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   // Initialize puzzle pieces
   useEffect(() => {
@@ -349,10 +351,11 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
         throw new Error(data.error);
       }
       
-      setAiResponse(data.response || "I'm not sure about that. Can you try asking a different question?");
+      const response = data.response || "I'm not sure about that. Can you try asking a different question?";
+      setAiResponse(response);
       
       if (onComplete) {
-        onComplete(data.response);
+        onComplete(response);
       }
       
       // Celebrate with confetti!
@@ -397,6 +400,183 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
     audio.volume = 0.3;
     audio.play().catch(e => console.log('Audio play error:', e));
   };
+
+  // Text-to-speech functionality
+  const speakText = (text: string) => {
+    // Cancel any ongoing speech
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    
+    if (!text) return;
+    
+    // Create speech synthesis utterance
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Analyze text for emotional content to set appropriate voice parameters
+    const detectEmotion = (text: string): { 
+      rate: number; 
+      pitch: number; 
+      volume: number 
+    } => {
+      // Default values optimized for children's content
+      let rate = 0.9;  // slightly slower than default
+      let pitch = 1.2; // slightly higher pitch for child-friendly tone
+      let volume = 1.0;
+      
+      // Check for question marks (curious tone)
+      if (text.includes('?')) {
+        pitch = 1.3; // Higher pitch for questions
+        rate = 0.85; // Slightly slower for emphasis
+      }
+      
+      // Check for exclamation marks (excited tone)
+      if (text.includes('!')) {
+        pitch = 1.4; // Higher pitch for excitement
+        rate = 1.0;  // Normal rate for excitement
+        volume = 1.0; // Full volume
+      }
+      
+      // Check for emotional keywords to adjust voice
+      const happyWords = ['happy', 'exciting', 'wonderful', 'fun', 'amazing', 'great', 'joy'];
+      const sadWords = ['sad', 'unfortunately', 'sorry', 'difficult', 'problem'];
+      const amazedWords = ['wow', 'incredible', 'fascinating', 'awesome', 'surprising'];
+      
+      // Convert to lowercase for better matching
+      const lowerText = text.toLowerCase();
+      
+      // Detect emotion based on keywords
+      if (happyWords.some(word => lowerText.includes(word))) {
+        pitch = 1.3;  // Higher pitch for happiness
+        rate = 1.0;   // Normal rate 
+      } else if (amazedWords.some(word => lowerText.includes(word))) {
+        pitch = 1.4;  // Even higher for amazement
+        rate = 0.9;   // Slightly slower for emphasis
+      } else if (sadWords.some(word => lowerText.includes(word))) {
+        pitch = 1.0;  // Lower pitch for sadness
+        rate = 0.8;   // Slower for sadness
+      }
+      
+      return { rate, pitch, volume };
+    };
+    
+    // Apply emotional parameters
+    const emotion = detectEmotion(text);
+    utterance.rate = emotion.rate;
+    utterance.pitch = emotion.pitch;
+    utterance.volume = emotion.volume;
+    
+    // Add natural pauses at punctuation
+    const addPauses = (text: string): string => {
+      return text
+        .replace(/\./g, '.<break time="500ms"/>') // Add pause after periods
+        .replace(/\!/g, '!<break time="600ms"/>') // Add longer pause after exclamations
+        .replace(/\?/g, '?<break time="500ms"/>') // Add pause after questions
+        .replace(/,/g, ',<break time="250ms"/>'); // Add small pause after commas
+    };
+    
+    // Add SSML markup if browser supports it
+    try {
+      const ssmlText = `<speak>${addPauses(text)}</speak>`;
+      // Some browsers might support SSML markup
+      utterance.text = ssmlText;
+    } catch (e) {
+      // Fallback to regular text if SSML isn't supported
+      utterance.text = text;
+    }
+    
+    // Try to find a child-friendly voice if available
+    const voices = window.speechSynthesis.getVoices();
+    
+    // Preferred voices in order (natural-sounding first)
+    const preferVoiceNames = [
+      'Google UK English Female', // Good natural voice on Chrome
+      'Samantha',                 // Good natural voice on macOS/iOS
+      'Karen',                    // Australian female voice on macOS
+      'Microsoft Zira',           // Good Windows voice
+      'Female'                    // Generic female voices
+    ];
+    
+    // Try to find the most natural-sounding voice available
+    let preferredVoice = null;
+    for (const voiceName of preferVoiceNames) {
+      const foundVoice = voices.find(voice => voice.name.includes(voiceName));
+      if (foundVoice) {
+        preferredVoice = foundVoice;
+        break;
+      }
+    }
+    
+    // Fallback: Try to find any female or child voice
+    if (!preferredVoice) {
+      preferredVoice = voices.find(voice => 
+        voice.name.includes('Female') || 
+        voice.name.includes('Kid') || 
+        voice.name.includes('Child')
+      );
+    }
+    
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+    
+    // Apply word-by-word speaking by breaking into sentences
+    // This creates more natural rhythm
+    const sentences = text.split(/(?<=[.!?])\s+/);
+    
+    // Set this utterance as ongoing
+    speechSynthesisRef.current = utterance;
+    
+    // Event handlers
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      toast.error("Couldn't play speech. Try again.");
+    };
+    
+    // Start speaking
+    window.speechSynthesis.speak(utterance);
+    
+    // Display a toast to enhance the experience
+    toast.info("Reading the answer aloud...", {
+      duration: 2000,
+      icon: <Volume2 className="h-4 w-4 text-purple-500" />
+    });
+  };
+  
+  const toggleSpeech = () => {
+    if (isSpeaking) {
+      // Stop speaking
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      toast.info("Stopped reading", { duration: 1000 });
+    } else {
+      // Start speaking
+      speakText(aiResponse);
+    }
+  };
+  
+  // Load voices when component mounts
+  useEffect(() => {
+    // Some browsers need this to load voices
+    const loadVoices = () => {
+      window.speechSynthesis.getVoices();
+    };
+    
+    loadVoices();
+    
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+    
+    // Clean up speech synthesis when unmounting
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
 
   return (
     <Card className="p-6 border-4 border-kid-pink rounded-2xl shadow-lg bg-white/95">
@@ -612,10 +792,21 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
       
       {aiResponse && (
         <div className="mt-6 bg-gradient-to-br from-purple-100 to-sky-100 p-5 rounded-xl border-2 border-purple-200 animate-fade-in shadow-md">
-          <h3 className="text-lg font-medium mb-2 text-purple-700 flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-amber-500" />
-            Answer:
-          </h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-medium text-purple-700 flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-amber-500" />
+              Answer:
+            </h3>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleSpeech}
+              className={`rounded-full p-2 ${isSpeaking ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-purple-100 text-purple-600 hover:bg-purple-200'}`}
+              title={isSpeaking ? "Stop speaking" : "Read answer aloud"}
+            >
+              {isSpeaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </Button>
+          </div>
           <p className="text-sky-800">{aiResponse}</p>
         </div>
       )}

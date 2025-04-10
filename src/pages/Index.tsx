@@ -10,13 +10,13 @@ export default function Index() {
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="text-center mb-16 animate-fade-in">
-        <div className="flex justify-center mb-4">
+        {/* <div className="flex justify-center mb-4">
           <Palette className="h-12 w-12 text-kid-blue" />
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold mb-4">Welcome to Botadoodle</h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+        <h1 className="text-4xl md:text-5xl font-bold mb-4">Welcome to Botadoodle</h1> */}
+        {/* <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Transform your doodles into amazing artwork, stories, and more with the power of AI
-        </p>
+        </p> */}
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-16">

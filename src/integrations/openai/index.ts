@@ -20,6 +20,10 @@ interface StoryPage {
   image: string;
 }
 
+// Simple in-memory cache for generated images
+// In a production app, you might want to use a more robust caching solution
+const imageCache: Record<string, string> = {};
+
 /**
  * Generates an image for a story page
  * @param character The character in the story
@@ -35,6 +39,15 @@ async function generateImageForStoryPage(
   text: string
 ): Promise<string> {
   try {
+    // Create a cache key based on the input parameters
+    const cacheKey = `${character}-${setting}-${object}-${text.substring(0, 50)}`;
+    
+    // Check if we have a cached image for this prompt
+    if (imageCache[cacheKey]) {
+      console.log('Using cached image');
+      return imageCache[cacheKey];
+    }
+    
     // Create a prompt for image generation
     const prompt = `A children's book illustration showing a scene where a ${character} in a ${setting} with a ${object}. Scene description: ${text}. Style: colorful, whimsical, child-friendly illustration, digital art.`;
 
@@ -48,8 +61,13 @@ async function generateImageForStoryPage(
       style: "vivid",
     });
 
-    // Return the generated image URL
-    return response.data[0]?.url || '/placeholder.svg';
+    // Get the image URL
+    const imageUrl = response.data[0]?.url || '/placeholder.svg';
+    
+    // Cache the result
+    imageCache[cacheKey] = imageUrl;
+    
+    return imageUrl;
   } catch (error) {
     console.error('Error generating image:', error);
     return '/placeholder.svg'; // Fallback to placeholder if image generation fails
@@ -100,18 +118,24 @@ export async function generateStory(elements: StoryElement[]): Promise<StoryPage
     // Split the story into paragraphs
     const paragraphs = storyContent.split('\n\n').filter(p => p.trim().length > 0);
     
-    // Create story pages and generate images for each page
-    const storyPages: StoryPage[] = [];
+    // Create story pages with placeholder images initially
+    const storyPages: StoryPage[] = paragraphs.map(text => ({
+      text,
+      image: '/placeholder.svg', // Use placeholder initially
+    }));
     
-    for (const text of paragraphs) {
-      // Generate an image for this story page
-      const imageUrl = await generateImageForStoryPage(character, setting, object, text);
-      
-      storyPages.push({
-        text,
-        image: imageUrl,
-      });
-    }
+    // Generate images in parallel for all paragraphs
+    const imagePromises = paragraphs.map(text => 
+      generateImageForStoryPage(character, setting, object, text)
+    );
+    
+    // Wait for all image generations to complete
+    const imageUrls = await Promise.all(imagePromises);
+    
+    // Update the story pages with the generated images
+    storyPages.forEach((page, index) => {
+      page.image = imageUrls[index];
+    });
     
     return storyPages;
   } catch (error) {
