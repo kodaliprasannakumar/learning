@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -85,12 +84,68 @@ serve(async (req) => {
         case "pixel":
           stylePrompt = "as pixel art, with clear blocky pixels and limited color palette";
           break;
+        case "storybook":
+          stylePrompt = "as a children's storybook illustration with whimsical details and soft colors";
+          break;
+        case "sketchy":
+          stylePrompt = "as a refined pencil sketch with detailed shading and texture";
+          break;
         default:
           stylePrompt = "in a realistic detailed style";
       }
 
-      // Generate styled image from doodle
-      const imagePrompt = `Create an interpretation of this child's drawing ${stylePrompt}. The drawing is of ${doodleName || "an object"}. Keep the main concept but make it look professional and visually appealing to children.`;
+      // Generate styled image using the actual doodle as input
+      // First, we'll use GPT-4 Vision to understand what the doodle is showing
+      console.log("Analyzing doodle image...");
+      
+      const visionResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${openAiApiKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          messages: [
+            { 
+              role: "system", 
+              content: "You are an assistant that analyzes children's drawings and provides detailed descriptions of what they depict." 
+            },
+            { 
+              role: "user", 
+              content: [
+                { 
+                  type: "text", 
+                  text: `Analyze this child's drawing and describe what you see in detail. The child says it's "${doodleName || "a drawing"}"` 
+                },
+                { 
+                  type: "image_url", 
+                  image_url: { 
+                    url: doodleImage 
+                  } 
+                }
+              ] 
+            }
+          ],
+          max_tokens: 300
+        })
+      });
+      
+      const visionData = await visionResponse.json();
+      
+      if (visionData.error) {
+        console.error("OpenAI vision analysis error:", visionData.error);
+        return new Response(
+          JSON.stringify({ error: "Failed to analyze doodle", details: visionData.error }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+        );
+      }
+      
+      const doodleDescription = visionData.choices[0].message.content;
+      console.log("Doodle description:", doodleDescription);
+      
+      // Now use this description to generate a new image with DALL-E
+      const imagePrompt = `Create a high-quality image ${stylePrompt} based exactly on this child's drawing. The drawing shows: "${doodleDescription}". Maintain the key elements, proportions, and character of the child's original drawing but enhance it visually.`;
       
       console.log("Generating image with prompt:", imagePrompt);
       
@@ -119,7 +174,10 @@ serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify({ imageUrl: imageData.data[0].url }),
+        JSON.stringify({ 
+          imageUrl: imageData.data[0].url,
+          description: doodleDescription // Return the description so we can show it to the user
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } 
@@ -132,8 +190,67 @@ serve(async (req) => {
         );
       }
       
+      let description = "";
+      
+      // If we don't have a description yet, analyze the doodle using Vision API
+      if (!prompt) {
+        try {
+          console.log("Analyzing doodle image for video...");
+          
+          const visionResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${openAiApiKey}`
+            },
+            body: JSON.stringify({
+              model: "gpt-4o",
+              messages: [
+                { 
+                  role: "system", 
+                  content: "You are an assistant that analyzes children's drawings and provides detailed descriptions of what they depict." 
+                },
+                { 
+                  role: "user", 
+                  content: [
+                    { 
+                      type: "text", 
+                      text: `Analyze this child's drawing and describe what you see in detail. The child says it's "${doodleName || "a drawing"}"` 
+                    },
+                    { 
+                      type: "image_url", 
+                      image_url: { 
+                        url: doodleImage 
+                      } 
+                    }
+                  ] 
+                }
+              ],
+              max_tokens: 300
+            })
+          });
+          
+          const visionData = await visionResponse.json();
+          
+          if (visionData.error) {
+            console.error("OpenAI vision analysis error:", visionData.error);
+            throw new Error("Failed to analyze doodle");
+          }
+          
+          description = visionData.choices[0].message.content;
+          console.log("Doodle analysis for video:", description);
+        } catch (analysisError) {
+          console.error("Error analyzing doodle:", analysisError);
+          // Fall back to using just the name if analysis fails
+        }
+      } else {
+        description = prompt; // Use the provided description if available
+      }
+      
       // Use OpenAI to create a short description and then generate a video
-      const videoPrompt = `Create a short description for a lively, animated 8-second video about ${doodleName || "this drawing"}. The video should be engaging for children. Focus on movements and actions.`;
+      const videoPrompt = description ? 
+        `Create a short description for a lively, animated 8-second video about this drawing: ${description}. The video should be engaging for children. Focus on movements and actions.` :
+        `Create a short description for a lively, animated 8-second video about ${doodleName || "this drawing"}. The video should be engaging for children. Focus on movements and actions.`;
       
       console.log("Generating video description with prompt:", videoPrompt);
       
@@ -161,13 +278,13 @@ serve(async (req) => {
         );
       }
       
-      const description = descData.choices[0].message.content;
-      console.log("Generated description:", description);
+      const videoDescription = descData.choices[0].message.content;
+      console.log("Generated video description:", videoDescription);
       
       // Now use the description to generate a video with the Playground API
       try {
         // Generate a video using DALL-E 3 image as a base
-        const videoGenPrompt = `Create a fun, animated video for children about ${doodleName}. ${description}`;
+        const videoGenPrompt = `Create a fun, animated video for children about ${doodleName}. ${videoDescription}`;
         
         // For now, since direct video generation API is not available, we'll provide
         // an enhanced image with movement suggestion
@@ -194,7 +311,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             videoUrl: videoImageData.data[0].url, 
-            description: description,
+            description: videoDescription,
             message: "Video visualization created. Actual video animation would require additional services."
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -205,7 +322,7 @@ serve(async (req) => {
           JSON.stringify({ 
             error: "Failed to generate video", 
             details: videoError.message,
-            fallbackDescription: description
+            fallbackDescription: videoDescription
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
         );

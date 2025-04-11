@@ -19,6 +19,7 @@ const DoodlePage = () => {
   const [aiImage, setAiImage] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoDescription, setVideoDescription] = useState<string | null>(null);
+  const [doodleDescription, setDoodleDescription] = useState<string | null>(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -200,6 +201,11 @@ const DoodlePage = () => {
       }
       
       setAiImage(data.imageUrl);
+      // Store the description if it exists in the response
+      if (data.description) {
+        setDoodleDescription(data.description);
+      }
+      
       toast.success(`${selectedStyle} image generated successfully!`);
       
       // Trigger sparkle confetti
@@ -233,7 +239,8 @@ const DoodlePage = () => {
           doodleImage: aiImage || doodleImage,
           doodleName,
           mode: 'video',
-          style: selectedStyle
+          style: selectedStyle,
+          prompt: doodleDescription
         }
       });
       
@@ -248,12 +255,12 @@ const DoodlePage = () => {
       setVideoDescription(data.description);
       toast.success("Video generated successfully!");
       
-      // Trigger rainbow confetti
+      // Trigger confetti celebration
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#ff0000', '#ff7700', '#ffff00', '#00ff00', '#0077ff', '#8800ff']
+        colors: ['#FF9F1C', '#2EC4B6', '#E71D36', '#FF4E50', '#FC913A']
       });
     } catch (error) {
       console.error("Error generating video:", error);
@@ -403,6 +410,13 @@ const DoodlePage = () => {
                     className="w-full h-auto" 
                   />
                 </div>
+                
+                {doodleDescription && (
+                  <div className="bg-amber-50 p-4 rounded-xl mb-4 border-2 border-amber-200">
+                    <h3 className="text-lg font-semibold text-amber-700 mb-2">What I See In Your Doodle:</h3>
+                    <p className="text-amber-800">{doodleDescription}</p>
+                  </div>
+                )}
                 
                 <div className="flex justify-center mt-4">
                   <Button
