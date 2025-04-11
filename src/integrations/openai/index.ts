@@ -10,7 +10,7 @@ const openai = new OpenAI({
 interface StoryElement {
   id: string;
   name: string;
-  type: 'character' | 'setting' | 'object';
+  type: 'character' | 'setting' | 'object' | 'storyStyle' | 'imageStyle';
   image: string;
 }
 
@@ -30,17 +30,19 @@ const imageCache: Record<string, string> = {};
  * @param setting The setting of the story
  * @param object The key object in the story
  * @param text The text content of the page
+ * @param imageStyle The style to apply to the image
  * @returns Promise that resolves to an image URL
  */
 async function generateImageForStoryPage(
   character: string,
   setting: string,
   object: string,
-  text: string
+  text: string,
+  imageStyle: string = 'Cartoon'
 ): Promise<string> {
   try {
     // Create a cache key based on the input parameters
-    const cacheKey = `${character}-${setting}-${object}-${text.substring(0, 50)}`;
+    const cacheKey = `${character}-${setting}-${object}-${imageStyle}-${text.substring(0, 50)}`;
     
     // Check if we have a cached image for this prompt
     if (imageCache[cacheKey]) {
@@ -48,8 +50,19 @@ async function generateImageForStoryPage(
       return imageCache[cacheKey];
     }
     
+    // Map image styles to descriptive terms for DALL-E
+    const styleDescriptions: Record<string, string> = {
+      'Cartoon': 'colorful, whimsical cartoon style with bold outlines and vibrant colors',
+      'Watercolor': 'soft watercolor painting style with flowing colors and gentle brush strokes',
+      'Pixel Art': 'retro pixel art style with visible pixels and limited color palette',
+      'Realistic': 'detailed realistic digital painting with attention to light and shadow',
+      'Comic Book': 'comic book style with bold lines, dynamic composition and bright colors'
+    };
+    
+    const styleDescription = styleDescriptions[imageStyle] || styleDescriptions['Cartoon'];
+    
     // Create a prompt for image generation
-    const prompt = `A children's book illustration showing a scene where a ${character} in a ${setting} with a ${object}. Scene description: ${text}. Style: colorful, whimsical, child-friendly illustration, digital art.`;
+    const prompt = `A children's book illustration showing a scene where a ${character} in a ${setting} with a ${object}. Scene description: ${text}. Style: ${styleDescription}.`;
 
     // Call the OpenAI API to generate an image
     const response = await openai.images.generate({
@@ -76,7 +89,7 @@ async function generateImageForStoryPage(
 
 /**
  * Generates a story based on selected elements
- * @param elements Array of story elements (character, setting, object)
+ * @param elements Array of story elements (character, setting, object, storyStyle, imageStyle)
  * @returns Promise that resolves to an array of story pages
  */
 export async function generateStory(elements: StoryElement[]): Promise<StoryPage[]> {
@@ -84,10 +97,24 @@ export async function generateStory(elements: StoryElement[]): Promise<StoryPage
     const character = elements.find(e => e.type === 'character')?.name || 'Hero';
     const setting = elements.find(e => e.type === 'setting')?.name || 'Kingdom';
     const object = elements.find(e => e.type === 'object')?.name || 'Treasure';
+    const storyStyle = elements.find(e => e.type === 'storyStyle')?.name || 'Fun';
+    const imageStyle = elements.find(e => e.type === 'imageStyle')?.name || 'Cartoon';
+
+    // Map story styles to tone instructions for GPT
+    const storyStyleInstructions: Record<string, string> = {
+      'Fun': 'Make the story light-hearted and playful. Include fun and silly moments that will make children laugh.',
+      'Adventure': 'Make the story exciting and action-packed. Include challenges the characters must overcome and a sense of exploration.',
+      'Comedy': 'Make the story humorous with funny situations, misunderstandings, and jokes appropriate for children.',
+      'Educational': 'Make the story both entertaining and educational. Include interesting facts or lessons related to the character, setting, or object.',
+      'Mystery': 'Make the story intriguing with a simple mystery to solve. Include clues that lead to a satisfying resolution.'
+    };
+    
+    const styleInstruction = storyStyleInstructions[storyStyle] || storyStyleInstructions['Fun'];
 
     // Create a prompt for the story generation
     const prompt = `Create a short children's story about a ${character} in a ${setting} who discovers a ${object}. 
-    The story should be educational, engaging, and appropriate for kids.
+    ${styleInstruction}
+    The story should be engaging and appropriate for kids.
     Structure the story into 3 distinct parts: beginning, middle, and end.
     Each part should be a separate paragraph of 2-3 sentences.`;
 
@@ -126,7 +153,7 @@ export async function generateStory(elements: StoryElement[]): Promise<StoryPage
     
     // Generate images in parallel for all paragraphs
     const imagePromises = paragraphs.map(text => 
-      generateImageForStoryPage(character, setting, object, text)
+      generateImageForStoryPage(character, setting, object, text, imageStyle)
     );
     
     // Wait for all image generations to complete

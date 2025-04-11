@@ -4,13 +4,20 @@ import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import ImageWithFallback from './ImageWithFallback';
 import { cn } from '@/lib/utils';
-import { Sparkles, Wand2 } from 'lucide-react';
+import { Sparkles, Wand2, ChevronDown } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Types for our story elements
 interface StoryElement {
   id: string;
   name: string;
-  type: 'character' | 'setting' | 'object';
+  type: 'character' | 'setting' | 'object' | 'storyStyle' | 'imageStyle';
   image: string;
 }
 
@@ -20,7 +27,7 @@ interface StoryGeneratorProps {
 
 const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
   const [selectedElements, setSelectedElements] = useState<StoryElement[]>([]);
-  const [activeCategory, setActiveCategory] = useState<'character' | 'setting' | 'object'>('character');
+  const [activeCategory, setActiveCategory] = useState<'character' | 'setting' | 'object' | 'storyStyle' | 'imageStyle'>('character');
 
   // Placeholder data for story elements
   const storyElements: Record<string, StoryElement[]> = {
@@ -47,6 +54,20 @@ const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
       { id: 'o4', name: 'Time Machine', type: 'object', image: '/images/time_machine.png' },
       { id: 'o5', name: 'Enchanted Book', type: 'object', image: '/images/enchanted_book.png' },
       { id: 'o6', name: 'Mystery Box', type: 'object', image: '/images/mysterybox.png' },
+    ],
+    storyStyle: [
+      { id: 'ss1', name: 'Fun', type: 'storyStyle', image: '/images/fun_style.png' },
+      { id: 'ss2', name: 'Adventure', type: 'storyStyle', image: '/images/adventure_style.png' },
+      { id: 'ss3', name: 'Comedy', type: 'storyStyle', image: '/images/comedy_style.png' },
+      { id: 'ss4', name: 'Educational', type: 'storyStyle', image: '/images/educational_style.png' },
+      { id: 'ss5', name: 'Mystery', type: 'storyStyle', image: '/images/mystery_style.png' },
+    ],
+    imageStyle: [
+      { id: 'is1', name: 'Cartoon', type: 'imageStyle', image: '/images/cartoon_style.png' },
+      { id: 'is2', name: 'Watercolor', type: 'imageStyle', image: '/images/watercolor_style.png' },
+      { id: 'is3', name: 'Pixel Art', type: 'imageStyle', image: '/images/pixel_art_style.png' },
+      { id: 'is4', name: 'Realistic', type: 'imageStyle', image: '/images/realistic_style.png' },
+      { id: 'is5', name: 'Comic Book', type: 'imageStyle', image: '/images/comic_style.png' },
     ],
   };
 
@@ -81,15 +102,32 @@ const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
     const randomCharacter = storyElements.character[Math.floor(Math.random() * storyElements.character.length)];
     const randomSetting = storyElements.setting[Math.floor(Math.random() * storyElements.setting.length)];
     const randomObject = storyElements.object[Math.floor(Math.random() * storyElements.object.length)];
+    const randomStoryStyle = storyElements.storyStyle[Math.floor(Math.random() * storyElements.storyStyle.length)];
+    const randomImageStyle = storyElements.imageStyle[Math.floor(Math.random() * storyElements.imageStyle.length)];
     
-    setSelectedElements([randomCharacter, randomSetting, randomObject]);
+    setSelectedElements([randomCharacter, randomSetting, randomObject, randomStoryStyle, randomImageStyle]);
     toast("Random elements selected!");
   };
 
   const handleGenerateStory = () => {
-    if (selectedElements.length < 3) {
+    const hasCharacter = selectedElements.some(e => e.type === 'character');
+    const hasSetting = selectedElements.some(e => e.type === 'setting');
+    const hasObject = selectedElements.some(e => e.type === 'object');
+    
+    if (!hasCharacter || !hasSetting || !hasObject) {
       toast.error("Please select at least one character, setting, and object!");
       return;
+    }
+    
+    // If no styles are selected, use default styles
+    if (!selectedElements.some(e => e.type === 'storyStyle')) {
+      const defaultStoryStyle = storyElements.storyStyle[0];
+      setSelectedElements([...selectedElements, defaultStoryStyle]);
+    }
+    
+    if (!selectedElements.some(e => e.type === 'imageStyle')) {
+      const defaultImageStyle = storyElements.imageStyle[0];
+      setSelectedElements([...selectedElements, defaultImageStyle]);
     }
     
     onGenerateStory(selectedElements);
@@ -163,22 +201,83 @@ const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
         })}
       </div>
       
-      {/* Category Tabs */}
-      <div className="flex border-b-4 border-amber-200">
-        {['character', 'setting', 'object'].map((category) => (
-          <button
-            key={category}
-            className={cn(
-              "flex-1 py-3 px-4 text-center transition-colors border-b-4 -mb-1 rounded-t-xl font-medium",
-              activeCategory === category 
-                ? "border-amber-500 text-amber-600 bg-amber-50" 
-                : "border-transparent text-muted-foreground hover:text-amber-600 hover:border-amber-200 hover:bg-amber-50/50"
-            )}
-            onClick={() => setActiveCategory(category as any)}
+      {/* Style Dropdowns */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Story Style Dropdown */}
+        <div className="flex flex-col space-y-2">
+          <label className="text-lg font-medium text-amber-600">Story Style</label>
+          <Select 
+            onValueChange={(value) => {
+              const style = storyElements.storyStyle.find(s => s.id === value);
+              if (style) {
+                handleSelectElement(style);
+              }
+            }}
+            value={selectedElements.find(e => e.type === 'storyStyle')?.id || ""}
           >
-            {category.charAt(0).toUpperCase() + category.slice(1)}s
-          </button>
-        ))}
+            <SelectTrigger className="bg-white border-2 border-amber-200 rounded-xl h-12">
+              <SelectValue placeholder="Select a story style" />
+            </SelectTrigger>
+            <SelectContent className="border-2 border-amber-200 rounded-xl">
+              {storyElements.storyStyle.map((style) => (
+                <SelectItem key={style.id} value={style.id} className="cursor-pointer">
+                  {style.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {/* Image Style Dropdown */}
+        <div className="flex flex-col space-y-2">
+          <label className="text-lg font-medium text-amber-600">Image Style</label>
+          <Select
+            onValueChange={(value) => {
+              const style = storyElements.imageStyle.find(s => s.id === value);
+              if (style) {
+                handleSelectElement(style);
+              }
+            }}
+            value={selectedElements.find(e => e.type === 'imageStyle')?.id || ""}
+          >
+            <SelectTrigger className="bg-white border-2 border-amber-200 rounded-xl h-12">
+              <SelectValue placeholder="Select an image style" />
+            </SelectTrigger>
+            <SelectContent className="border-2 border-amber-200 rounded-xl">
+              {storyElements.imageStyle.map((style) => (
+                <SelectItem key={style.id} value={style.id} className="cursor-pointer">
+                  {style.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
+      {/* Category Tabs - only show for main elements */}
+      <div className="flex border-b-4 border-amber-200">
+        {['character', 'setting', 'object'].map((category) => {
+          const displayName = {
+            character: 'Characters',
+            setting: 'Settings',
+            object: 'Objects',
+          }[category];
+          
+          return (
+            <button
+              key={category}
+              className={cn(
+                "flex-1 py-3 px-4 text-center transition-colors border-b-4 -mb-1 rounded-t-xl font-medium",
+                activeCategory === category 
+                  ? "border-amber-500 text-amber-600 bg-amber-50" 
+                  : "border-transparent text-muted-foreground hover:text-amber-600 hover:border-amber-200 hover:bg-amber-50/50"
+              )}
+              onClick={() => setActiveCategory(category as any)}
+            >
+              {displayName}
+            </button>
+          );
+        })}
       </div>
       
       {/* Element Selection Grid */}

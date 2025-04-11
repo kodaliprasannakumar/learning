@@ -14,7 +14,7 @@ import jsPDF from 'jspdf';
 interface StoryElement {
   id: string;
   name: string;
-  type: 'character' | 'setting' | 'object';
+  type: 'character' | 'setting' | 'object' | 'storyStyle' | 'imageStyle';
   image: string;
 }
 

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Style Placeholder Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    canvas {
+      border: 1px solid #ddd;
+      margin-bottom: 10px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    .style-card {
+      border: 1px solid #eee;
+      padding: 10px;
+      border-radius: 8px;
+      background: #f9f9f9;
+    }
+    button {
+      background: #f0b429;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    h2 {
+      color: #f0b429;
+    }
+  </style>
+</head>
+<body>
+  <h1>Style Placeholder Generator</h1>
+  <p>Click on each style to download the corresponding placeholder image.</p>
+  
+  <h2>Story Styles</h2>
+  <div class="grid">
+    <div class="style-card">
+      <canvas id="fun" width="300" height="100"></canvas>
+      <div>Fun</div>
+      <button onclick="downloadImage('fun', 'fun_style.png')">Download</button>
+    </div>
+    <div class="style-card">
+      <canvas id="adventure" width="300" height="100"></canvas>
+      <div>Adventure</div>
+      <button onclick="downloadImage('adventure', 'adventure_style.png')">Download</button>
+    </div>
+    <div class="style-card">
+      <canvas id="comedy" width="300" height="100"></canvas>
+      <div>Comedy</div>
+      <button onclick="downloadImage('comedy', 'comedy_style.png')">Download</button>
+    </div>
+    <div class="style-card">
+      <canvas id="educational" width="300" height="100"></canvas>
+      <div>Educational</div>
+      <button onclick="downloadImage('educational', 'educational_style.png')">Download</button>
+    </div>
+    <div class="style-card">
+      <canvas id="mystery" width="300" height="100"></canvas>
+      <div>Mystery</div>
+      <button onclick="downloadImage('mystery', 'mystery_style.png')">Download</button>
+    </div>
+  </div>
+  
+  <h2>Image Styles</h2>
+  <div class="grid">
+    <div class="style-card">
+      <canvas id="cartoon" width="300" height="100"></canvas>
+      <div>Cartoon</div>
+      <button onclick="downloadImage('cartoon', 'cartoon_style.png')">Download</button>
+    </div>
+    <div class="style-card">
+      <canvas id="watercolor" width="300" height="100"></canvas>
+      <div>Watercolor</div>
+      <button onclick="downloadImage('watercolor', 'watercolor_style.png')">Download</button>
+    </div>
+    <div class="style-card">
+      <canvas id="pixelart" width="300" height="100"></canvas>
+      <div>Pixel Art</div>
+      <button onclick="downloadImage('pixelart', 'pixel_art_style.png')">Download</button>
+    </div>
+    <div class="style-card">
+      <canvas id="realistic" width="300" height="100"></canvas>
+      <div>Realistic</div>
+      <button onclick="downloadImage('realistic', 'realistic_style.png')">Download</button>
+    </div>
+    <div class="style-card">
+      <canvas id="comic" width="300" height="100"></canvas>
+      <div>Comic Book</div>
+      <button onclick="downloadImage('comic', 'comic_style.png')">Download</button>
+    </div>
+  </div>
+
+  <script>
+    // Colors for each style
+    const styleColors = {
+      // Story styles
+      fun: ['#FFD166', '#EF476F', '#26C485'],
+      adventure: ['#F79824', '#1D3557', '#8AC926'],
+      comedy: ['#FF9F1C', '#2EC4B6', '#E71D36'],
+      educational: ['#3D5A80', '#98C1D9', '#293241'],
+      mystery: ['#540D6E', '#EE4266', '#3BCEAC'],
+      
+      // Image styles
+      cartoon: ['#FF8A5B', '#4ECDC4', '#F7FFF7'],
+      watercolor: ['#83C5BE', '#FFDDD2', '#006D77'],
+      pixelart: ['#2D1E2F', '#F72585', '#4CC9F0'],
+      realistic: ['#344E41', '#A3B18A', '#DAD7CD'],
+      comic: ['#F15BB5', '#FEE440', '#00BBF9'],
+    };
+
+    // Generate all placeholders on page load
+    window.onload = function() {
+      Object.keys(styleColors).forEach(style => {
+        drawStyleImage(style, styleColors[style]);
+      });
+    };
+
+    function drawStyleImage(id, colors) {
+      const canvas = document.getElementById(id);
+      const ctx = canvas.getContext('2d');
+      
+      // Background
+      ctx.fillStyle = colors[0];
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Style elements
+      ctx.fillStyle = colors[1];
+      ctx.beginPath();
+      ctx.arc(75, 50, 30, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = colors[2];
+      ctx.fillRect(150, 20, 100, 60);
+      
+      // Text
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 16px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(id.charAt(0).toUpperCase() + id.slice(1) + ' Style', 150, 60);
+    }
+
+    function downloadImage(id, filename) {
+      const canvas = document.getElementById(id);
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+  </script>
+</body>
+</html> 
