@@ -9,7 +9,7 @@ import {
   Pencil
 } from 'lucide-react';
 
-type StyleOption = "realistic" | "cartoon" | "watercolor" | "pixel" | "storybook" | "sketchy";
+type StyleOption = "cartoon" | "watercolor" | "pixel" | "storybook" | "sketchy";
 
 interface StyleSelectorProps {
   onStyleSelect: (style: StyleOption) => void;
@@ -23,12 +23,6 @@ const StyleSelector = ({ onStyleSelect, selectedStyle }: StyleSelectorProps) => 
     icon: React.ReactNode;
     description: string;
   }> = [
-    {
-      id: "realistic",
-      name: "Realistic",
-      icon: <ImageIcon className="h-5 w-5" />,
-      description: "Detailed and lifelike"
-    },
     {
       id: "cartoon",
       name: "Cartoon",

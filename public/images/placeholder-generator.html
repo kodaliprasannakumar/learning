@@ -91,14 +91,19 @@
       <button onclick="downloadImage('pixelart', 'pixel_art_style.png')">Download</button>
     </div>
     <div class="style-card">
-      <canvas id="realistic" width="300" height="100"></canvas>
-      <div>Realistic</div>
-      <button onclick="downloadImage('realistic', 'realistic_style.png')">Download</button>
-    </div>
-    <div class="style-card">
       <canvas id="comic" width="300" height="100"></canvas>
       <div>Comic Book</div>
       <button onclick="downloadImage('comic', 'comic_style.png')">Download</button>
+    </div>
+    <div class="style-card">
+      <canvas id="digitalart" width="300" height="100"></canvas>
+      <div>Digital Art</div>
+      <button onclick="downloadImage('digitalart', 'digital_art_style.png')">Download</button>
+    </div>
+    <div class="style-card">
+      <canvas id="3drender" width="300" height="100"></canvas>
+      <div>3D Render</div>
+      <button onclick="downloadImage('3drender', '3d_render_style.png')">Download</button>
     </div>
   </div>
 
@@ -116,8 +121,9 @@
       cartoon: ['#FF8A5B', '#4ECDC4', '#F7FFF7'],
       watercolor: ['#83C5BE', '#FFDDD2', '#006D77'],
       pixelart: ['#2D1E2F', '#F72585', '#4CC9F0'],
-      realistic: ['#344E41', '#A3B18A', '#DAD7CD'],
       comic: ['#F15BB5', '#FEE440', '#00BBF9'],
+      digitalart: ['#3A86FF', '#FF006E', '#FFBE0B'],
+      '3drender': ['#5E60CE', '#64DFDF', '#FB5607']
     };
 
     // Generate all placeholders on page load

@@ -66,8 +66,9 @@ const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
       { id: 'is1', name: 'Cartoon', type: 'imageStyle', image: '/images/cartoon_style.png' },
       { id: 'is2', name: 'Watercolor', type: 'imageStyle', image: '/images/watercolor_style.png' },
       { id: 'is3', name: 'Pixel Art', type: 'imageStyle', image: '/images/pixel_art_style.png' },
-      { id: 'is4', name: 'Realistic', type: 'imageStyle', image: '/images/realistic_style.png' },
       { id: 'is5', name: 'Comic Book', type: 'imageStyle', image: '/images/comic_style.png' },
+      { id: 'is6', name: 'Digital Art', type: 'imageStyle', image: '/images/digital_art_style.png' },
+      { id: 'is7', name: '3D Render', type: 'imageStyle', image: '/images/3d_render_style.png' },
     ],
   };
 

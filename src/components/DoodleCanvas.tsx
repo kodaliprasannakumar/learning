@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 
 interface DoodleCanvasProps {
-  onDoodleComplete: (imageDataUrl: string, doodleName: string) => void;
+  onDoodleComplete: (imageDataUrl: string) => void;
 }
 
 // Brush types
@@ -22,7 +22,6 @@ const DoodleCanvas = ({ onDoodleComplete }: DoodleCanvasProps) => {
   const [lineWidth, setLineWidth] = useState(5);
   const [canUndo, setCanUndo] = useState(false);
   const [canClear, setCanClear] = useState(false);
-  const [doodleName, setDoodleName] = useState('');
   const [brushType, setBrushType] = useState<BrushType>('normal');
   
   const historyRef = useRef<ImageData[]>([]);
@@ -247,17 +246,12 @@ const DoodleCanvas = ({ onDoodleComplete }: DoodleCanvasProps) => {
   };
 
   const handleComplete = () => {
-    if (!doodleName.trim()) {
-      toast.error("Please name your doodle first!");
-      return;
-    }
-
     const canvas = canvasRef.current;
     if (!canvas) return;
     
     // Get data URL from canvas
     const dataUrl = canvas.toDataURL('image/png');
-    onDoodleComplete(dataUrl, doodleName);
+    onDoodleComplete(dataUrl);
     toast.success("Doodle saved!");
   };
   
@@ -267,7 +261,7 @@ const DoodleCanvas = ({ onDoodleComplete }: DoodleCanvasProps) => {
     
     const dataUrl = canvas.toDataURL('image/png');
     const link = document.createElement('a');
-    link.download = `${doodleName || 'doodle'}.png`;
+    link.download = 'doodle.png';
     link.href = dataUrl;
     document.body.appendChild(link);
     link.click();
@@ -307,17 +301,6 @@ const DoodleCanvas = ({ onDoodleComplete }: DoodleCanvasProps) => {
   return (
     <div className="flex flex-col space-y-6 animate-fade-in">
       <Card className="p-6 border-4 border-kid-blue/20 bg-gradient-to-br from-kid-blue/5 to-indigo-50 rounded-2xl shadow-lg">
-        <div className="mb-5">
-          <Label htmlFor="doodle-name" className="text-lg font-semibold mb-2 block text-kid-blue">Name your masterpiece</Label>
-          <Input
-            id="doodle-name"
-            placeholder="What are you drawing today?"
-            value={doodleName}
-            onChange={(e) => setDoodleName(e.target.value)}
-            className="w-full text-base p-3 border-2 border-kid-blue/40 focus:border-kid-blue rounded-xl"
-          />
-        </div>
-        
         <div className="mb-5">
           <Tabs defaultValue="colors" className="w-full">
             <TabsList className="grid w-full grid-cols-2 p-1 bg-white/80 rounded-xl">

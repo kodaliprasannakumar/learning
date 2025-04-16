@@ -55,8 +55,9 @@ async function generateImageForStoryPage(
       'Cartoon': 'colorful, whimsical cartoon style with bold outlines and vibrant colors',
       'Watercolor': 'soft watercolor painting style with flowing colors and gentle brush strokes',
       'Pixel Art': 'retro pixel art style with visible pixels and limited color palette',
-      'Realistic': 'detailed realistic digital painting with attention to light and shadow',
-      'Comic Book': 'comic book style with bold lines, dynamic composition and bright colors'
+      'Comic Book': 'comic book style with bold lines, dynamic composition and bright colors',
+      'Digital Art': 'modern digital art with vibrant colors, smooth gradients, and clean lines',
+      '3D Render': '3D rendered illustration with depth, lighting effects, and polished surfaces'
     };
     
     const styleDescription = styleDescriptions[imageStyle] || styleDescriptions['Cartoon'];

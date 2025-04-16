@@ -14,11 +14,10 @@ import { useCreditSystem } from '@/hooks/useCreditSystem';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
 
-type StyleOption = "realistic" | "cartoon" | "watercolor" | "pixel" | "storybook" | "sketchy";
+type StyleOption = "cartoon" | "watercolor" | "pixel" | "storybook" | "sketchy";
 
 const DoodlePage = () => {
   const [doodleImage, setDoodleImage] = useState<string | null>(null);
-  const [doodleName, setDoodleName] = useState<string>('');
   const [aiImage, setAiImage] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoDescription, setVideoDescription] = useState<string | null>(null);
@@ -35,9 +34,8 @@ const DoodlePage = () => {
   // Add credit confirmation state
   const [showCreditConfirm, setShowCreditConfirm] = useState(false);
 
-  const handleDoodleComplete = (imageDataUrl: string, name: string) => {
+  const handleDoodleComplete = (imageDataUrl: string) => {
     setDoodleImage(imageDataUrl);
-    setDoodleName(name);
     setAiImage(null);
     setVideoUrl(null);
     setVideoDescription(null);
@@ -150,7 +148,7 @@ const DoodlePage = () => {
           user_id: user.id,
           image_url: aiImageUrl || imageUrl, // Prefer AI image if available
           video_url: processedVideoUrl,
-          title: doodleName || `Doodle ${new Date().toLocaleDateString()}`,
+          title: `Doodle ${new Date().toLocaleDateString()}`,
         })
         .select();
       
@@ -204,6 +202,19 @@ const DoodlePage = () => {
       return;
     }
     
+    // Check if we have enough credits and deduct them
+    if (credits < 5) {
+      toast.error(`Not enough credits. You need 5 credits to generate an image. You have ${credits} credits.`);
+      return;
+    }
+    
+    // First spend the credits
+    const success = await spendCredits(5, "Generate AI image");
+    if (!success) {
+      toast.error("Transaction failed. Could not process credit transaction.");
+      return;
+    }
+    
     setIsGeneratingImage(true);
     toast.info(`Generating ${selectedStyle} image from your doodle...`);
     
@@ -211,7 +222,6 @@ const DoodlePage = () => {
       const { data, error } = await supabase.functions.invoke('generate-media', {
         body: {
           doodleImage,
-          doodleName,
           mode: 'image',
           style: selectedStyle
         }
@@ -261,7 +271,6 @@ const DoodlePage = () => {
       const { data, error } = await supabase.functions.invoke('generate-media', {
         body: {
           doodleImage: aiImage || doodleImage,
-          doodleName,
           mode: 'video',
           style: selectedStyle,
           prompt: doodleDescription
@@ -296,7 +305,6 @@ const DoodlePage = () => {
 
   const handleNewDoodle = () => {
     setDoodleImage(null);
-    setDoodleName('');
     setAiImage(null);
     setVideoUrl(null);
     setVideoDescription(null);
@@ -351,13 +359,13 @@ const DoodlePage = () => {
           >
             <Card className="p-4 shadow-md border-kid-blue/20 hover:shadow-lg transition-shadow overflow-hidden">
               <div className="text-center mb-3">
-                <h2 className="text-xl font-semibold text-foreground">{doodleName || "Your Doodle"}</h2>
+                <h2 className="text-xl font-semibold text-foreground">Your Doodle</h2>
               </div>
               
               <div className="rounded-md overflow-hidden border border-muted">
                 <img 
                   src={doodleImage} 
-                  alt={doodleName || "Your doodle"} 
+                  alt="Your doodle" 
                   className="w-full h-auto" 
                 />
               </div>

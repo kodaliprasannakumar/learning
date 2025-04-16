@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { doodleImage, doodleName, mode, style = "realistic", prompt, max_tokens = 300 } = await req.json();
+    const { doodleImage, mode, style = "cartoon", prompt, max_tokens = 300 } = await req.json();
 
     // Get OpenAI API key from environment variable
     const openAiApiKey = Deno.env.get("OPENAI_API_KEY");
@@ -91,7 +91,7 @@ serve(async (req) => {
           stylePrompt = "as a refined pencil sketch with detailed shading and texture";
           break;
         default:
-          stylePrompt = "in a realistic detailed style";
+          stylePrompt = "in a colorful cartoon style with bold outlines and vibrant colors";
       }
 
       // Generate styled image using the actual doodle as input
@@ -116,7 +116,7 @@ serve(async (req) => {
               content: [
                 { 
                   type: "text", 
-                  text: `Analyze this child's drawing and describe what you see in detail. The child says it's "${doodleName || "a drawing"}"` 
+                  text: "Analyze this child's drawing and describe what you see in detail." 
                 },
                 { 
                   type: "image_url", 
@@ -183,9 +183,9 @@ serve(async (req) => {
     } 
     else if (mode === "video") {
       // Validate doodle image for video generation
-      if (!doodleImage && !doodleName) {
+      if (!doodleImage) {
         return new Response(
-          JSON.stringify({ error: "No doodle image or name provided" }),
+          JSON.stringify({ error: "No doodle image provided" }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
         );
       }
@@ -215,7 +215,7 @@ serve(async (req) => {
                   content: [
                     { 
                       type: "text", 
-                      text: `Analyze this child's drawing and describe what you see in detail. The child says it's "${doodleName || "a drawing"}"` 
+                      text: "Analyze this child's drawing and describe what you see in detail." 
                     },
                     { 
                       type: "image_url", 
@@ -250,7 +250,7 @@ serve(async (req) => {
       // Use OpenAI to create a short description and then generate a video
       const videoPrompt = description ? 
         `Create a short description for a lively, animated 8-second video about this drawing: ${description}. The video should be engaging for children. Focus on movements and actions.` :
-        `Create a short description for a lively, animated 8-second video about ${doodleName || "this drawing"}. The video should be engaging for children. Focus on movements and actions.`;
+        `Create a short description for a lively, animated 8-second video about this drawing. The video should be engaging for children. Focus on movements and actions.`;
       
       console.log("Generating video description with prompt:", videoPrompt);
       
@@ -284,7 +284,7 @@ serve(async (req) => {
       // Now use the description to generate a video with the Playground API
       try {
         // Generate a video using DALL-E 3 image as a base
-        const videoGenPrompt = `Create a fun, animated video for children about ${doodleName}. ${videoDescription}`;
+        const videoGenPrompt = `Create a fun, animated video for children. ${videoDescription}`;
         
         // For now, since direct video generation API is not available, we'll provide
         // an enhanced image with movement suggestion
