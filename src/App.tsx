@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import DoodlePage from "./pages/DoodlePage";
 import StoryPage from "./pages/StoryPage";
 import PuzzlePage from "./pages/PuzzlePage";
+import QuotePage from "./pages/QuotePage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 import Header from "./components/Header";
@@ -43,6 +44,11 @@ const AppRoutes = () => {
       <Route path="/puzzle" element={
         <ProtectedRoute>
           <PuzzlePage />
+        </ProtectedRoute>
+      } />
+      <Route path="/quote" element={
+        <ProtectedRoute>
+          <QuotePage />
         </ProtectedRoute>
       } />
       <Route path="/auth" element={<AuthPage />} />
