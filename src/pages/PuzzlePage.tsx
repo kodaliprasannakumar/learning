@@ -1,16 +1,31 @@
-
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import PuzzleGame from '@/components/PuzzleGame';
 import { useAuth } from '@/hooks/useAuth';
-import { Puzzle, Lightbulb, Sparkles } from 'lucide-react';
+import { Puzzle, Lightbulb, Sparkles, Coins } from 'lucide-react';
+import { useCreditSystem } from '@/hooks/useCreditSystem';
+import { toast } from '@/components/ui/use-toast';
+
+// Credit rewards
+const PUZZLE_COMPLETION_REWARD = 3;
 
 const PuzzlePage = () => {
   const [response, setResponse] = useState<string | null>(null);
   const { user } = useAuth();
+  const { earnCredits } = useCreditSystem();
 
-  const handlePuzzleComplete = (aiResponse: string) => {
+  const handlePuzzleComplete = async (aiResponse: string) => {
     setResponse(aiResponse);
+    
+    // Reward credits for completion
+    const success = await earnCredits(PUZZLE_COMPLETION_REWARD, "Completed a puzzle");
+    if (success) {
+      toast({
+        title: "Great job!",
+        description: `You earned ${PUZZLE_COMPLETION_REWARD} credits for completing the puzzle!`,
+        variant: "default",
+      });
+    }
   };
 
   return (
@@ -60,6 +75,17 @@ const PuzzlePage = () => {
             <Sparkles className="h-6 w-6 text-amber-500 animate-pulse-soft" />
           </div>
         </Card>
+      </div>
+      
+      {/* Add credit information somewhere in your UI */}
+      <div className="mt-4 p-4 bg-purple-50 border border-purple-100 rounded-lg">
+        <h3 className="text-lg font-medium text-purple-700 flex items-center gap-2">
+          <Coins className="h-5 w-5 text-purple-600" />
+          Puzzle Rewards
+        </h3>
+        <p className="text-sm text-purple-600 mt-1">
+          Complete puzzles correctly to earn {PUZZLE_COMPLETION_REWARD} credits each time!
+        </p>
       </div>
     </div>
   );

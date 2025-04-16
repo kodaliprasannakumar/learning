@@ -9,6 +9,9 @@ import { generateStory } from '@/integrations/openai';
 import { speak, stopSpeaking, isSpeaking } from '@/lib/textToSpeech';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { useCreditSystem } from '@/hooks/useCreditSystem';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
+import { Coins } from 'lucide-react';
 
 // Types for our story elements
 interface StoryElement {
@@ -23,6 +26,11 @@ interface StoryPage {
   image: string;
 }
 
+// Credit costs constants
+const GENERATE_STORY_COST = 5;
+const GENERATE_ILLUSTRATION_COST = 3;
+const STORY_REWARD = 3;
+
 const StoryPage = () => {
   const [selectedElements, setSelectedElements] = useState<StoryElement[]>([]);
   const [storyPages, setStoryPages] = useState<StoryPage[]>([]);
@@ -33,6 +41,9 @@ const StoryPage = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isReading, setIsReading] = useState(false);
   const stopSpeakingRef = useRef<(() => void) | null>(null);
+  const { earnCredits, spendCredits, credits } = useCreditSystem();
+  const [showStoryConfirm, setShowStoryConfirm] = useState(false);
+  const [showIllustrationConfirm, setShowIllustrationConfirm] = useState(false);
 
   // Clean up speech when component unmounts
   useEffect(() => {
@@ -62,12 +73,28 @@ const StoryPage = () => {
     setError(null);
     
     try {
+      // Check if we have enough credits
+      if (credits < GENERATE_STORY_COST) {
+        toast.error(`Not enough credits. You need ${GENERATE_STORY_COST} credits to generate a story. You have ${credits} credits.`);
+        return;
+      }
+      
+      // First spend the credits
+      const success = await spendCredits(GENERATE_STORY_COST, "Generate a story");
+      if (!success) {
+        toast.error("Transaction failed. Could not process credit transaction.");
+        setIsGenerating(false);
+        return;
+      }
+      
       // Use the OpenAI API to generate the story
       const generatedStory = await generateStory(elements);
       
       setStoryPages(generatedStory);
       setCurrentPage(0);
       toast.success("Your story has been created!");
+      
+      // Remove credit earning functionality as per user request
     } catch (err) {
       console.error("Error generating story:", err);
       setError("Failed to generate story. Please try again.");
@@ -239,6 +266,25 @@ const StoryPage = () => {
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  // Handlers for confirmation dialogs
+  const handleGenerateStoryClick = () => {
+    if (credits < GENERATE_STORY_COST) {
+      toast.error(`Not enough credits. You need ${GENERATE_STORY_COST} credits to generate a story. You have ${credits} credits.`);
+      return;
+    }
+    
+    setShowStoryConfirm(true);
+  };
+  
+  const handleGenerateIllustrationClick = () => {
+    if (credits < GENERATE_ILLUSTRATION_COST) {
+      toast.error(`Not enough credits. You need ${GENERATE_ILLUSTRATION_COST} credits to generate an illustration. You have ${credits} credits.`);
+      return;
+    }
+    
+    setShowIllustrationConfirm(true);
   };
 
   return (
@@ -472,6 +518,69 @@ const StoryPage = () => {
           />
         </div>
       </div>
+      
+      {/* Credit confirmation dialogs */}
+      <AlertDialog open={showStoryConfirm} onOpenChange={setShowStoryConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Story Generation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Generating a story will cost <span className="font-semibold text-amber-600">{GENERATE_STORY_COST} credits</span>.
+              You currently have {credits} credits.
+              
+              <div className="mt-4 p-3 bg-amber-50 rounded-lg">
+                <p className="text-sm text-amber-700">
+                  The AI will create a complete story based on your inputs!
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowStoryConfirm(false);
+                handleGenerateStory(selectedElements);
+              }}
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+            >
+              <Coins className="h-4 w-4 mr-2" />
+              Spend {GENERATE_STORY_COST} Credits
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      <AlertDialog open={showIllustrationConfirm} onOpenChange={setShowIllustrationConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Illustration Generation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Generating an illustration will cost <span className="font-semibold text-amber-600">{GENERATE_ILLUSTRATION_COST} credits</span>.
+              You currently have {credits} credits.
+              
+              <div className="mt-4 p-3 bg-amber-50 rounded-lg">
+                <p className="text-sm text-amber-700">
+                  The AI will create a beautiful illustration for your story!
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowIllustrationConfirm(false);
+                handleGenerateStory(selectedElements);
+              }}
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+            >
+              <Coins className="h-4 w-4 mr-2" />
+              Spend {GENERATE_ILLUSTRATION_COST} Credits
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -7,9 +7,12 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Wand2, Brush, ArrowLeft, Save, ArrowRight, Sparkles } from 'lucide-react';
+import { Loader2, Wand2, Brush, ArrowLeft, Save, ArrowRight, Sparkles, Coins } from 'lucide-react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import { useCreditSystem } from '@/hooks/useCreditSystem';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
+import { useToast } from '@/components/ui/use-toast';
 
 type StyleOption = "realistic" | "cartoon" | "watercolor" | "pixel" | "storybook" | "sketchy";
 
@@ -26,6 +29,11 @@ const DoodlePage = () => {
   const [selectedStyle, setSelectedStyle] = useState<StyleOption>("cartoon");
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { earnCredits, spendCredits, credits } = useCreditSystem();
+  const { toast: useToastToast } = useToast();
+
+  // Add credit confirmation state
+  const [showCreditConfirm, setShowCreditConfirm] = useState(false);
 
   const handleDoodleComplete = (imageDataUrl: string, name: string) => {
     setDoodleImage(imageDataUrl);
@@ -166,6 +174,22 @@ const DoodlePage = () => {
         navigate('/');
       }, 1500);
       
+      // After successful save, reward credits
+      const success = await earnCredits(2, "Saved a doodle");
+      if (success) {
+        useToastToast({
+          title: "Doodle saved successfully!",
+          description: "You earned 2 credits for saving your creation!",
+          variant: "default",
+        });
+      } else {
+        useToastToast({
+          title: "Doodle saved successfully!",
+          description: "Your creation has been saved.",
+          variant: "default",
+        });
+      }
+      
     } catch (error) {
       console.error("Error saving doodle:", error);
       toast.error("Failed to save doodle. Please try again.");
@@ -278,6 +302,20 @@ const DoodlePage = () => {
     setVideoDescription(null);
   };
 
+  // Add a confirmation check before generating
+  const handleGenerateClick = () => {
+    if (credits < 5) {
+      useToastToast({
+        title: "Not enough credits",
+        description: "You need 5 credits to generate an image. You have " + credits + " credits.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setShowCreditConfirm(true);
+  };
+
   return (
     <div className="container mx-auto px-4 py-12 max-w-9xl">
       <motion.div 
@@ -369,7 +407,7 @@ const DoodlePage = () => {
               
               <div className="flex justify-center mt-5">
                 <Button
-                  onClick={handleGenerateRealisticImage}
+                  onClick={handleGenerateClick}
                   disabled={isGeneratingImage || !doodleImage}
                   className="bg-gradient-to-r from-kid-purple to-kid-blue text-white hover:opacity-90 transition-opacity"
                 >
@@ -486,6 +524,37 @@ const DoodlePage = () => {
           </motion.div>
         </div>
       )}
+
+      <AlertDialog open={showCreditConfirm} onOpenChange={setShowCreditConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Image Generation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Generating an AI image will cost <span className="font-semibold text-amber-600">5 credits</span>.
+              You currently have {credits} credits.
+              
+              <div className="mt-4 p-3 bg-purple-50 rounded-lg">
+                <p className="text-sm text-purple-700">
+                  The AI will transform your doodle into a detailed illustration!
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowCreditConfirm(false);
+                handleGenerateRealisticImage();
+              }}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              <Coins className="h-4 w-4 mr-2" />
+              Spend 5 Credits
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

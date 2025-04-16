@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/hooks/useAuth';
-import { Palette, Video, BookOpen, Puzzle, LogOut, LogIn, Menu, X, Lightbulb } from 'lucide-react';
+import { Palette, Video, BookOpen, Puzzle, LogOut, LogIn, Menu, X, Lightbulb, Coins } from 'lucide-react';
 import { CreditDisplay } from './CreditDisplay';
 
 const Header: React.FC = () => {
@@ -103,6 +103,20 @@ const Header: React.FC = () => {
                 </div>
                 <span className="font-medium">Quotes</span>
               </Link>
+              
+              <Link 
+                to="/credits" 
+                className={`flex flex-col items-center text-sm text-foreground transition-all duration-200 ${
+                  isActive('/credits') 
+                    ? 'text-amber-600 font-medium scale-110' 
+                    : 'hover:text-amber-600 hover:scale-105'
+                }`}
+              >
+                <div className={`p-2.5 rounded-full mb-1.5 ${isActive('/credits') ? 'bg-amber-500/10' : 'hover:bg-amber-500/5'}`}>
+                  <Coins className={`h-6 w-6 ${isActive('/credits') ? 'text-amber-500' : ''}`} />
+                </div>
+                <span className="font-medium">Credits</span>
+              </Link>
             </div>
           </nav>
           
@@ -201,6 +215,19 @@ const Header: React.FC = () => {
               >
                 <Lightbulb className={`h-5 w-5 ${isActive('/quote') ? 'text-amber-500' : ''}`} />
                 <span>Quotes</span>
+              </Link>
+              
+              <Link 
+                to="/credits" 
+                className={`flex items-center gap-3 p-2.5 rounded-lg transition-colors ${
+                  isActive('/credits') 
+                    ? 'bg-amber-500/10 text-amber-500 font-medium' 
+                    : 'hover:bg-amber-500/5 hover:text-amber-500'
+                }`}
+                onClick={closeMenu}
+              >
+                <Coins className={`h-5 w-5 ${isActive('/credits') ? 'text-amber-500' : ''}`} />
+                <span>Credits</span>
               </Link>
               
               {user && (
