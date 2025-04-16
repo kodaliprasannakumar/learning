@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { Confetti } from "@/components/Confetti";
-import { Lightbulb, RefreshCw, CheckCircle, BookOpen } from "lucide-react";
+import { Lightbulb, RefreshCw, CheckCircle, BookOpen, Coins } from "lucide-react";
+import { useCreditSystem } from "@/hooks/useCreditSystem";
 
 // Define a type for our quotes
 interface Quote {
@@ -14,6 +15,7 @@ interface Quote {
 
 export default function QuotePage() {
   const { toast } = useToast();
+  const { earnCredits, spendCredits, credits } = useCreditSystem();
   const [isLoading, setIsLoading] = useState(false);
   const [isExplanationLoading, setIsExplanationLoading] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -24,6 +26,11 @@ export default function QuotePage() {
   const [isCorrect, setIsCorrect] = useState(false);
   const [wordSuggestions, setWordSuggestions] = useState<string[]>([]);
   const [explanation, setExplanation] = useState<string | null>(null);
+  const [showExplanation, setShowExplanation] = useState(false);
+
+  // Credit costs
+  const CORRECT_ANSWER_REWARD = 2;
+  const EXPLANATION_COST = 2;
 
   // Demo quotes array - in a real app, these would come from an API
   const demoQuotes: Quote[] = [
@@ -66,9 +73,34 @@ export default function QuotePage() {
 
   // Get AI explanation for the quote
   const getQuoteExplanation = async (quoteText: string, author: string) => {
+    // Check if user has enough credits for explanation if not already showing it
+    if (!showExplanation && credits < EXPLANATION_COST) {
+      toast({
+        title: "Not enough credits",
+        description: `You need ${EXPLANATION_COST} credits to get an explanation. You have ${credits} credits.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsExplanationLoading(true);
     
     try {
+      // If not already showing explanation, charge for it
+      if (!showExplanation) {
+        const success = await spendCredits(EXPLANATION_COST, "Quote explanation");
+        if (!success) {
+          toast({
+            title: "Transaction failed",
+            description: "Could not process credit transaction.",
+            variant: "destructive"
+          });
+          setIsExplanationLoading(false);
+          return;
+        }
+        setShowExplanation(true);
+      }
+
       // In a real app, this would be an API call to an AI service
       // For demo purposes, we'll simulate a response with timeout
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -108,6 +140,7 @@ export default function QuotePage() {
     setUserInput("");
     setExplanation(null);
     setWordSuggestions([]);
+    setShowExplanation(false);
 
     try {
       // In a real app, fetch from API - using demo data for now
@@ -161,7 +194,7 @@ export default function QuotePage() {
     }
   };
 
-  const checkAnswer = () => {
+  const checkAnswer = async () => {
     if (!hiddenPart || !quote) return;
     
     const isAnswerCorrect = userInput.trim().toLowerCase() === hiddenPart.text.toLowerCase();
@@ -169,14 +202,22 @@ export default function QuotePage() {
     if (isAnswerCorrect) {
       setIsCorrect(true);
       setShowConfetti(true);
-      toast({
-        title: "Great job! 🎉",
-        description: "You completed the quote correctly!",
-        variant: "default"
-      });
       
-      // Get AI explanation for the quote
-      getQuoteExplanation(quote.text, quote.author);
+      // Award credits for correct answer
+      const success = await earnCredits(CORRECT_ANSWER_REWARD, "Completed quote correctly");
+      if (success) {
+        toast({
+          title: "Great job! 🎉",
+          description: `You earned ${CORRECT_ANSWER_REWARD} credits for completing the quote correctly!`,
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Great job! 🎉",
+          description: "You completed the quote correctly!",
+          variant: "default"
+        });
+      }
       
       setTimeout(() => {
         setShowConfetti(false);
@@ -249,11 +290,6 @@ export default function QuotePage() {
         <div className="border-4 border-amber-400/30 bg-gradient-to-br from-amber-50 to-amber-100/50 p-8 rounded-2xl shadow-lg">
           {imageUrl && (
             <div className="mb-8 flex justify-center">
-              {/* <img 
-                src={imageUrl} 
-                alt="Quote illustration"
-                className="rounded-lg shadow-md max-h-[300px] object-cover"
-              /> */}
             </div>
           )}
           
@@ -295,16 +331,33 @@ export default function QuotePage() {
                 <CheckCircle className="mr-2 h-5 w-5" /> Check Answer
               </Button>
             ) : (
-              <Button 
-                onClick={fetchNewQuote}
-                className="bg-amber-500 hover:bg-amber-600 text-white py-6 text-lg flex-1"
-              >
-                <RefreshCw className="mr-2 h-5 w-5" /> Try Another Quote
-              </Button>
+              <>
+                <Button 
+                  onClick={fetchNewQuote}
+                  className="bg-amber-500 hover:bg-amber-600 text-white py-6 text-lg flex-1"
+                >
+                  <RefreshCw className="mr-2 h-5 w-5" /> Try Another Quote
+                </Button>
+                
+                {!showExplanation && (
+                  <Button 
+                    onClick={() => getQuoteExplanation(quote.text, quote.author)}
+                    className="bg-purple-600 hover:bg-purple-700 text-white py-6 text-lg flex-1"
+                    disabled={credits < EXPLANATION_COST}
+                  >
+                    <BookOpen className="mr-2 h-5 w-5" /> 
+                    Get Explanation 
+                    <div className="flex items-center ml-2 bg-white/20 rounded-full px-2 py-0.5 text-sm">
+                      <Coins className="h-3 w-3 mr-1" />
+                      {EXPLANATION_COST}
+                    </div>
+                  </Button>
+                )}
+              </>
             )}
           </div>
           
-          {isCorrect && (
+          {isCorrect && showExplanation && (
             <div className="mt-8 p-6 bg-white/80 backdrop-blur-sm rounded-xl border-2 border-green-100 shadow-md">
               <div className="flex items-center gap-3 mb-4">
                 <BookOpen className="h-6 w-6 text-green-600" />
@@ -327,44 +380,43 @@ export default function QuotePage() {
         </div>
         
         <div className="mt-10 p-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-md">
-          <h2 className="text-2xl font-bold mb-4 text-amber-700">Why Daily Quotes Matter</h2>
+          <h2 className="text-2xl font-bold mb-2 text-amber-700">
+            Daily Wisdom Credits
+          </h2>
           <p className="text-muted-foreground mb-4">
-            Inspirational quotes can help kids develop:
+            Earn and spend credits while improving your wisdom:
           </p>
-          <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <li className="flex items-start gap-2">
-              <div className="bg-green-100 rounded-full p-1 mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20 6L9 17l-5-5" />
-                </svg>
-              </div>
-              <span>A positive mindset and outlook on challenges</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <div className="bg-green-100 rounded-full p-1 mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20 6L9 17l-5-5" />
-                </svg>
-              </div>
-              <span>Emotional intelligence and self-awareness</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <div className="bg-green-100 rounded-full p-1 mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20 6L9 17l-5-5" />
-                </svg>
-              </div>
-              <span>Improved vocabulary and language skills</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <div className="bg-green-100 rounded-full p-1 mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20 6L9 17l-5-5" />
-                </svg>
-              </div>
-              <span>Critical thinking and reflection abilities</span>
-            </li>
-          </ul>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-green-50 border border-green-100 rounded-lg p-4">
+              <h3 className="text-lg font-medium mb-2 text-green-700 flex items-center gap-2">
+                <Coins className="h-5 w-5 text-green-600" />
+                Earn Credits
+              </h3>
+              <ul className="space-y-2">
+                <li className="flex justify-between text-sm">
+                  <span>Complete a quote correctly</span>
+                  <span className="font-bold text-green-600">+{CORRECT_ANSWER_REWARD}</span>
+                </li>
+                <li className="flex justify-between text-sm">
+                  <span>Daily login bonus</span>
+                  <span className="font-bold text-green-600">+5</span>
+                </li>
+              </ul>
+            </div>
+            
+            <div className="bg-amber-50 border border-amber-100 rounded-lg p-4">
+              <h3 className="text-lg font-medium mb-2 text-amber-700 flex items-center gap-2">
+                <Coins className="h-5 w-5 text-amber-600" />
+                Spend Credits
+              </h3>
+              <ul className="space-y-2">
+                <li className="flex justify-between text-sm">
+                  <span>Get quote explanation</span>
+                  <span className="font-bold text-amber-700">-{EXPLANATION_COST}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </div>

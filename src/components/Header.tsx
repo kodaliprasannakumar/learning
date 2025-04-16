@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/hooks/useAuth';
-import { Palette, Video, BookOpen, Puzzle, LogOut, LogIn, Menu, X } from 'lucide-react';
+import { Palette, Video, BookOpen, Puzzle, LogOut, LogIn, Menu, X, Lightbulb } from 'lucide-react';
+import { CreditDisplay } from './CreditDisplay';
 
 const Header: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -46,7 +47,7 @@ const Header: React.FC = () => {
           
           {/* Navigation - Center column (hidden on mobile) */}
           <nav className="hidden md:flex flex-1 justify-center">
-            <div className="flex items-center gap-8 md:gap-14 bg-white/50 backdrop-blur-sm rounded-full px-8 py-3 shadow-sm">
+            <div className="flex items-center gap-8 md:gap-10 bg-white/50 backdrop-blur-sm rounded-full px-8 py-3 shadow-sm">
               <Link 
                 to="/doodle" 
                 className={`flex flex-col items-center text-sm text-foreground transition-all duration-200 ${
@@ -88,6 +89,20 @@ const Header: React.FC = () => {
                 </div>
                 <span className="font-medium">Puzzle</span>
               </Link>
+              
+              <Link 
+                to="/quote" 
+                className={`flex flex-col items-center text-sm text-foreground transition-all duration-200 ${
+                  isActive('/quote') 
+                    ? 'text-amber-600 font-medium scale-110' 
+                    : 'hover:text-amber-600 hover:scale-105'
+                }`}
+              >
+                <div className={`p-2.5 rounded-full mb-1.5 ${isActive('/quote') ? 'bg-amber-500/10' : 'hover:bg-amber-500/5'}`}>
+                  <Lightbulb className={`h-6 w-6 ${isActive('/quote') ? 'text-amber-500' : ''}`} />
+                </div>
+                <span className="font-medium">Quotes</span>
+              </Link>
             </div>
           </nav>
           
@@ -106,8 +121,10 @@ const Header: React.FC = () => {
             </button>
           </div>
           
-          {/* Auth button - Right column (visible on desktop, hidden on mobile) */}
-          <div className="hidden md:flex flex-1 justify-end">
+          {/* Auth section - Right column (visible on desktop, hidden on mobile) */}
+          <div className="hidden md:flex flex-1 justify-end items-center gap-3">
+            {user && <CreditDisplay className="mr-2" />}
+            
             {user ? (
               <Button 
                 variant="outline" 
@@ -172,6 +189,26 @@ const Header: React.FC = () => {
                 <Puzzle className={`h-5 w-5 ${isActive('/puzzle') ? 'text-purple-600' : ''}`} />
                 <span>Puzzle</span>
               </Link>
+              
+              <Link 
+                to="/quote" 
+                className={`flex items-center gap-3 p-2.5 rounded-lg transition-colors ${
+                  isActive('/quote') 
+                    ? 'bg-amber-500/10 text-amber-500 font-medium' 
+                    : 'hover:bg-amber-500/5 hover:text-amber-500'
+                }`}
+                onClick={closeMenu}
+              >
+                <Lightbulb className={`h-5 w-5 ${isActive('/quote') ? 'text-amber-500' : ''}`} />
+                <span>Quotes</span>
+              </Link>
+              
+              {user && (
+                <div className="p-2.5 flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-600">Your Credits:</span>
+                  <CreditDisplay displayType="full" />
+                </div>
+              )}
               
               <div className="mt-2 pt-2 border-t border-gray-200">
                 {user ? (

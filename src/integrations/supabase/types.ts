@@ -40,22 +40,65 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string | null
+          credits_balance: number
           id: string
+          last_credit_refresh_date: string | null
+          lifetime_credits: number
           username: string | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string | null
+          credits_balance?: number
           id: string
+          last_credit_refresh_date?: string | null
+          lifetime_credits?: number
           username?: string | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string | null
+          credits_balance?: number
           id?: string
+          last_credit_refresh_date?: string | null
+          lifetime_credits?: number
           username?: string | null
         }
         Relationships: []
+      }
+      credit_transactions: {
+        Row: {
+          id: string
+          user_id: string
+          amount: number
+          description: string
+          transaction_type: "earn" | "spend"
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          amount: number
+          description: string
+          transaction_type: "earn" | "spend"
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          amount?: number
+          description?: string
+          transaction_type?: "earn" | "spend"
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_transactions_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       stories: {
         Row: {
@@ -95,7 +138,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      begin_transaction: {
+        Args: Record<PropertyKey, never>
+        Returns: { transaction: string }
+      }
+      commit_transaction: {
+        Args: { tid: string }
+        Returns: undefined
+      }
+      increment: {
+        Args: { x: number }
+        Returns: number
+      }
+      rollback_transaction: {
+        Args: { tid: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
