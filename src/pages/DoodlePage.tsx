@@ -325,7 +325,7 @@ const DoodlePage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-9xl">
+    <div className="container mx-auto px-4 py-12 max-w-10xl">
       <motion.div 
         className="text-center mb-6 md:mb-8"
         initial={{ opacity: 0, y: -20 }}
@@ -340,7 +340,7 @@ const DoodlePage = () => {
       
       {!doodleImage ? (
         <motion.div 
-          className="max-w-9xl mx-auto"
+          className="w-full mx-auto"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4, delay: 0.2 }}

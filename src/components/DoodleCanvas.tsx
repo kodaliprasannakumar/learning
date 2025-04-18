@@ -7,6 +7,7 @@ import { Eraser, Droplet, Palette, Copy, Download, Undo2, Trash2, CheckCircle2 }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { motion } from 'framer-motion';
+import { HexColorPicker } from 'react-colorful';
 
 interface DoodleCanvasProps {
   onDoodleComplete: (imageDataUrl: string) => void;
@@ -299,11 +300,12 @@ const DoodleCanvas = ({ onDoodleComplete }: DoodleCanvasProps) => {
   ] as const;
 
   return (
-    <div className="flex flex-col space-y-6 animate-fade-in">
-      <Card className="p-6 border-4 border-kid-blue/20 bg-gradient-to-br from-kid-blue/5 to-indigo-50 rounded-2xl shadow-lg">
-        <div className="mb-5">
+    <div className="flex flex-col md:flex-row h-full w-full gap-4">
+      {/* Left column: Tools panel */}
+      <div className="w-full md:w-64 lg:w-72 flex-shrink-0 space-y-4">
+        <Card className="p-4 border-4 border-kid-blue/20 bg-gradient-to-br from-kid-blue/5 to-indigo-50 rounded-2xl shadow-lg">
           <Tabs defaultValue="colors" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 p-1 bg-white/80 rounded-xl">
+            <TabsList className="grid w-full grid-cols-2 p-1 bg-white/80 rounded-xl mb-4">
               <TabsTrigger 
                 value="colors" 
                 className="rounded-lg data-[state=active]:bg-kid-blue data-[state=active]:text-white py-2"
@@ -320,30 +322,55 @@ const DoodleCanvas = ({ onDoodleComplete }: DoodleCanvasProps) => {
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="colors" className="py-4">
-              <div className="flex flex-wrap gap-3 justify-center">
-                {colors.map((colorOption) => (
-                  <button
-                    key={colorOption.value}
-                    className={`w-14 h-14 rounded-full transition-all ${color === colorOption.value ? 'ring-4 ring-offset-2 ring-kid-blue' : 'hover:scale-110'}`}
-                    style={{ 
-                      backgroundColor: colorOption.value, 
-                      border: colorOption.value === '#ffffff' ? '1px solid #e2e2e2' : 'none'
-                    }}
-                    onClick={() => setColor(colorOption.value)}
-                    aria-label={`Select ${colorOption.label} color`}
+            <TabsContent value="colors" className="py-2">
+              {/* Color Wheel */}
+              <div className="mb-4">
+                <HexColorPicker 
+                  color={color} 
+                  onChange={setColor} 
+                  className="w-full max-w-[200px] mx-auto mb-3"
+                />
+                <div className="flex items-center justify-center gap-2 mt-2">
+                  <div 
+                    className="w-8 h-8 rounded-full border border-gray-300"
+                    style={{ backgroundColor: color }}
                   />
-                ))}
+                  <Input
+                    value={color}
+                    onChange={(e) => setColor(e.target.value)}
+                    className="w-24 h-8 text-xs"
+                    maxLength={7}
+                  />
+                </div>
+              </div>
+              
+              {/* Preset Colors */}
+              <div className="mt-4">
+                <Label className="text-xs text-muted-foreground mb-2 block">Preset Colors</Label>
+                <div className="grid grid-cols-5 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {colors.map((colorOption) => (
+                    <button
+                      key={colorOption.value}
+                      className={`w-full aspect-square rounded-full transition-all ${color === colorOption.value ? 'ring-4 ring-offset-2 ring-kid-blue' : 'hover:scale-110'}`}
+                      style={{ 
+                        backgroundColor: colorOption.value, 
+                        border: colorOption.value === '#ffffff' ? '1px solid #e2e2e2' : 'none'
+                      }}
+                      onClick={() => setColor(colorOption.value)}
+                      aria-label={`Select ${colorOption.label} color`}
+                    />
+                  ))}
+                </div>
               </div>
             </TabsContent>
             
-            <TabsContent value="brushes" className="pt-4">
+            <TabsContent value="brushes" className="pt-2">
               <div className="space-y-5">
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                <div className="grid grid-cols-3 gap-2">
                   {brushTypes.map((type) => (
                     <button
                       key={type.value}
-                      className={`flex flex-col items-center justify-center p-3 rounded-xl transition-all 
+                      className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all 
                         ${brushType === type.value 
                           ? 'bg-kid-blue/20 ring-2 ring-kid-blue' 
                           : 'bg-white hover:bg-kid-blue/10'
@@ -351,37 +378,33 @@ const DoodleCanvas = ({ onDoodleComplete }: DoodleCanvasProps) => {
                       onClick={() => setBrushType(type.value)}
                       aria-label={`Select ${type.label} brush`}
                     >
-                      <div className="mb-2 bg-white p-2 rounded-lg shadow-sm">
+                      <div className="mb-1 bg-white p-1 rounded-lg shadow-sm">
                         {type.icon}
                       </div>
-                      <span className="text-sm font-medium">{type.label}</span>
+                      <span className="text-xs font-medium">{type.label}</span>
                     </button>
                   ))}
                 </div>
                 
-                <div className="flex flex-wrap gap-4 justify-center mt-4">
+                <div className="grid grid-cols-2 gap-2">
                   {brushSizes.map((size) => (
                     <button
                       key={size.value}
-                      className={`flex flex-col items-center justify-center space-y-1 transition-all`}
+                      className={`flex flex-col items-center justify-center space-y-1 transition-all p-2
+                        ${lineWidth === size.value 
+                          ? 'bg-kid-blue/10 ring-2 ring-kid-blue rounded-xl' 
+                          : 'hover:bg-kid-blue/5 rounded-xl'
+                        }`}
                       onClick={() => setLineWidth(size.value)}
                       aria-label={`Select ${size.label} brush size`}
                     >
                       <div 
-                        className={`flex items-center justify-center w-14 h-14 rounded-full bg-white
-                          ${lineWidth === size.value 
-                            ? 'ring-2 ring-kid-blue shadow-md' 
-                            : 'hover:bg-kid-blue/5'
-                          }`}
-                      >
-                        <div 
-                          className="rounded-full bg-foreground" 
-                          style={{ 
-                            width: `${size.value}px`, 
-                            height: `${size.value}px` 
-                          }}
-                        />
-                      </div>
+                        className="rounded-full bg-foreground" 
+                        style={{ 
+                          width: `${size.value}px`, 
+                          height: `${size.value}px` 
+                        }}
+                      />
                       <span className="text-xs font-medium">{size.label}</span>
                     </button>
                   ))}
@@ -389,67 +412,66 @@ const DoodleCanvas = ({ onDoodleComplete }: DoodleCanvasProps) => {
               </div>
             </TabsContent>
           </Tabs>
+        </Card>
+        
+        <div className="space-y-2">
+          <Button 
+            onClick={undo} 
+            disabled={!canUndo}
+            variant="outline"
+            className="w-full border-2 border-kid-blue/40 hover:border-kid-blue rounded-xl disabled:opacity-50 shadow-sm hover:shadow-md"
+          >
+            <Undo2 className="h-4 w-4 mr-2" />
+            <span className="font-medium">Undo</span>
+          </Button>
+          
+          <Button 
+            onClick={clearCanvas} 
+            disabled={!canClear}
+            variant="outline"
+            className="w-full border-2 border-kid-orange/40 hover:border-kid-orange rounded-xl disabled:opacity-50 shadow-sm hover:shadow-md"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            <span className="font-medium">Clear</span>
+          </Button>
+          
+          <Button 
+            onClick={downloadCanvas}
+            variant="outline"
+            className="w-full border-2 border-kid-green/40 hover:border-kid-green rounded-xl shadow-sm hover:shadow-md"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            <span className="font-medium">Download</span>
+          </Button>
+          
+          <Button 
+            onClick={handleComplete}
+            className="w-full bg-kid-blue hover:bg-kid-blue/80 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-95"
+          >
+            <CheckCircle2 className="h-4 w-4 mr-2" />
+            <span className="font-medium">Complete</span>
+          </Button>
         </div>
-      </Card>
-      
-      <div className="relative overflow-hidden rounded-2xl bg-white border-4 border-kid-blue/20 shadow-lg">
-        <canvas
-          ref={canvasRef}
-          width={1500}
-          height={1000}
-          className="w-full h-[40rem] md:h-[45rem] touch-none cursor-crosshair"
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
-          onTouchStart={startDrawing}
-          onTouchMove={draw}
-          onTouchEnd={stopDrawing}
-          style={{ backgroundColor: '#ffffff' }}
-        />
       </div>
       
-      <div className="flex flex-wrap gap-4 justify-center">
-        <Button 
-          onClick={undo} 
-          disabled={!canUndo}
-          variant="outline"
-          size="lg"
-          className="min-w-[120px] h-12 flex items-center justify-center gap-2 border-2 border-kid-blue/40 hover:border-kid-blue rounded-xl disabled:opacity-50 shadow-sm hover:shadow-md"
-        >
-          <Undo2 className="h-5 w-5" />
-          <span className="font-medium">Undo</span>
-        </Button>
-        
-        <Button 
-          onClick={clearCanvas} 
-          disabled={!canClear}
-          variant="outline"
-          size="lg"
-          className="min-w-[120px] h-12 flex items-center justify-center gap-2 border-2 border-kid-orange/40 hover:border-kid-orange rounded-xl disabled:opacity-50 shadow-sm hover:shadow-md"
-        >
-          <Trash2 className="h-5 w-5" />
-          <span className="font-medium">Clear</span>
-        </Button>
-        
-        <Button 
-          onClick={downloadCanvas}
-          variant="outline"
-          size="lg"
-          className="min-w-[120px] h-12 flex items-center justify-center gap-2 border-2 border-kid-green/40 hover:border-kid-green rounded-xl shadow-sm hover:shadow-md"
-        >
-          <Download className="h-5 w-5" />
-          <span className="font-medium">Download</span>
-        </Button>
-        
-        <Button 
-          onClick={handleComplete}
-          size="lg"
-          className="min-w-[150px] h-12 flex items-center justify-center gap-2 bg-kid-blue hover:bg-kid-blue/80 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-95"
-        >
-          <CheckCircle2 className="h-5 w-5" />
-          <span className="font-medium">Complete</span>
-        </Button>
+      {/* Right column: Canvas */}
+      <div className="flex-grow">
+        <div className="relative overflow-hidden rounded-2xl bg-white border-4 border-kid-blue/20 shadow-lg h-full">
+          <canvas
+            ref={canvasRef}
+            width={1500}
+            height={1000}
+            className="w-full h-[40rem] md:h-[45rem] touch-none cursor-crosshair"
+            onMouseDown={startDrawing}
+            onMouseMove={draw}
+            onMouseUp={stopDrawing}
+            onMouseLeave={stopDrawing}
+            onTouchStart={startDrawing}
+            onTouchMove={draw}
+            onTouchEnd={stopDrawing}
+            style={{ backgroundColor: '#ffffff' }}
+          />
+        </div>
       </div>
     </div>
   );

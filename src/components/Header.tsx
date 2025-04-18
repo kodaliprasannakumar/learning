@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/hooks/useAuth';
@@ -10,6 +10,32 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [prevScrollPos, setPrevScrollPos] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  // Handle scroll behavior
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollPos = window.scrollY;
+      const isScrollingDown = prevScrollPos < currentScrollPos;
+      const isScrollingUp = prevScrollPos > currentScrollPos;
+      const isMinimalScroll = currentScrollPos < 10;
+      
+      // Always show header at the top of the page or when scrolling up
+      if (isMinimalScroll || isScrollingUp) {
+        setVisible(true);
+      } 
+      // Hide when scrolling down and not at the top
+      else if (isScrollingDown && currentScrollPos > 50) {
+        setVisible(false);
+      }
+      
+      setPrevScrollPos(currentScrollPos);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [prevScrollPos]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -29,7 +55,11 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-gradient-to-r from-kid-pink/30 via-kid-yellow/30 to-kid-green/30 border-b-2 border-kid-pink/30 shadow-md sticky top-0 z-50">
+    <header 
+      className={`bg-gradient-to-r from-kid-pink/30 via-kid-yellow/30 to-kid-green/30 border-b-2 border-kid-pink/30 shadow-md sticky top-0 z-50 transition-transform duration-300 ${
+        visible ? 'translate-y-0' : '-translate-y-full'
+      }`}
+    >
       <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
         {/* Desktop Layout */}
         <div className="flex justify-between items-center">
