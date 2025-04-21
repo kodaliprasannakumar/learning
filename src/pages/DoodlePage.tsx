@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import DoodleCanvas from '@/components/DoodleCanvas';
@@ -34,6 +34,41 @@ const DoodlePage = () => {
 
   // Add credit confirmation state
   const [showCreditConfirm, setShowCreditConfirm] = useState(false);
+  // Add state for redirect preference
+  const [shouldRedirectAfterSave, setShouldRedirectAfterSave] = useState<boolean>(() => {
+    // Get preference from localStorage, default to true if not set
+    return localStorage.getItem('redirectAfterSave') !== 'false';
+  });
+
+  // Effect to save page state to prevent refresh issues
+  useEffect(() => {
+    // Save current page state to localStorage when navigating away
+    const savePageState = () => {
+      if (doodleImage) {
+        sessionStorage.setItem('doodlePageState', JSON.stringify({
+          path: window.location.pathname,
+          hasActiveDoodle: !!doodleImage
+        }));
+      }
+    };
+
+    // Save state when leaving page
+    window.addEventListener('beforeunload', savePageState);
+    
+    // Restore state if available
+    const savedState = sessionStorage.getItem('doodlePageState');
+    if (savedState) {
+      const state = JSON.parse(savedState);
+      if (state.path === '/doodle' && window.location.pathname === '/doodle') {
+        // Already on the correct page, clear the state
+        sessionStorage.removeItem('doodlePageState');
+      }
+    }
+
+    return () => {
+      window.removeEventListener('beforeunload', savePageState);
+    };
+  }, [doodleImage]);
 
   const handleDoodleComplete = (imageDataUrl: string) => {
     setDoodleImage(imageDataUrl);
@@ -168,10 +203,14 @@ const DoodlePage = () => {
         origin: { y: 0.6 }
       });
       
-      // Navigate to home page to see the saved doodle
-      setTimeout(() => {
-        navigate('/');
-      }, 1500);
+      // Navigate to home page to see the saved doodle only if preference is set
+      if (shouldRedirectAfterSave) {
+        setTimeout(() => {
+          navigate('/');
+        }, 1500);
+      } else {
+        toast.success("You can continue working on your doodle or start a new one");
+      }
       
       // After successful save, reward credits
       const success = await earnCredits(2, "Saved a doodle");
@@ -523,6 +562,21 @@ const DoodlePage = () => {
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="flex items-center space-x-2 py-2">
+            <input 
+              type="checkbox" 
+              id="redirectPreference"
+              checked={shouldRedirectAfterSave}
+              onChange={(e) => {
+                setShouldRedirectAfterSave(e.target.checked);
+                localStorage.setItem('redirectAfterSave', e.target.checked.toString());
+              }}
+              className="rounded border-gray-300"
+            />
+            <label htmlFor="redirectPreference" className="text-sm text-gray-600">
+              Redirect to home after saving
+            </label>
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction

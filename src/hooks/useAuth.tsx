@@ -30,8 +30,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
         setLoading(false);
 
-        // Redirect logic
-        if (event === 'SIGNED_IN') {
+        // Redirect logic - only redirect on explicit sign in or sign out events
+        // This prevents redirects on page refresh
+        if (event === 'SIGNED_IN' && window.location.pathname === '/auth') {
           navigate('/');
         } else if (event === 'SIGNED_OUT') {
           navigate('/auth');
