@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Plus, Send, X, Lightbulb, Puzzle, MessageSquare, Sparkles, Wand2, Volume2, VolumeX } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { generateText, validateSentence as validateSentenceApi } from '@/integrations/aws/lambda';
 
 interface PuzzlePiece {
   id: string;
@@ -280,9 +281,9 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
   };
 
   const validateSentence = async () => {
-    const question = getCurrentQuestion();
-    if (!question.trim()) {
-      toast.error("Please arrange some words to form a question");
+    const sentence = getCurrentQuestion();
+    if (sentence.trim() === '') {
+      toast.error("Please create a question first!");
       return;
     }
     
@@ -290,36 +291,19 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
     setAiValidation(null);
     
     try {
-      // Get AI validation
-      const { data, error } = await supabase.functions.invoke('generate-media', {
-        body: {
-          mode: 'text',
-          prompt: `I'm a child using an app to form questions by arranging words. Here's my current arrangement: "${question}". 
-          Is this a well-formed, meaningful question? If yes, just respond with "VALID". 
-          If no, respond with "INVALID" followed by a very brief, child-friendly suggestion on how to improve it. Keep your response under 100 characters.`,
-          max_tokens: 100
-        }
-      });
+      // Use the new Lambda integration module
+      const validationText = await validateSentenceApi(sentence);
+      setAiValidation(validationText);
       
-      if (error) throw error;
-      
-      if (data.error) {
-        console.error("AI validation error:", data.error);
-        throw new Error(data.error);
-      }
-      
-      const validationResponse = data.response || "";
-      setAiValidation(validationResponse);
-      
-      if (validationResponse.startsWith("VALID")) {
-        toast.success("Your question looks good!");
-        createSuccessConfetti();
+      if (validationText.toLowerCase().includes('valid') || validationText.toLowerCase() === 'valid') {
+        toast.success("Your question looks good! You can now submit it.");
       } else {
-        toast.info("Your question needs improvement");
+        toast.info("Try to improve your question.");
       }
+      
     } catch (error) {
-      console.error("Error validating sentence:", error);
-      toast.error("Failed to validate. Please try again.");
+      console.error("Error validating question:", error);
+      toast.error("Failed to validate question. Please try again.");
     } finally {
       setIsValidating(false);
     }
@@ -327,44 +311,30 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
 
   const handleSubmitPuzzle = async () => {
     const question = customQuestion || getCurrentQuestion();
-    if (!question.trim()) {
-      toast.error("Please arrange the pieces or enter a custom question");
+    if (question.trim() === '') {
+      toast.error("Please create a question first!");
       return;
     }
     
     setIsSubmitting(true);
+    setAiResponse('');
     
     try {
-      // Get AI response
-      const { data, error } = await supabase.functions.invoke('generate-media', {
-        body: {
-          mode: 'text',
-          prompt: `Answer this child's question in a friendly, educational way: "${question}"`,
-          max_tokens: 300
-        }
-      });
+      // Use the new Lambda integration module
+      const aiText = await generateText(question);
+      setAiResponse(aiText);
       
-      if (error) throw error;
-      
-      if (data.error) {
-        console.error("AI response error:", data.error);
-        throw new Error(data.error);
-      }
-      
-      const response = data.response || "I'm not sure about that. Can you try asking a different question?";
-      setAiResponse(response);
-      
+      // Call the onComplete callback if provided
       if (onComplete) {
-        onComplete(response);
+        onComplete(aiText);
       }
       
-      // Celebrate with confetti!
+      // Create a success celebration
       createSuccessConfetti();
       
-      toast.success("Puzzle completed!");
     } catch (error) {
-      console.error("Error getting AI response:", error);
-      toast.error("Failed to get a response. Please try again.");
+      console.error("Error generating response:", error);
+      toast.error("Failed to generate response. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -579,238 +549,234 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
   }, []);
 
   return (
-    <Card className="p-6 border-4 border-kid-pink rounded-2xl shadow-lg bg-white/95">
-      <h2 className="text-2xl font-bold mb-4 text-center text-kid-blue flex justify-center items-center gap-2">
-    
-      </h2>
-      <p className="text-center mb-6 text-violet-600 font-medium">{initialPrompt}</p>
-      
-      {/* Knowledge Box */}
-      <div className={`mb-6 bg-kid-yellow rounded-xl p-4 border-2 border-amber-400 shadow-md transition-all ${showWordShimmer ? 'animate-pulse' : ''}`}>
-        <h3 className="text-lg font-medium mb-2 flex items-center gap-2 text-amber-700">
-          <Lightbulb className="h-5 w-5" />
-          Word Collection
-        </h3>
-        <div className="flex gap-2 mb-3">
-          <Input
-            placeholder="Add a new word"
-            value={newWord}
-            onChange={(e) => setNewWord(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddWord()}
-            className="border-2 border-amber-300 focus:border-amber-500 rounded-xl font-medium"
-          />
-          <Button 
-            onClick={handleAddWord} 
-            className="bg-amber-400 hover:bg-amber-500 text-white rounded-xl transition-all hover:scale-105 shadow-md"
-            size="icon"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        <div className="bg-amber-50 p-3 rounded-xl min-h-20 flex flex-wrap gap-2 border-2 border-amber-200 relative">
-          {knowledgeWords.map((word, index) => {
-            // Cycle through colors for variety
-            const colorIndex = index % blockColors.length;
-            const blockColor = blockColors[colorIndex];
-            const isLastAdded = word === lastAddedWord;
-            
-            return (
-              <div
-                key={word}
-                draggable
-                onDragStart={(e) => handleWordDragStart(e, word)}
-                className={`${blockColor} px-4 py-2 rounded-lg cursor-move flex items-center gap-1 text-white shadow-md 
-                            hover:brightness-110 hover:scale-105 transition-all relative font-medium
-                            before:content-[''] before:absolute before:left-0 before:top-0 before:h-1/2 before:w-full 
-                            before:bg-white/20 before:rounded-t-lg
-                            ${isLastAdded ? 'animate-bounce-once' : ''}`}
-              >
-                {word}
-                <button 
-                  onClick={() => handleRemoveWord(word)}
-                  className="ml-1 flex items-center justify-center w-5 h-5 bg-white/20 rounded-full 
-                              hover:bg-white/30"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-                {isLastAdded && (
-                  <Sparkles className="absolute -top-2 -right-2 h-4 w-4 text-yellow-300 animate-ping" />
-                )}
-              </div>
-            );
-          })}
-          {knowledgeWords.length === 0 && (
-            <p className="text-amber-600 text-sm">Add words to your collection!</p>
-          )}
-        </div>
-        <p className="text-xs text-amber-700 mt-1 italic flex items-center">
-          <Sparkles className="h-3 w-3 mr-1" />
-          Drag words from here to the puzzle area below
-        </p>
-      </div>
-      
-      {/* Magnet Mode Toggle */}
-      <div className="flex justify-end mb-2">
-        <button
-          onClick={() => setMagnetMode(!magnetMode)}
-          className={`text-xs flex items-center gap-1 px-3 py-1 rounded-full transition-all ${
-            magnetMode 
-              ? 'bg-kid-blue text-white' 
-              : 'bg-gray-200 text-gray-700'
-          }`}
-        >
-          <Wand2 className="h-3 w-3" />
-          {magnetMode ? 'Magic Alignment On' : 'Magic Alignment Off'}
-        </button>
-      </div>
-      
-      {/* Puzzle Editor */}
-      <div 
-        ref={containerRef}
-        className={`relative ${isDraggingOver 
-          ? 'border-4 border-kid-blue bg-gradient-to-br from-kid-green/40 to-kid-green/20' 
-          : 'border-4 border-dashed border-kid-green bg-gradient-to-br from-kid-green/30 to-kid-green/10'} 
-          rounded-xl h-80 sm:h-96 mb-6 p-4 overflow-hidden transition-all duration-300`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={(e) => {
-          // Use the appropriate handler based on whether this is a word from collection or moving an existing piece
-          if (draggedPiece) {
-            handleDrop(e);
-          } else {
-            handleWordDrop(e);
-          }
-        }}
-      >
-        {pieces.map((piece) => (
-          <div
-            key={piece.id}
-            draggable
-            onDragStart={(e) => handleDragStart(piece.id, e)}
-            className={`absolute ${piece.color} px-4 py-2 text-white rounded-lg cursor-move shadow-md flex items-center gap-1
-                        transition-all duration-300 font-medium
-                        before:content-[''] before:absolute before:left-0 before:top-0 before:h-1/2 before:w-full 
-                        before:bg-white/20 before:rounded-t-lg
-                        ${piece.isNew ? 'animate-pop-in' : ''}`}
-            style={{
-              left: `${Math.min(Math.max(piece.position.x, 0), containerRef.current ? containerRef.current.clientWidth - 100 : 0)}px`,
-              top: `${Math.min(Math.max(piece.position.y, 0), containerRef.current ? containerRef.current.clientHeight - 40 : 0)}px`,
-              touchAction: 'none',
-              zIndex: draggedPiece === piece.id ? 10 : 1,
-              transform: `scale(${piece.scale || 1}) rotate(${piece.rotation || 0}deg)`,
-              transition: draggedPiece === piece.id ? 'none' : 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-            }}
-          >
-            {piece.text}
-            <button 
-              onClick={() => handleRemovePiece(piece.id)}
-              className="ml-1 flex items-center justify-center w-5 h-5 bg-white/20 rounded-full 
-                        hover:bg-white/30"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </div>
-        ))}
-        {pieces.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center text-teal-700/70 pointer-events-none">
-            <div className="flex flex-col items-center">
-              <Puzzle className="w-12 h-12 mb-2 animate-bounce-light" />
-              <span>Drag words here to form a question</span>
+    <div className="flex flex-col space-y-6">
+      {/* Main puzzle interface */}
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Left column: Word collection */}
+        <div className="w-full md:w-72 lg:w-80 flex-shrink-0 flex flex-col">
+          <Card className={`p-4 flex-grow bg-gradient-to-br from-kid-yellow/60 to-amber-100 border-2 border-amber-400 rounded-xl shadow-md transition-all h-full ${
+            showWordShimmer ? 'animate-pulse' : ''
+          }`}>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-lg font-medium text-amber-700 flex items-center gap-2">
+                <Lightbulb className="h-5 w-5" />
+                Word Collection
+              </h3>
             </div>
-          </div>
-        )}
-      </div>
-      
-      <div className="mb-6 bg-sky-50 rounded-xl p-4 border-2 border-sky-200">
-        <div className="flex justify-between items-center mb-2">
-          <p className="text-sm text-sky-700 font-medium flex items-center gap-1">
-            <MessageSquare className="h-4 w-4" />
-            Current arrangement:
-          </p>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={validateSentence}
-            disabled={isValidating || pieces.length === 0}
-            className="bg-cyan-500 hover:bg-cyan-600 text-white border-0 rounded-full shadow-sm hover:scale-105 transition-all"
-          >
-            {isValidating ? (
-              <>
-                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                <span>Checking...</span>
-              </>
-            ) : (
-              <span>Check Sentence</span>
-            )}
-          </Button>
+
+            <div className="flex gap-2 mb-3">
+              <Input
+                placeholder="Add a new word"
+                value={newWord}
+                onChange={(e) => setNewWord(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddWord()}
+                className="border-2 border-amber-300 focus:border-amber-500 rounded-xl font-medium"
+              />
+              <Button 
+                onClick={handleAddWord} 
+                className="bg-amber-400 hover:bg-amber-500 text-white rounded-xl transition-all hover:scale-105 shadow-md"
+                size="icon"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="bg-amber-50 p-3 rounded-xl flex flex-wrap gap-2 border-2 border-amber-200 relative overflow-y-auto flex-grow">
+              {knowledgeWords.map((word, index) => {
+                const colorIndex = index % blockColors.length;
+                const blockColor = blockColors[colorIndex];
+                const isLastAdded = word === lastAddedWord;
+                
+                return (
+                  <div
+                    key={`word-${index}`}
+                    draggable
+                    onDragStart={(e) => handleWordDragStart(e, word)}
+                    className={`${blockColor} px-4 py-2 rounded-lg cursor-move flex items-center gap-1 text-white shadow-md 
+                      hover:brightness-110 hover:scale-105 transition-all relative font-medium
+                      before:content-[''] before:absolute before:left-0 before:top-0 before:h-1/2 before:w-full 
+                      before:bg-white/20 before:rounded-t-lg
+                      ${isLastAdded ? 'animate-bounce-once' : ''}`}
+                  >
+                    {word}
+                    <button 
+                      onClick={() => handleRemoveWord(word)}
+                      className="ml-1 flex items-center justify-center w-5 h-5 bg-white/20 rounded-full 
+                        hover:bg-white/30"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                    {isLastAdded && (
+                      <Sparkles className="absolute -top-2 -right-2 h-4 w-4 text-yellow-300 animate-ping" />
+                    )}
+                  </div>
+                );
+              })}
+              {knowledgeWords.length === 0 && (
+                <p className="text-amber-600 text-sm">Add words to your collection!</p>
+              )}
+            </div>
+            <p className="text-xs text-amber-700 mt-1 italic flex items-center">
+              <Sparkles className="h-3 w-3 mr-1" />
+              Drag words from here to the puzzle area
+            </p>
+          </Card>
         </div>
-        <div className="bg-white p-3 rounded-lg min-h-12 border-2 border-sky-100 text-sky-800 font-medium">
-          {getCurrentQuestion() || "Start dragging the words!"}
+
+        {/* Right column: Drag and drop area */}
+        <div className="flex-grow flex flex-col">
+          <Card className="p-4 bg-white rounded-xl border-2 border-emerald-100 shadow-md h-full">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-lg font-semibold text-emerald-700 flex items-center gap-2">
+                <Puzzle className="h-5 w-5 text-emerald-500" />
+                Build Your Question
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`h-8 px-2 text-xs ${magnetMode ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700'}`}
+                onClick={() => setMagnetMode(!magnetMode)}
+              >
+                {magnetMode ? '✓ Magnet Mode' : 'Magnet Mode'}
+              </Button>
+            </div>
+
+            <div 
+              ref={containerRef}
+              className={`relative w-full flex-grow bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg border-2 border-dashed transition-all ${
+                isDraggingOver 
+                  ? 'border-emerald-400 bg-emerald-50/80' 
+                  : 'border-emerald-200'
+              } h-[500px]`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => {
+                // Use the appropriate handler based on whether this is a word or a piece
+                if (draggedPiece) {
+                  handleDrop(e);
+                } else {
+                  handleWordDrop(e);
+                }
+              }}
+            >
+              {pieces.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center text-emerald-400/70 pointer-events-none">
+                  <p className="text-center px-4">
+                    Drag words here to build your question!
+                  </p>
+                </div>
+              )}
+              
+              {pieces.map((piece) => (
+                <div
+                  key={piece.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(piece.id, e)}
+                  className={`absolute px-4 py-2 rounded-lg shadow-md cursor-move select-none 
+                    ${piece.color} text-white font-medium
+                    ${piece.isNew ? 'animate-drop-in' : 'transition-all duration-200'}
+                    active:cursor-grabbing hover:shadow-lg hover:brightness-110 hover:scale-105
+                    before:content-[''] before:absolute before:left-0 before:top-0 before:h-1/2 before:w-full 
+                    before:bg-white/20 before:rounded-t-lg`}
+                  style={{
+                    left: `${piece.position.x}px`,
+                    top: `${piece.position.y}px`,
+                    transform: `rotate(${piece.rotation}deg) scale(${piece.scale})`,
+                    zIndex: draggedPiece === piece.id ? 10 : 1,
+                  }}
+                >
+                  <div className="flex items-center gap-1">
+                    {piece.text}
+                    <button
+                      className="ml-1 flex items-center justify-center w-5 h-5 bg-white/20 rounded-full hover:bg-white/30"
+                      onClick={() => handleRemovePiece(piece.id)}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-3 mt-4">
+              <Button 
+                variant="outline" 
+                className="border-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                onClick={validateSentence}
+                disabled={isValidating || pieces.length === 0}
+              >
+                {isValidating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Checking...
+                  </>
+                ) : (
+                  <>
+                    <Lightbulb className="h-4 w-4 mr-2" />
+                    Check Sentence
+                  </>
+                )}
+              </Button>
+              
+              <Button 
+                disabled={isSubmitting || pieces.length === 0}
+                onClick={handleSubmitPuzzle}
+                className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Asking...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Ask Question
+                  </>
+                )}
+              </Button>
+            </div>
+          </Card>
         </div>
-        
-        {aiValidation && (
-          <div className={`mt-3 p-3 rounded-lg text-sm animate-slide-up ${aiValidation.startsWith("VALID") 
-                ? "bg-green-100 text-green-800 border-2 border-green-200" 
-                : "bg-amber-100 text-amber-800 border-2 border-amber-200"}`}>
-            {aiValidation.replace(/^(VALID|INVALID)/, '').trim()}
-            {aiValidation.startsWith("VALID") && (
-              <Sparkles className="inline-block ml-1 h-3 w-3 text-green-500 animate-ping" />
-            )}
+      </div>
+
+      {/* Answer section */}
+      {aiValidation && (
+        <Card className="p-4 border-2 border-blue-100 bg-blue-50/50 rounded-xl mt-4">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-lg font-semibold text-blue-700 flex items-center gap-2">
+              <Lightbulb className="h-5 w-5 text-blue-500" />
+              Sentence Check
+            </h3>
           </div>
-        )}
-      </div>
-      
-      <div className="mb-6 bg-purple-50 rounded-xl p-4 border-2 border-purple-200">
-        <Label htmlFor="custom-question" className="text-purple-700 font-medium">Or type your own question:</Label>
-        <Input
-          id="custom-question"
-          value={customQuestion}
-          onChange={(e) => setCustomQuestion(e.target.value)}
-          placeholder="Enter a question for the AI..."
-          className="mt-2 border-2 border-purple-200 focus:border-purple-400 rounded-xl"
-        />
-      </div>
-      
-      <Button 
-        onClick={handleSubmitPuzzle} 
-        disabled={isSubmitting || (pieces.length === 0 && !customQuestion)}
-        className="w-full bg-gradient-to-r from-kid-blue to-sky-500 hover:brightness-110 text-white rounded-xl py-6 font-bold text-lg shadow-lg transition-all hover:shadow-xl hover:scale-[1.02]"
-      >
-        {isSubmitting ? (
-          <>
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            <span>Getting Answer...</span>
-          </>
-        ) : (
-          <>
-            <Send className="mr-2 h-5 w-5" />
-            <span>Ask Question</span>
-          </>
-        )}
-      </Button>
+          <p className="text-blue-700 text-sm">{aiValidation}</p>
+        </Card>
+      )}
       
       {aiResponse && (
-        <div className="mt-6 bg-gradient-to-br from-purple-100 to-sky-100 p-5 rounded-xl border-2 border-purple-200 animate-fade-in shadow-md">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-medium text-purple-700 flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-amber-500" />
-              Answer:
+        <Card className="p-4 border-2 border-purple-100 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-lg font-semibold text-purple-700 flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-purple-500" />
+              Answer
             </h3>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
+              className="h-8 w-8 p-0 rounded-full"
               onClick={toggleSpeech}
-              className={`rounded-full p-2 ${isSpeaking ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-purple-100 text-purple-600 hover:bg-purple-200'}`}
-              title={isSpeaking ? "Stop speaking" : "Read answer aloud"}
             >
-              {isSpeaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              {isSpeaking ? (
+                <VolumeX className="h-4 w-4 text-red-500" />
+              ) : (
+                <Volume2 className="h-4 w-4 text-purple-500" />
+              )}
             </Button>
           </div>
-          <p className="text-sky-800">{aiResponse}</p>
-        </div>
+          <p className="text-purple-900">{aiResponse}</p>
+        </Card>
       )}
-    </Card>
+    </div>
   );
 };
 

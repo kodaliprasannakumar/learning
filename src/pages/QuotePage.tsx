@@ -275,10 +275,8 @@ export default function QuotePage() {
       {showConfetti && <Confetti />}
       
       <div className="text-center mb-12">
-        <div className="flex justify-center mb-4">
-          <Lightbulb className="h-12 w-12 text-amber-500" />
-        </div>
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-amber-500 to-amber-700 text-transparent bg-clip-text">
+        
+        <h1 className="text-4xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-amber-500 to-amber-700 text-transparent bg-clip-text">
           Daily Wisdom
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">

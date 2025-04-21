@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lambda Function Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        .image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            margin: 10px 0;
+        }
+        .loading {
+            margin-top: 10px;
+            color: #777;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>AWS Lambda Function Tester</h1>
+    <p>Use this page to test your AWS Lambda function for the Doodle-to-Fable project.</p>
+
+    <div class="section">
+        <h2>Text Generation Test</h2>
+        <textarea id="textPrompt" placeholder="Enter your prompt here...">What are clouds made of?</textarea>
+        <div>
+            <button onclick="testTextGeneration()">Generate Text</button>
+        </div>
+        <div id="textLoading" class="loading" style="display: none;">Processing...</div>
+        <div id="textError" class="error" style="display: none;"></div>
+        <pre id="textResponse"></pre>
+    </div>
+
+    <div class="section">
+        <h2>Image Generation Test</h2>
+        <p>Select an image file or enter an image URL:</p>
+        <input type="file" id="imageFile" accept="image/*" onchange="previewImage()">
+        <p>or</p>
+        <input type="text" id="imageUrl" placeholder="https://example.com/image.jpg" style="width: 100%;">
+        <select id="imageStyle">
+            <option value="cartoon">Cartoon</option>
+            <option value="watercolor">Watercolor</option>
+            <option value="pixel">Pixel Art</option>
+            <option value="storybook">Storybook</option>
+            <option value="sketchy">Sketchy</option>
+        </select>
+        <div>
+            <img id="inputImagePreview" class="image-preview" style="display: none;">
+            <br>
+            <button onclick="testImageGeneration()">Generate Enhanced Image</button>
+        </div>
+        <div id="imageLoading" class="loading" style="display: none;">Processing image (this may take up to 30 seconds)...</div>
+        <div id="imageError" class="error" style="display: none;"></div>
+        <div>
+            <h3>Result:</h3>
+            <img id="resultImage" class="image-preview" style="display: none;">
+            <p id="imageDescription"></p>
+        </div>
+    </div>
+
+    <script>
+        const API_ENDPOINT = 'https://kxjju6abc5.execute-api.us-west-2.amazonaws.com/default/generate-media';
+        let fileDataUrl = null;
+
+        function previewImage() {
+            const fileInput = document.getElementById('imageFile');
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    fileDataUrl = e.target.result;
+                    const preview = document.getElementById('inputImagePreview');
+                    preview.src = fileDataUrl;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function testTextGeneration() {
+            const prompt = document.getElementById('textPrompt').value.trim();
+            if (!prompt) {
+                alert('Please enter a prompt');
+                return;
+            }
+
+            document.getElementById('textLoading').style.display = 'block';
+            document.getElementById('textResponse').textContent = '';
+            document.getElementById('textError').style.display = 'none';
+
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        mode: 'text',
+                        prompt: prompt,
+                        max_tokens: 200
+                    })
+                });
+
+                const data = await response.json();
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                document.getElementById('textResponse').textContent = data.response;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('textError').textContent = error.message || 'An error occurred';
+                document.getElementById('textError').style.display = 'block';
+            } finally {
+                document.getElementById('textLoading').style.display = 'none';
+            }
+        }
+
+        async function testImageGeneration() {
+            let imageSource = fileDataUrl;
+            if (!imageSource) {
+                imageSource = document.getElementById('imageUrl').value.trim();
+                if (!imageSource) {
+                    alert('Please select a file or enter an image URL');
+                    return;
+                }
+            }
+
+            const style = document.getElementById('imageStyle').value;
+            
+            document.getElementById('imageLoading').style.display = 'block';
+            document.getElementById('resultImage').style.display = 'none';
+            document.getElementById('imageDescription').textContent = '';
+            document.getElementById('imageError').style.display = 'none';
+
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        mode: 'image',
+                        doodleImage: imageSource,
+                        style: style
+                    })
+                });
+
+                const data = await response.json();
+                if (data.error) {
+                    throw new Error(data.error || data.details || 'Failed to generate image');
+                }
+
+                const resultImage = document.getElementById('resultImage');
+                resultImage.src = data.imageUrl;
+                resultImage.style.display = 'block';
+                document.getElementById('imageDescription').textContent = data.description;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('imageError').textContent = error.message || 'An error occurred';
+                document.getElementById('imageError').style.display = 'block';
+            } finally {
+                document.getElementById('imageLoading').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html> 

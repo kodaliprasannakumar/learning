@@ -13,6 +13,7 @@ import confetti from 'canvas-confetti';
 import { useCreditSystem } from '@/hooks/useCreditSystem';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
+import { generateImage, generateVideo } from '@/integrations/aws/lambda';
 
 type StyleOption = "cartoon" | "watercolor" | "pixel" | "storybook" | "sketchy";
 
@@ -219,26 +220,11 @@ const DoodlePage = () => {
     toast.info(`Generating ${selectedStyle} image from your doodle...`);
     
     try {
-      const { data, error } = await supabase.functions.invoke('generate-media', {
-        body: {
-          doodleImage,
-          mode: 'image',
-          style: selectedStyle
-        }
-      });
+      // Use the new Lambda integration module
+      const result = await generateImage(doodleImage, selectedStyle);
       
-      if (error) throw error;
-      
-      if (data.error) {
-        console.error("Image generation error:", data.error);
-        throw new Error(data.error);
-      }
-      
-      setAiImage(data.imageUrl);
-      // Store the description if it exists in the response
-      if (data.description) {
-        setDoodleDescription(data.description);
-      }
+      setAiImage(result.imageUrl);
+      setDoodleDescription(result.description);
       
       toast.success(`${selectedStyle} image generated successfully!`);
       
@@ -248,11 +234,13 @@ const DoodlePage = () => {
         angle: 60,
         spread: 55,
         origin: { x: 0.5, y: 0.7 },
-        colors: ['#33C3F0', '#FFDEE2', '#FEF7CD', '#F2FCE2', '#E5DEFF']
       });
     } catch (error) {
-      console.error("Error generating realistic image:", error);
+      console.error("Error generating image:", error);
       toast.error("Failed to generate image. Please try again.");
+      
+      // Refund credits on failure
+      await earnCredits(5, "Refund for failed image generation");
     } finally {
       setIsGeneratingImage(false);
     }
@@ -268,24 +256,11 @@ const DoodlePage = () => {
     toast.info("Generating video based on your doodle...");
     
     try {
-      const { data, error } = await supabase.functions.invoke('generate-media', {
-        body: {
-          doodleImage: aiImage || doodleImage,
-          mode: 'video',
-          style: selectedStyle,
-          prompt: doodleDescription
-        }
-      });
+      // Use the new Lambda integration module
+      const result = await generateVideo(aiImage || doodleImage, doodleDescription, selectedStyle);
       
-      if (error) throw error;
-      
-      if (data.error) {
-        console.error("Video generation error:", data.error);
-        throw new Error(data.error);
-      }
-      
-      setVideoUrl(data.videoUrl);
-      setVideoDescription(data.description);
+      setVideoUrl(result.videoUrl);
+      setVideoDescription(result.description);
       toast.success("Video generated successfully!");
       
       // Trigger confetti celebration

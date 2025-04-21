@@ -65,14 +65,7 @@ const Header: React.FC = () => {
         <div className="flex justify-between items-center">
           {/* Logo - Left column */}
           <div className="flex-1 flex items-center">
-            <Link 
-              to="/" 
-              className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-kid-blue text-transparent bg-clip-text flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity"
-              onClick={closeMenu}
-            >
-              <Palette className="h-9 w-9 sm:h-9 sm:w-8 text-kid-blue" />
-              <span>Botadoodle</span>
-            </Link>
+            <img src="public/images/AIR.png" alt="Botadoodle Logo" className="h-9 w-9 sm:h-9 sm:w-8" />
           </div>
           
           {/* Navigation - Center column (hidden on mobile) */}
