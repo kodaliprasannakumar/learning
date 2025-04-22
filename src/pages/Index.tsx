@@ -19,8 +19,21 @@ export default function Index() {
         </p> */}
       </div>
       
+      <div className="text-center mb-10">
+        <h1 className="text-4xl md:text-5xl font-bold mb-4 animate-fade-in">Welcome to Your Creative Playground!</h1>
+        <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-6 animate-fade-in" style={{ animationDelay: "100ms" }}>
+          Unleash your imagination and watch your ideas come to life with our fun, interactive tools.
+        </p>
+        <div className="relative my-8">
+          <div className="absolute left-1/2 transform -translate-x-1/2 -top-8 w-full max-w-lg mx-auto">
+            
+          </div>
+          <p className="text-lg italic text-purple-600 font-medium">Choose Your Adventure Below!</p>
+        </div>
+      </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-16">
-        <div className="border-4 border-kid-blue/20 bg-gradient-to-br from-kid-blue/5 to-indigo-50 p-8 rounded-2xl shadow-lg card-hover">
+        <div className="card-glow-blue bg-gradient-to-br from-kid-blue/5 to-indigo-50 p-8 rounded-2xl shadow-lg card-hover">
           <div className="h-40 mb-6 flex items-center justify-center">
             <div className="bg-kid-blue/10 w-28 h-28 rounded-full flex items-center justify-center">
               <Video className="h-14 w-14 text-kid-blue" />
@@ -37,7 +50,7 @@ export default function Index() {
           </Link>
         </div>
         
-        <div className="border-4 border-amber-400/20 bg-gradient-to-br from-kid-yellow/40 to-amber-50 p-8 rounded-2xl shadow-lg card-hover">
+        <div className="card-glow-yellow bg-gradient-to-br from-kid-yellow/40 to-amber-50 p-8 rounded-2xl shadow-lg card-hover">
           <div className="h-40 mb-6 flex items-center justify-center">
             <div className="bg-amber-500/10 w-28 h-28 rounded-full flex items-center justify-center">
               <BookOpen className="h-14 w-14 text-amber-500" />
@@ -54,7 +67,7 @@ export default function Index() {
           </Link>
         </div>
 
-        <div className="border-4 border-purple-400/20 bg-gradient-to-br from-kid-purple/20 to-purple-50 p-8 rounded-2xl shadow-lg card-hover">
+        <div className="card-glow-purple bg-gradient-to-br from-kid-purple/20 to-purple-50 p-8 rounded-2xl shadow-lg card-hover">
           <div className="h-40 mb-6 flex items-center justify-center">
             <div className="bg-purple-500/10 w-28 h-28 rounded-full flex items-center justify-center">
               <Puzzle className="h-14 w-14 text-purple-600" />
@@ -73,7 +86,7 @@ export default function Index() {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-1 gap-8 max-w-5xl mx-auto mb-16">
-        <div className="border-4 border-amber-400/20 bg-gradient-to-br from-amber-100 to-amber-50 p-8 rounded-2xl shadow-lg card-hover">
+        <div className="card-glow-yellow bg-gradient-to-br from-amber-100 to-amber-50 p-8 rounded-2xl shadow-lg card-hover">
           <div className="h-40 mb-6 flex items-center justify-center">
             <div className="bg-amber-500/10 w-28 h-28 rounded-full flex items-center justify-center">
               <Lightbulb className="h-14 w-14 text-amber-500" />
