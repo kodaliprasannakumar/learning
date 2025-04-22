@@ -66,7 +66,7 @@ const Header: React.FC = () => {
           {/* Logo - Left column */}
           <div className="flex-1 flex items-center">
             <Link to="/">
-              <img src="public/images/AIR.png" alt="Botadoodle Logo" className="h-15 w-15 sm:h-18 sm:w-24" />
+              <img src="/images/AIR.png" alt="Botadoodle Logo" className="h-15 w-15 sm:h-18 sm:w-24" />
             </Link>
           </div>
           
