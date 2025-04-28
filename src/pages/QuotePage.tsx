@@ -38,7 +38,22 @@ export default function QuotePage() {
     { text: "You are braver than you believe, stronger than you seem, and smarter than you think.", author: "A.A. Milne", category: "courage" },
     { text: "The more that you read, the more things you will know. The more that you learn, the more places you'll go.", author: "Dr. Seuss", category: "learning" },
     { text: "Be kind whenever possible. It is always possible.", author: "Dalai Lama", category: "kindness" },
-    { text: "Nothing is impossible, the word itself says I'm possible!", author: "Audrey Hepburn", category: "perseverance" }
+    { text: "Nothing is impossible, the word itself says I'm possible!", author: "Audrey Hepburn", category: "perseverance" },
+    { text: "Yesterday is history, tomorrow is a mystery, but today is a gift. That is why it is called the present.", author: "Eleanor Roosevelt", category: "mindfulness" },
+    { text: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt", category: "dreams" },
+    { text: "In any moment of decision, the best thing you can do is the right thing. The worst thing you can do is nothing.", author: "Theodore Roosevelt", category: "decisions" },
+    { text: "Kindness is like snow. It beautifies everything it covers.", author: "Kahlil Gibran", category: "kindness" },
+    { text: "Try to be a rainbow in someone's cloud.", author: "Maya Angelou", category: "positivity" },
+    { text: "The best way to predict your future is to create it.", author: "Abraham Lincoln", category: "future" },
+    { text: "Life is what happens when you're busy making other plans.", author: "John Lennon", category: "life" },
+    { text: "It always seems impossible until it is done.", author: "Nelson Mandela", category: "achievement" },
+    { text: "Never let the fear of striking out keep you from playing the game.", author: "Babe Ruth", category: "courage" },
+    { text: "The only limit to our realization of tomorrow will be our doubts of today.", author: "Franklin D. Roosevelt", category: "doubt" },
+    { text: "The journey of a thousand miles begins with one step.", author: "Lao Tzu", category: "perseverance" },
+    { text: "What you do makes a difference, and you have to decide what kind of difference you want to make.", author: "Jane Goodall", category: "impact" },
+    { text: "A person's a person, no matter how small.", author: "Dr. Seuss", category: "respect" },
+    { text: "Unless someone like you cares a whole awful lot, nothing is going to get better. It's not.", author: "Dr. Seuss", category: "caring" },
+    { text: "We know what we are, but know not what we may be.", author: "William Shakespeare", category: "potential" }
   ];
 
   // Generate word suggestions based on the missing word
@@ -115,7 +130,29 @@ export default function QuotePage() {
         
         "Dalai Lama": "The Dalai Lama's simple yet profound message teaches that kindness is always a choice available to us. This quote helps children understand that being kind is within their control no matter the circumstances, and that compassion toward others is a value worth practicing every day.",
         
-        "Audrey Hepburn": "Audrey Hepburn's clever wordplay on 'impossible' reveals that even seemingly insurmountable challenges contain the seeds of possibility. This quote encourages children to approach obstacles with optimism and creativity, seeing opportunities where others might see limitations."
+        "Audrey Hepburn": "Audrey Hepburn's clever wordplay on 'impossible' reveals that even seemingly insurmountable challenges contain the seeds of possibility. This quote encourages children to approach obstacles with optimism and creativity, seeing opportunities where others might see limitations.",
+        
+        "Eleanor Roosevelt": "Eleanor Roosevelt reminds us that we should appreciate the present moment while it's here. This quote teaches children about mindfulness and the importance of focusing on the gifts each day brings, rather than dwelling on the past or worrying about the future.",
+        
+        "Kahlil Gibran": "Kahlil Gibran uses a beautiful metaphor comparing kindness to snow. Just as snow makes everything it covers more beautiful, acts of kindness improve every situation and relationship they touch. This teaches children that kindness has a transformative power.",
+        
+        "Maya Angelou": "Maya Angelou encourages us to bring positivity into other people's lives. This quote teaches children that they have the power to brighten someone else's day through their words and actions, just like a rainbow brings beauty after a storm.",
+        
+        "Abraham Lincoln": "Abraham Lincoln emphasizes that we have the power to shape our own futures through our actions and decisions. This teaches children that they can be active creators of their own destiny rather than passive observers.",
+        
+        "John Lennon": "John Lennon reminds us that life often unfolds in unexpected ways. This quote helps children understand that while planning is important, being flexible and appreciating the journey is equally valuable.",
+        
+        "Nelson Mandela": "Nelson Mandela, who overcame tremendous obstacles, reminds us that great achievements often seem impossible until they're accomplished. This encourages children to persevere even when a goal seems out of reach.",
+        
+        "Babe Ruth": "Babe Ruth, one of baseball's greatest players, encourages us to take chances and not let fear hold us back. This teaches children the importance of courage and taking healthy risks as part of growth and learning.",
+        
+        "Franklin D. Roosevelt": "Franklin D. Roosevelt points out that our doubts are often the biggest obstacles to our success. This quote helps children understand that believing in possibilities opens doors to achievement.",
+        
+        "Lao Tzu": "Lao Tzu's ancient wisdom reminds us that even the longest journeys begin with a single step. This teaches children that big goals are achieved through small, consistent actions taken one at a time.",
+        
+        "Jane Goodall": "Jane Goodall, famous for her work with chimpanzees and conservation, reminds us that our actions matter. This quote encourages children to think about the impact they want to have on the world and make conscious choices.",
+        
+        "William Shakespeare": "Shakespeare suggests that while we know our current capabilities, our potential for growth and change is limitless. This inspires children to imagine possibilities beyond their current circumstances and skills."
       };
       
       // Get the explanation based on the author, or use a default
@@ -276,7 +313,7 @@ export default function QuotePage() {
       
       <div className="text-center mb-12">
         
-        <h1 className="text-4xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-amber-500 to-amber-700 text-transparent bg-clip-text">
+        <h1 className="text-4xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-amber-600 to-orange-700 text-transparent bg-clip-text drop-shadow-sm">
           Daily Wisdom
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">

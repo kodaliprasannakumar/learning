@@ -20,7 +20,7 @@ export default function Index() {
       </div>
       
       <div className="text-center mb-10">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 animate-fade-in">Welcome to Your Creative Playground!</h1>
+        <h1 className="text-4xl md:text-5xl font-bold py-4 animate-fade-in leading-[1.4]">Welcome to Your Creative Playground!</h1>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-6 animate-fade-in" style={{ animationDelay: "100ms" }}>
           Unleash your imagination and watch your ideas come to life with our fun, interactive tools.
         </p>
