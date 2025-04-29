@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/hooks/useAuth';
-import { Palette, Video, BookOpen, Puzzle, LogOut, LogIn, Menu, X, Lightbulb, Coins } from 'lucide-react';
+import { Palette, Video, BookOpen, Puzzle, LogOut, LogIn, Menu, X, Lightbulb, Coins, Globe } from 'lucide-react';
 import { CreditDisplay } from './CreditDisplay';
 
 const Header: React.FC = () => {
@@ -167,6 +167,24 @@ const Header: React.FC = () => {
                 </div>
                 <span className="font-medium">Credits</span>
               </Link>
+              
+              <Link 
+                to="/space" 
+                className={`flex flex-col items-center text-sm text-foreground transition-all duration-300 ${
+                  isActive('/space') 
+                    ? 'text-indigo-600 font-bold scale-110' 
+                    : 'hover:text-indigo-600 hover:scale-110'
+                }`}
+              >
+                <div className={`p-2.5 rounded-full mb-1.5 transition-all duration-300 ${
+                  isActive('/space') 
+                    ? 'bg-gradient-to-br from-indigo-600 to-blue-400 shadow-lg shadow-indigo-600/30 transform -rotate-3' 
+                    : 'bg-white/80 hover:bg-gradient-to-br hover:from-indigo-600/20 hover:to-blue-100 hover:shadow-md hover:-rotate-3'
+                }`}>
+                  <Globe className={`h-6 w-6 transition-colors ${isActive('/space') ? 'text-white' : 'text-gray-600 group-hover:text-indigo-600'}`} />
+                </div>
+                <span className="font-medium">Space</span>
+              </Link>
             </div>
           </nav>
           
@@ -278,6 +296,19 @@ const Header: React.FC = () => {
               >
                 <Coins className={`h-5 w-5 ${isActive('/credits') ? 'text-white' : ''}`} />
                 <span>Credits</span>
+              </Link>
+              
+              <Link 
+                to="/space" 
+                className={`flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300 ${
+                  isActive('/space') 
+                    ? 'bg-gradient-to-r from-indigo-600/80 to-blue-400/80 text-white font-medium shadow-md' 
+                    : 'hover:bg-gradient-to-r hover:from-indigo-600/10 hover:to-blue-50 hover:text-indigo-600 hover:shadow-sm'
+                }`}
+                onClick={closeMenu}
+              >
+                <Globe className={`h-5 w-5 ${isActive('/space') ? 'text-white' : ''}`} />
+                <span>Space</span>
               </Link>
               
               {user && (

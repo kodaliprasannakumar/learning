@@ -51,10 +51,17 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
       
       const savedCredits = localStorage.getItem(key);
       if (savedCredits) {
-        setCredits(parseInt(savedCredits, 10));
+        const parsedCredits = parseInt(savedCredits, 10);
+        // Ensure we have a valid number
+        setCredits(isNaN(parsedCredits) ? 0 : parsedCredits);
+      } else {
+        // If no credits found, initialize with default value
+        saveCredits(50);
       }
     } catch (error) {
       console.error("Error in fetchCredits:", error);
+      // Fallback to default value if there's an error
+      setCredits(50);
     } finally {
       setIsLoading(false);
     }

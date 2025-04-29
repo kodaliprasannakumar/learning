@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import SavedDoodles from "@/components/SavedDoodles";
-import { Video, BookOpen, Puzzle, Shield, Star, Palette, Lightbulb } from "lucide-react";
+import { Video, BookOpen, Puzzle, Shield, Star, Palette, Lightbulb, Globe } from "lucide-react";
 
 export default function Index() {
   const { user, loading } = useAuth();
@@ -99,6 +99,25 @@ export default function Index() {
           <Link to="/quote">
             <Button className="kid-button bg-amber-500 hover:bg-amber-500/80 text-white w-full py-5 text-lg">
               Get Daily Wisdom
+            </Button>
+          </Link>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-8 max-w-5xl mx-auto mb-16">
+        <div className="card-glow-indigo bg-gradient-to-br from-indigo-100 to-blue-50 p-8 rounded-2xl shadow-lg card-hover">
+          <div className="h-40 mb-6 flex items-center justify-center">
+            <div className="bg-indigo-500/10 w-28 h-28 rounded-full flex items-center justify-center">
+              <Globe className="h-14 w-14 text-indigo-600" />
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold mb-2 text-indigo-600">Space Explorer</h2>
+          <p className="mb-6 text-muted-foreground">
+            Explore cosmic questions and get answers from our AI space expert by interacting with a 3D globe.
+          </p>
+          <Link to="/space">
+            <Button className="kid-button bg-indigo-600 hover:bg-indigo-600/80 text-white w-full py-5 text-lg">
+              Explore Space
             </Button>
           </Link>
         </div>
