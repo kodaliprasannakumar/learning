@@ -12,6 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import ImageProviderSelector from './ImageProviderSelector';
+import { ImageProvider } from '@/services/imageGeneration';
 
 // Types for our story elements
 interface StoryElement {
@@ -22,12 +24,13 @@ interface StoryElement {
 }
 
 interface StoryGeneratorProps {
-  onGenerateStory: (elements: StoryElement[]) => void;
+  onGenerateStory: (elements: StoryElement[], imageProvider: ImageProvider) => void;
 }
 
 const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
   const [selectedElements, setSelectedElements] = useState<StoryElement[]>([]);
   const [activeCategory, setActiveCategory] = useState<'character' | 'setting' | 'object' | 'storyStyle' | 'imageStyle'>('character');
+  const [selectedImageProvider, setSelectedImageProvider] = useState<ImageProvider>(ImageProvider.AUTO);
 
   // Placeholder data for story elements
   const storyElements: Record<string, StoryElement[]> = {
@@ -121,17 +124,20 @@ const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
     }
     
     // If no styles are selected, use default styles
+    let elements = [...selectedElements];
+    
     if (!selectedElements.some(e => e.type === 'storyStyle')) {
       const defaultStoryStyle = storyElements.storyStyle[0];
-      setSelectedElements([...selectedElements, defaultStoryStyle]);
+      elements = [...elements, defaultStoryStyle];
     }
     
     if (!selectedElements.some(e => e.type === 'imageStyle')) {
       const defaultImageStyle = storyElements.imageStyle[0];
-      setSelectedElements([...selectedElements, defaultImageStyle]);
+      elements = [...elements, defaultImageStyle];
     }
     
-    onGenerateStory(selectedElements);
+    // Pass both the story elements and the selected image provider
+    onGenerateStory(elements, selectedImageProvider);
   };
 
   return (
@@ -309,6 +315,14 @@ const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
           );
         })}
       </div>
+      
+      {/* Image Provider Selector */}
+      <Card className="p-6 border-2 border-amber-200 bg-white rounded-xl mt-6">
+        <ImageProviderSelector 
+          value={selectedImageProvider}
+          onChange={setSelectedImageProvider}
+        />
+      </Card>
       
       <div className="flex justify-center mt-6">
         <Button 

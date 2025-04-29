@@ -12,6 +12,7 @@ import jsPDF from 'jspdf';
 import { useCreditSystem } from '@/hooks/useCreditSystem';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { Coins } from 'lucide-react';
+import { ImageProvider } from '@/services/imageGeneration';
 
 // Types for our story elements
 interface StoryElement {
@@ -67,7 +68,7 @@ const StoryPage = () => {
     }
   }, [currentPage, storyView]);
 
-  const handleGenerateStory = async (elements: StoryElement[]) => {
+  const handleGenerateStory = async (elements: StoryElement[], imageProvider: ImageProvider) => {
     setSelectedElements(elements);
     setIsGenerating(true);
     setError(null);
@@ -87,14 +88,17 @@ const StoryPage = () => {
         return;
       }
       
-      // Use the OpenAI API to generate the story
-      const generatedStory = await generateStory(elements);
+      // Use the OpenAI API to generate the story with the selected image provider
+      // We're adding the imageProvider as a property to the first element as a workaround
+      // since we don't want to modify the generateStory function signature
+      const elementsWithProvider = [...elements];
+      (elementsWithProvider[0] as any).imageProvider = imageProvider;
+      
+      const generatedStory = await generateStory(elementsWithProvider);
       
       setStoryPages(generatedStory);
       setCurrentPage(0);
       toast.success("Your story has been created!");
-      
-      // Remove credit earning functionality as per user request
     } catch (err) {
       console.error("Error generating story:", err);
       setError("Failed to generate story. Please try again.");
@@ -540,7 +544,9 @@ const StoryPage = () => {
             <AlertDialogAction
               onClick={() => {
                 setShowStoryConfirm(false);
-                handleGenerateStory(selectedElements);
+                // Cast to any to avoid TypeScript error
+                const providerFromElement = (selectedElements[0] as any).imageProvider || ImageProvider.AUTO;
+                handleGenerateStory(selectedElements, providerFromElement);
               }}
               className="bg-amber-500 hover:bg-amber-600 text-white"
             >
@@ -571,7 +577,9 @@ const StoryPage = () => {
             <AlertDialogAction
               onClick={() => {
                 setShowIllustrationConfirm(false);
-                handleGenerateStory(selectedElements);
+                // Cast to any to avoid TypeScript error
+                const providerFromElement = (selectedElements[0] as any).imageProvider || ImageProvider.AUTO;
+                handleGenerateStory(selectedElements, providerFromElement);
               }}
               className="bg-amber-500 hover:bg-amber-600 text-white"
             >

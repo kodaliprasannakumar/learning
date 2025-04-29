@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { generateImage, ImageProvider } from '../../services/imageGeneration';
 
 // Create an OpenAI instance
 const openai = new OpenAI({
@@ -50,33 +51,15 @@ async function generateImageForStoryPage(
       return imageCache[cacheKey];
     }
     
-    // Map image styles to descriptive terms for DALL-E
-    const styleDescriptions: Record<string, string> = {
-      'Cartoon': 'colorful, whimsical cartoon style with bold outlines and vibrant colors',
-      'Watercolor': 'soft watercolor painting style with flowing colors and gentle brush strokes',
-      'Pixel Art': 'retro pixel art style with visible pixels and limited color palette',
-      'Comic Book': 'comic book style with bold lines, dynamic composition and bright colors',
-      'Digital Art': 'modern digital art with vibrant colors, smooth gradients, and clean lines',
-      '3D Render': '3D rendered illustration with depth, lighting effects, and polished surfaces'
-    };
-    
-    const styleDescription = styleDescriptions[imageStyle] || styleDescriptions['Cartoon'];
-    
-    // Create a prompt for image generation
-    const prompt = `A children's book illustration showing a scene where a ${character} in a ${setting} with a ${object}. Scene description: ${text}. Style: ${styleDescription}.`;
-
-    // Call the OpenAI API to generate an image
-    const response = await openai.images.generate({
-      model: "dall-e-3",
-      prompt,
-      n: 1,
-      size: "1024x1024",
-      quality: "standard",
-      style: "vivid",
-    });
-
-    // Get the image URL
-    const imageUrl = response.data[0]?.url || '/placeholder.svg';
+    // Use the image generation service instead of directly calling DALL-E
+    const imageUrl = await generateImage(
+      character,
+      setting,
+      object,
+      text,
+      imageStyle,
+      ImageProvider.AUTO // Let the service decide which provider to use based on rate limits
+    );
     
     // Cache the result
     imageCache[cacheKey] = imageUrl;
@@ -100,6 +83,9 @@ export async function generateStory(elements: StoryElement[]): Promise<StoryPage
     const object = elements.find(e => e.type === 'object')?.name || 'Treasure';
     const storyStyle = elements.find(e => e.type === 'storyStyle')?.name || 'Fun';
     const imageStyle = elements.find(e => e.type === 'imageStyle')?.name || 'Cartoon';
+    
+    // Extract image provider if it exists on the first element
+    const imageProvider = (elements[0] as any).imageProvider;
 
     // Map story styles to tone instructions for GPT
     const storyStyleInstructions: Record<string, string> = {
@@ -154,7 +140,14 @@ export async function generateStory(elements: StoryElement[]): Promise<StoryPage
     
     // Generate images in parallel for all paragraphs
     const imagePromises = paragraphs.map(text => 
-      generateImageForStoryPage(character, setting, object, text, imageStyle)
+      generateImage(
+        character, 
+        setting, 
+        object, 
+        text, 
+        imageStyle, 
+        imageProvider // Pass the image provider extracted from elements
+      )
     );
     
     // Wait for all image generations to complete
@@ -172,6 +165,12 @@ export async function generateStory(elements: StoryElement[]): Promise<StoryPage
   }
 }
 
+// Export the image generation function so it can be used by the image generation service
+export {
+  generateImageForStoryPage,
+};
+
 export default {
   generateStory,
+  generateImageForStoryPage,
 }; 
