@@ -1,5 +1,5 @@
 [build]
-  command = "npm i -f rollup-plugin-node-polyfills && npm install && npm run build"
+  command = "rm -rf node_modules package-lock.json && npm i -g npm@latest && npm i --legacy-peer-deps && npm run build"
   publish = "dist"
 
 [build.environment]
