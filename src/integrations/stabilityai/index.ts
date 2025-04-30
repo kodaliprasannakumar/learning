@@ -183,22 +183,52 @@ async function generateImageForStoryPage(
     // Create a prompt for image generation
     const prompt = `A children's book illustration showing a scene where a ${character} in a ${setting} with a ${object}. Scene description: ${text}. Style: ${styleDescription}.`;
 
-    // Generate the image using Amazon Bedrock
-    // Fall back to direct Stability API if Bedrock fails
-    let imageUrl;
-    try {
-      imageUrl = await generateImageWithBedrockStableDiffusion(prompt);
-    } catch (error) {
-      console.error('Error with Bedrock, falling back to direct Stability API:', error);
-      imageUrl = await generateImageWithStableDiffusion(prompt);
+    // Generate the image with robust fallback strategy
+    let imageUrl = '/placeholder.svg';
+    let bedrockError = null;
+    
+    // Try Amazon Bedrock first if credentials are available
+    if (AWS_ACCESS_KEY_ID && AWS_SECRET_ACCESS_KEY) {
+      try {
+        console.log('Attempting to generate image with Amazon Bedrock');
+        imageUrl = await generateImageWithBedrockStableDiffusion(prompt);
+        console.log('Successfully generated image with Amazon Bedrock');
+      } catch (error) {
+        bedrockError = error;
+        console.error('Amazon Bedrock image generation failed:', error);
+        console.log('Falling back to direct Stability API...');
+      }
+    } else {
+      console.log('AWS credentials not configured, skipping Bedrock');
     }
     
-    // Cache the result
-    imageCache[cacheKey] = imageUrl;
+    // If Bedrock failed or wasn't attempted, try direct Stability API
+    if (imageUrl === '/placeholder.svg' && STABILITY_API_KEY) {
+      try {
+        console.log('Attempting to generate image with direct Stability API');
+        imageUrl = await generateImageWithStableDiffusion(prompt);
+        console.log('Successfully generated image with direct Stability API');
+      } catch (error) {
+        console.error('Direct Stability API image generation failed:', error);
+        
+        // If we have specific errors that might indicate configuration issues, log them
+        if (bedrockError) {
+          console.error('All image generation attempts failed. Original Bedrock error:', bedrockError);
+        }
+        
+        // Fallback to placeholder if all methods fail
+        console.log('All image generation attempts failed, using placeholder image');
+      }
+    }
+    
+    // Cache the result (but only if it's not the placeholder)
+    if (imageUrl !== '/placeholder.svg') {
+      imageCache[cacheKey] = imageUrl;
+    }
     
     return imageUrl;
   } catch (error) {
-    console.error('Error generating image:', error);
+    console.error('Error in image generation process:', error);
     return '/placeholder.svg'; // Fallback to placeholder if image generation fails
   }
 }
