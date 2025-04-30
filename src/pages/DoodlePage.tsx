@@ -14,6 +14,7 @@ import { useCreditSystem } from '@/hooks/useCreditSystem';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { generateImage, generateVideo } from '@/integrations/aws/lambda';
+import GenerationAnimation from "@/components/GenerationAnimation";
 
 type StyleOption = "cartoon" | "watercolor" | "pixel" | "storybook" | "sketchy";
 
@@ -463,7 +464,7 @@ const DoodlePage = () => {
                   </h2>
                 </div>
                 
-                <div className="rounded-md overflow-hidden border border-muted">
+                <div className="rounded-md overflow-hidden border border-muted relative">
                   <img 
                     src={aiImage} 
                     alt={`AI-generated ${selectedStyle} image`} 
@@ -479,7 +480,7 @@ const DoodlePage = () => {
                 )}
                 
                 <div className="flex justify-center mt-4">
-                  <Button
+                  {/* <Button
                     onClick={handleGenerateVideo}
                     disabled={isGeneratingVideo || !aiImage}
                     className="bg-gradient-to-r from-kid-pink to-kid-purple text-white hover:opacity-90 transition-opacity"
@@ -495,7 +496,7 @@ const DoodlePage = () => {
                         Create Story
                       </>
                     )}
-                  </Button>
+                  </Button> */}
                 </div>
               </Card>
             )}
@@ -535,12 +536,18 @@ const DoodlePage = () => {
             )}
             
             {!aiImage && !videoUrl && (
-              <Card className="p-6 shadow-md border-dashed border-2 border-muted flex flex-col items-center justify-center min-h-[300px] text-center">
-                <Wand2 className="h-10 w-10 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">Transform Your Doodle</h3>
-                <p className="text-muted-foreground max-w-xs">
-                  Generate an amazing {selectedStyle} version of your drawing, then create a story from it!
-                </p>
+              <Card className="p-8 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] border-dashed border-2 border-muted flex flex-col items-center justify-center min-h-[320px] text-center relative">
+                {isGeneratingImage ? (
+                  <GenerationAnimation mode="image" />
+                ) : (
+                  <>
+                    <Wand2 className="h-12 w-12 text-muted-foreground mb-5" />
+                    <h3 className="text-xl font-medium text-foreground mb-3">Transform Your Doodle</h3>
+                    <p className="text-muted-foreground max-w-xs mx-8">
+                      Generate an amazing {selectedStyle} version of your drawing, then create a story from it!
+                    </p>
+                  </>
+                )}
               </Card>
             )}
           </motion.div>
