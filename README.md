@@ -100,4 +100,4 @@ You can deploy this project using any static site hosting service:
 
 ## Contributing
 
-Contributions to improve Botadoodle are welcome. Please feel free to submit a pull request or open an issue.
+Contributions to improve Wizzle are welcome. Please feel free to submit a pull request or open an issue.

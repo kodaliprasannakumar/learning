@@ -6,7 +6,7 @@ const Footer = () => {
     <footer className="w-full border-t-2 border-kid-yellow/40 bg-gradient-to-r from-kid-green/10 via-kid-yellow/10 to-kid-pink/10 py-6">
       <div className="container flex flex-col items-center justify-between gap-4 md:flex-row">
         <p className="text-center text-sm text-muted-foreground md:text-left flex items-center gap-1">
-          © {new Date().getFullYear()} Botadoodle. Made with 
+          © {new Date().getFullYear()} Wizzle. Made with 
           <Heart className="h-3 w-3 text-rose-500 animate-pulse" fill="currentColor" />
           for kids.
         </p>
