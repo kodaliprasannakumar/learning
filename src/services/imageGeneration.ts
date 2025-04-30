@@ -30,8 +30,6 @@ setInterval(() => {
  * Image generation providers
  */
 export enum ImageProvider {
-  AUTO = 'auto',       // Automatically choose the best provider
-  DALLE = 'dalle',     // OpenAI's DALL-E 3
   STABILITY = 'stability', // Stability AI's Stable Diffusion
 }
 
@@ -51,75 +49,19 @@ export async function generateImage(
   object: string,
   text: string,
   imageStyle: string = 'Cartoon',
-  provider: ImageProvider = ImageProvider.AUTO
+  provider: ImageProvider = ImageProvider.STABILITY
 ): Promise<string> {
   try {
-    // If provider is AUTO, determine which provider to use based on rate limits
-    if (provider === ImageProvider.AUTO) {
-      // Check if DALL-E is rate limited (5 requests per minute)
-      if (DALLE_RATE_LIMIT.requestCount >= 5 || DALLE_RATE_LIMIT.isLimited) {
-        console.log('DALL-E rate limited, using Stability AI');
-        provider = ImageProvider.STABILITY;
-      } else {
-        provider = ImageProvider.DALLE;
-      }
-    }
-
-    // Generate image with the selected provider
-    let imageUrl: string;
-    if (provider === ImageProvider.DALLE) {
-      // Track DALL-E request count
-      DALLE_RATE_LIMIT.requestCount++;
-      if (DALLE_RATE_LIMIT.requestCount >= 5) {
-        DALLE_RATE_LIMIT.isLimited = true;
-      }
-
-      // Use OpenAI integration
-      // @ts-ignore - Assuming the structure matches even if TypeScript doesn't recognize it
-      imageUrl = await openaiService.generateImageForStoryPage(
-        character, 
-        setting, 
-        object, 
-        text, 
-        imageStyle
-      );
-    } else {
-      // Use Stability AI integration
-      imageUrl = await stabilityService.generateImageForStoryPage(
-        character,
-        setting,
-        object,
-        text,
-        imageStyle
-      );
-    }
-
-    return imageUrl;
+    // Generate image with Stability AI
+    return await stabilityService.generateImageForStoryPage(
+      character,
+      setting,
+      object,
+      text,
+      imageStyle
+    );
   } catch (error) {
     console.error('Error in image generation service:', error);
-    
-    // If primary provider fails, try fallback
-    if (provider === ImageProvider.DALLE) {
-      console.log('DALL-E failed, falling back to Stability AI');
-      return stabilityService.generateImageForStoryPage(
-        character,
-        setting,
-        object,
-        text,
-        imageStyle
-      );
-    } else if (provider === ImageProvider.STABILITY) {
-      console.log('Stability AI failed, falling back to DALL-E');
-      // @ts-ignore - Assuming the structure matches
-      return openaiService.generateImageForStoryPage(
-        character,
-        setting,
-        object,
-        text,
-        imageStyle
-      );
-    }
-    
     return '/placeholder.svg';
   }
 }

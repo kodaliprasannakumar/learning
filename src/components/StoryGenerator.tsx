@@ -12,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import ImageProviderSelector from './ImageProviderSelector';
 import { ImageProvider } from '@/services/imageGeneration';
 
 // Types for our story elements
@@ -30,7 +29,7 @@ interface StoryGeneratorProps {
 const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
   const [selectedElements, setSelectedElements] = useState<StoryElement[]>([]);
   const [activeCategory, setActiveCategory] = useState<'character' | 'setting' | 'object' | 'storyStyle' | 'imageStyle'>('character');
-  const [selectedImageProvider, setSelectedImageProvider] = useState<ImageProvider>(ImageProvider.AUTO);
+  const [selectedImageProvider, setSelectedImageProvider] = useState<ImageProvider>(ImageProvider.STABILITY);
 
   // Placeholder data for story elements
   const storyElements: Record<string, StoryElement[]> = {
@@ -315,14 +314,6 @@ const StoryGenerator = ({ onGenerateStory }: StoryGeneratorProps) => {
           );
         })}
       </div>
-      
-      {/* Image Provider Selector */}
-      <Card className="p-6 border-2 border-amber-200 bg-white rounded-xl mt-6">
-        <ImageProviderSelector 
-          value={selectedImageProvider}
-          onChange={setSelectedImageProvider}
-        />
-      </Card>
       
       <div className="flex justify-center mt-6">
         <Button 

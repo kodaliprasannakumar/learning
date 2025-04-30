@@ -50,7 +50,7 @@ const SpaceQuestionsPage = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-bold text-center mb-2 text-indigo-600">Space Explorer</h1>
-        <p className="text-center text-lg mb-8">Explore the cosmos! Hover over the spikes to see questions, and click to get answers from our AI space expert.</p>
+        <p className="text-center text-lg mb-8">Explore the cosmos! Hover over the planets to see questions, and click to get answers from our AI space expert.</p>
         
         <div className="bg-gradient-to-b from-indigo-50 to-violet-100 rounded-xl p-4 shadow-lg mb-8">
           <SpaceGlobe 

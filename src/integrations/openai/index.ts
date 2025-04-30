@@ -58,7 +58,7 @@ async function generateImageForStoryPage(
       object,
       text,
       imageStyle,
-      ImageProvider.AUTO // Let the service decide which provider to use based on rate limits
+      ImageProvider.STABILITY // Always use Stability AI
     );
     
     // Cache the result

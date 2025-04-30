@@ -92,7 +92,8 @@ const StoryPage = () => {
       // We're adding the imageProvider as a property to the first element as a workaround
       // since we don't want to modify the generateStory function signature
       const elementsWithProvider = [...elements];
-      (elementsWithProvider[0] as any).imageProvider = imageProvider;
+      // Always use STABILITY
+      (elementsWithProvider[0] as any).imageProvider = ImageProvider.STABILITY;
       
       const generatedStory = await generateStory(elementsWithProvider);
       
@@ -544,8 +545,8 @@ const StoryPage = () => {
             <AlertDialogAction
               onClick={() => {
                 setShowStoryConfirm(false);
-                // Cast to any to avoid TypeScript error
-                const providerFromElement = (selectedElements[0] as any).imageProvider || ImageProvider.AUTO;
+                // Use Stability AI for regenerating the entire story
+                const providerFromElement = ImageProvider.STABILITY;
                 handleGenerateStory(selectedElements, providerFromElement);
               }}
               className="bg-amber-500 hover:bg-amber-600 text-white"
@@ -577,8 +578,8 @@ const StoryPage = () => {
             <AlertDialogAction
               onClick={() => {
                 setShowIllustrationConfirm(false);
-                // Cast to any to avoid TypeScript error
-                const providerFromElement = (selectedElements[0] as any).imageProvider || ImageProvider.AUTO;
+                // Use Stability AI for regenerating the entire story
+                const providerFromElement = ImageProvider.STABILITY;
                 handleGenerateStory(selectedElements, providerFromElement);
               }}
               className="bg-amber-500 hover:bg-amber-600 text-white"
