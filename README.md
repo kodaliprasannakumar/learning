@@ -22,6 +22,38 @@ This project uses the OpenAI API for generating stories and images. To set up th
 
 > **Note**: Keep your API key secure and never commit it to version control.
 
+## Stability AI Setup
+
+For image generation, this project uses Stability AI's Stable Diffusion models. To set up:
+
+1. Create an account at [https://stability.ai/](https://stability.ai/)
+2. Generate an API key from your account dashboard
+3. Add the API key to your `.env` file:
+   ```
+   VITE_STABILITY_API_KEY=your_stability_api_key_here
+   ```
+
+## Amazon Bedrock Alternative Setup
+
+As an alternative to direct Stability AI API integration, you can use Stable Diffusion models through Amazon Bedrock:
+
+1. Create an AWS account if you don't have one
+2. Enable access to Stability AI models in Amazon Bedrock (console → Amazon Bedrock → Model access)
+3. Create IAM credentials with Bedrock access permissions
+4. Add AWS credentials to your `.env` file:
+   ```
+   VITE_AWS_ACCESS_KEY_ID=your_aws_access_key
+   VITE_AWS_SECRET_ACCESS_KEY=your_aws_secret_key
+   VITE_AWS_REGION=us-west-2  # or your preferred region where Stability models are available
+   ```
+5. Install the AWS SDK:
+   ```
+   npm install @aws-sdk/client-bedrock-runtime
+   ```
+6. Modify the `src/integrations/stabilityai/index.ts` file to use the Amazon Bedrock integration by uncommenting the relevant code
+
+> **Note**: Using Amazon Bedrock may incur AWS charges. Check the [Amazon Bedrock pricing page](https://aws.amazon.com/bedrock/pricing/) for details.
+
 ## Local Development
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)

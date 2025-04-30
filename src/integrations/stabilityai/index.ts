@@ -1,6 +1,10 @@
 /**
  * Stability AI API integration for image generation
  * This provides an alternative to DALL-E-3 with fewer rate limits
+ * 
+ * Integration options:
+ * 1. Direct Stability AI API (default)
+ * 2. Amazon Bedrock (commented implementation below)
  */
 
 // Type definition for story elements (matching the OpenAI integration)
@@ -22,6 +26,11 @@ const imageCache: Record<string, string> = {};
 
 // Check if the Stability API key is available
 const STABILITY_API_KEY = import.meta.env.VITE_STABILITY_API_KEY;
+
+// Check if AWS credentials are available for Bedrock
+const AWS_ACCESS_KEY_ID = import.meta.env.VITE_AWS_ACCESS_KEY_ID;
+const AWS_SECRET_ACCESS_KEY = import.meta.env.VITE_AWS_SECRET_ACCESS_KEY;
+const AWS_REGION = import.meta.env.VITE_AWS_REGION || 'us-west-2';
 
 /**
  * Generates an image using Stability AI's Stable Diffusion
@@ -75,6 +84,65 @@ async function generateImageWithStableDiffusion(prompt: string): Promise<string>
 }
 
 /**
+ * Generates an image using Amazon Bedrock's Stability AI models
+ * @param prompt The text prompt to generate an image from
+ * @returns Promise that resolves to an image URL
+ */
+async function generateImageWithBedrockStableDiffusion(prompt: string): Promise<string> {
+  try {
+    if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY) {
+      console.error("AWS credentials not found");
+      return '/placeholder.svg';
+    }
+
+    // This requires AWS SDK v3 for JavaScript
+    // npm install @aws-sdk/client-bedrock-runtime
+    const { BedrockRuntimeClient, InvokeModelCommand } = await import('@aws-sdk/client-bedrock-runtime');
+
+    const client = new BedrockRuntimeClient({ 
+      region: AWS_REGION,
+      credentials: {
+        accessKeyId: AWS_ACCESS_KEY_ID,
+        secretAccessKey: AWS_SECRET_ACCESS_KEY
+      }
+    });
+
+    // Using Stable Diffusion 3.5 Large model
+    // Other options include: stability.stable-image-ultra-v1:1, stability.stable-image-core-v1:0
+    const MODEL_ID = "stability.sd3-5-large-v1:0";
+
+    const params = {
+      modelId: MODEL_ID,
+      body: JSON.stringify({
+        prompt: prompt,
+        mode: "text-to-image",
+        aspect_ratio: "1:1",
+        output_format: "jpeg",
+        seed: Math.floor(Math.random() * 1000000)
+      }),
+    };
+
+    const command = new InvokeModelCommand(params);
+    const response = await client.send(command);
+    
+    // Use TextDecoder to handle the response instead of Buffer
+    // response.body is a Uint8Array in the browser environment
+    const decoder = new TextDecoder('utf-8');
+    const responseText = decoder.decode(response.body);
+    const modelResponse = JSON.parse(responseText);
+    
+    const base64Image = modelResponse.images[0];
+    
+    // Convert base64 to URL
+    const imageUrl = `data:image/jpeg;base64,${base64Image}`;
+    return imageUrl;
+  } catch (error) {
+    console.error('Error generating image with Amazon Bedrock:', error);
+    return '/placeholder.svg'; // Fallback to placeholder
+  }
+}
+
+/**
  * Generates an image for a story page using Stable Diffusion
  * @param character The character in the story
  * @param setting The setting of the story
@@ -115,8 +183,15 @@ async function generateImageForStoryPage(
     // Create a prompt for image generation
     const prompt = `A children's book illustration showing a scene where a ${character} in a ${setting} with a ${object}. Scene description: ${text}. Style: ${styleDescription}.`;
 
-    // Generate the image
-    const imageUrl = await generateImageWithStableDiffusion(prompt);
+    // Generate the image using Amazon Bedrock
+    // Fall back to direct Stability API if Bedrock fails
+    let imageUrl;
+    try {
+      imageUrl = await generateImageWithBedrockStableDiffusion(prompt);
+    } catch (error) {
+      console.error('Error with Bedrock, falling back to direct Stability API:', error);
+      imageUrl = await generateImageWithStableDiffusion(prompt);
+    }
     
     // Cache the result
     imageCache[cacheKey] = imageUrl;
