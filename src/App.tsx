@@ -12,6 +12,7 @@ import CreditsPage from "./pages/CreditsPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 import SpaceQuestionsPage from "./pages/SpaceQuestionsPage";
+import QuizPage from "./pages/QuizPage";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
@@ -105,6 +106,11 @@ const AppRoutes = () => {
       <Route path="/space" element={
         <ProtectedRoute>
           <SpaceQuestionsPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/quiz" element={
+        <ProtectedRoute>
+          <QuizPage />
         </ProtectedRoute>
       } />
       <Route path="/auth" element={<AuthPage />} />

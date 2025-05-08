@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/hooks/useAuth';
-import { Palette, Video, BookOpen, Puzzle, LogOut, LogIn, Menu, X, Lightbulb, Coins, Globe } from 'lucide-react';
+import { Palette, Video, BookOpen, Puzzle, LogOut, LogIn, Menu, X, Lightbulb, Coins, Globe, ClipboardCheck } from 'lucide-react';
 import { CreditDisplay } from './CreditDisplay';
 
 const Header: React.FC = () => {
@@ -185,6 +185,24 @@ const Header: React.FC = () => {
                 </div>
                 <span className="font-medium">Space</span>
               </Link>
+
+              <Link 
+                to="/quiz" 
+                className={`flex flex-col items-center text-sm text-foreground transition-all duration-300 ${
+                  isActive('/quiz') 
+                    ? 'text-green-600 font-bold scale-110' 
+                    : 'hover:text-green-600 hover:scale-110'
+                }`}
+              >
+                <div className={`p-2.5 rounded-full mb-1.5 transition-all duration-300 ${
+                  isActive('/quiz') 
+                    ? 'bg-gradient-to-br from-green-600 to-emerald-400 shadow-lg shadow-green-600/30 transform rotate-3' 
+                    : 'bg-white/80 hover:bg-gradient-to-br hover:from-green-600/20 hover:to-emerald-100 hover:shadow-md hover:rotate-3'
+                }`}>
+                  <ClipboardCheck className={`h-6 w-6 transition-colors ${isActive('/quiz') ? 'text-white' : 'text-gray-600 group-hover:text-green-600'}`} />
+                </div>
+                <span className="font-medium">Quiz</span>
+              </Link>
             </div>
           </nav>
           
@@ -309,6 +327,19 @@ const Header: React.FC = () => {
               >
                 <Globe className={`h-5 w-5 ${isActive('/space') ? 'text-white' : ''}`} />
                 <span>Space</span>
+              </Link>
+
+              <Link 
+                to="/quiz" 
+                className={`flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300 ${
+                  isActive('/quiz') 
+                    ? 'bg-gradient-to-r from-green-600/80 to-emerald-400/80 text-white font-medium shadow-md' 
+                    : 'hover:bg-gradient-to-r hover:from-green-600/10 hover:to-emerald-50 hover:text-green-600 hover:shadow-sm'
+                }`}
+                onClick={closeMenu}
+              >
+                <ClipboardCheck className={`h-5 w-5 ${isActive('/quiz') ? 'text-white' : ''}`} />
+                <span>Quiz</span>
               </Link>
               
               {user && (
