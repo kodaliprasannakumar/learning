@@ -94,12 +94,8 @@ const DoodlePage = () => {
     try {
       setIsSaving(true);
       
-      // Create a unique filename
+      // Create a unique timestamp for all related files
       const timestamp = Date.now();
-      const fileName = `${user.id}/doodle-${timestamp}.png`;
-      
-      // Convert the data URL to a file
-      const imageBlob = await fetch(doodleImage).then(res => res.blob());
       
       // Create storage bucket if it doesn't exist
       const { data: bucketData, error: bucketError } = await supabase.storage.getBucket('doodles');
@@ -113,43 +109,88 @@ const DoodlePage = () => {
         }
       }
       
-      // Upload the image to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('doodles')
-        .upload(fileName, imageBlob, { contentType: 'image/png', upsert: true });
+      // Upload the original doodle image
+      const originalFileName = `${user.id}/original-doodle-${timestamp}.png`;
+      const originalImageBlob = await fetch(doodleImage).then(res => res.blob());
       
-      if (uploadError) {
-        console.error("Upload error:", uploadError);
-        throw uploadError;
+      const { error: originalUploadError } = await supabase.storage
+        .from('doodles')
+        .upload(originalFileName, originalImageBlob, { contentType: 'image/png', upsert: true });
+      
+      if (originalUploadError) {
+        console.error("Original doodle upload error:", originalUploadError);
+        throw originalUploadError;
       }
       
-      // Get the public URL for the uploaded image
-      const { data: publicUrlData } = supabase.storage
+      // Get the public URL for the original doodle
+      const { data: originalPublicUrlData } = supabase.storage
         .from('doodles')
-        .getPublicUrl(fileName);
+        .getPublicUrl(originalFileName);
       
-      const imageUrl = publicUrlData.publicUrl;
-      console.log("Image uploaded, public URL:", imageUrl);
+      const originalImageUrl = originalPublicUrlData.publicUrl;
+      console.log("Original doodle uploaded, public URL:", originalImageUrl);
       
+      // Upload the AI-generated image if available
       let aiImageUrl = null;
       if (aiImage) {
-        // Save the AI-generated image if available
-        const aiFileName = `${user.id}/ai-doodle-${timestamp}.png`;
-        const aiImageBlob = await fetch(aiImage).then(res => res.blob());
-        
-        const { data: aiUploadData, error: aiUploadError } = await supabase.storage
-          .from('doodles')
-          .upload(aiFileName, aiImageBlob, { contentType: 'image/png', upsert: true });
-        
-        if (aiUploadError) {
-          console.error("AI image upload error:", aiUploadError);
-          // Continue even if AI image upload fails
-        } else {
-          const { data: aiPublicUrlData } = supabase.storage
-            .from('doodles')
-            .getPublicUrl(aiFileName);
+        try {
+          // Use the proxy-image Edge Function to fetch and store the image
+          // This avoids CORS issues by having the server fetch the image
+          const aiFileName = `${user.id}/ai-doodle-${timestamp}.png`;
           
-          aiImageUrl = aiPublicUrlData.publicUrl;
+          // Try to use our edge function first
+          try {
+            // Call our proxy-image Edge Function
+            const proxyResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/proxy-image`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${supabase.auth.getSession().then(res => res.data.session?.access_token)}`
+              },
+              body: JSON.stringify({
+                imageUrl: aiImage,
+                userId: user.id,
+                imageName: aiFileName
+              })
+            });
+            
+            if (proxyResponse.ok) {
+              const proxyData = await proxyResponse.json();
+              aiImageUrl = proxyData.publicUrl;
+              console.log("AI image proxied and stored successfully:", aiImageUrl);
+            } else {
+              // If proxy fails, fall back to direct URL
+              console.warn("Proxy function failed, falling back to direct URL:", await proxyResponse.text());
+              aiImageUrl = aiImage;
+            }
+          } catch (proxyError) {
+            // If proxy fails, fall back to direct URL
+            console.warn("Proxy function error, falling back to direct URL:", proxyError);
+            aiImageUrl = aiImage;
+            
+            // Attempt direct upload as a fallback
+            try {
+              const aiImageBlob = await fetch(aiImage).then(res => res.blob());
+              
+              const { error: aiUploadError } = await supabase.storage
+                .from('doodles')
+                .upload(aiFileName, aiImageBlob, { contentType: 'image/png', upsert: true });
+              
+              if (!aiUploadError) {
+                const { data: aiPublicUrlData } = supabase.storage
+                  .from('doodles')
+                  .getPublicUrl(aiFileName);
+                
+                aiImageUrl = aiPublicUrlData.publicUrl;
+                console.log("AI doodle uploaded directly, public URL:", aiImageUrl);
+              }
+            } catch (directFetchError) {
+              console.warn("Could not fetch AI image directly either, using original URL:", directFetchError);
+            }
+          }
+        } catch (aiProcessError) {
+          console.error("Error processing AI image:", aiProcessError);
+          // If we can't upload the AI image, we'll still save the doodle with just the original image
         }
       }
       
@@ -161,7 +202,7 @@ const DoodlePage = () => {
           const videoBlob = await fetch(videoUrl).then(res => res.blob());
           const videoFileName = `${user.id}/video-doodle-${timestamp}.png`;
           
-          const { data: videoUploadData, error: videoUploadError } = await supabase.storage
+          const { error: videoUploadError } = await supabase.storage
             .from('doodles')
             .upload(videoFileName, videoBlob, { contentType: 'image/png', upsert: true });
             
@@ -169,7 +210,7 @@ const DoodlePage = () => {
             const { data: videoPublicUrlData } = supabase.storage
               .from('doodles')
               .getPublicUrl(videoFileName);
-              
+            
             processedVideoUrl = videoPublicUrlData.publicUrl;
           }
         } catch (videoProcessError) {
@@ -178,14 +219,25 @@ const DoodlePage = () => {
         }
       }
       
-      // Save the doodle metadata to the database
+      // Create a title with the style information if applicable
+      const title = aiImage 
+        ? `${selectedStyle.charAt(0).toUpperCase() + selectedStyle.slice(1)} Doodle (${new Date().toLocaleDateString()})`
+        : `Doodle (${new Date().toLocaleDateString()})`;
+      
+      // Save the doodle metadata to the database with references to both images
       const { data: doodleData, error: insertError } = await supabase
         .from('doodles')
         .insert({
           user_id: user.id,
-          image_url: aiImageUrl || imageUrl, // Prefer AI image if available
+          image_url: aiImageUrl || originalImageUrl, // Main display image (prefer AI if available)
           video_url: processedVideoUrl,
-          title: `Doodle ${new Date().toLocaleDateString()}`,
+          title: title,
+          details: {
+            original_image_url: originalImageUrl,
+            ai_image_url: aiImageUrl,
+            style: aiImage ? selectedStyle : null,
+            description: doodleDescription
+          }
         })
         .select();
       
@@ -194,7 +246,7 @@ const DoodlePage = () => {
         throw insertError;
       }
       
-      console.log("Doodle saved:", doodleData);
+      console.log("Doodle saved successfully:", doodleData);
       toast.success("Doodle saved successfully!");
       
       // Trigger confetti celebration
