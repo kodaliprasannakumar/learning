@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/hooks/useAuth';
-import { Palette, Video, BookOpen, Puzzle, LogOut, LogIn, Menu, X, Lightbulb, Coins, Globe, ClipboardCheck } from 'lucide-react';
+import { Palette, Video, BookOpen, Puzzle, LogOut, LogIn, Menu, X, Lightbulb, Coins, Globe, ClipboardCheck, Brain } from 'lucide-react';
 import { CreditDisplay } from './CreditDisplay';
 
 const Header: React.FC = () => {
@@ -72,6 +72,11 @@ const Header: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-bold ml-4">
               <span className="text-kid-blue">Wiz</span><span className="text-red-400">zle</span>
             </h1>
+            
+            {/* Beta Tag */}
+            <div className="ml-3 px-2 py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold rounded-full shadow-lg animate-pulse">
+              BETA
+            </div>
 
           </div>
           
@@ -202,6 +207,24 @@ const Header: React.FC = () => {
                   <ClipboardCheck className={`h-6 w-6 transition-colors ${isActive('/quiz') ? 'text-white' : 'text-gray-600 group-hover:text-green-600'}`} />
                 </div>
                 <span className="font-medium">Quiz</span>
+              </Link>
+              
+              <Link 
+                to="/ai-trainer" 
+                className={`flex flex-col items-center text-sm text-foreground transition-all duration-300 ${
+                  isActive('/ai-trainer') 
+                    ? 'text-purple-600 font-bold scale-110' 
+                    : 'hover:text-purple-600 hover:scale-110'
+                }`}
+              >
+                <div className={`p-2.5 rounded-full mb-1.5 transition-all duration-300 ${
+                  isActive('/ai-trainer') 
+                    ? 'bg-gradient-to-br from-purple-600 to-blue-500 shadow-lg shadow-purple-600/30 transform -rotate-3' 
+                    : 'bg-white/80 hover:bg-gradient-to-br hover:from-purple-600/20 hover:to-blue-100 hover:shadow-md hover:-rotate-3'
+                }`}>
+                  <Brain className={`h-6 w-6 transition-colors ${isActive('/ai-trainer') ? 'text-white' : 'text-gray-600 group-hover:text-purple-600'}`} />
+                </div>
+                <span className="font-medium">AI</span>
               </Link>
             </div>
           </nav>
@@ -340,6 +363,19 @@ const Header: React.FC = () => {
               >
                 <ClipboardCheck className={`h-5 w-5 ${isActive('/quiz') ? 'text-white' : ''}`} />
                 <span>Quiz</span>
+              </Link>
+              
+              <Link 
+                to="/ai-trainer" 
+                className={`flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300 ${
+                  isActive('/ai-trainer') 
+                    ? 'bg-gradient-to-r from-purple-600/80 to-blue-500/80 text-white font-medium shadow-md' 
+                    : 'hover:bg-gradient-to-r hover:from-purple-600/10 hover:to-blue-100 hover:text-purple-600 hover:shadow-sm'
+                }`}
+                onClick={closeMenu}
+              >
+                <Brain className={`h-5 w-5 ${isActive('/ai-trainer') ? 'text-white' : ''}`} />
+                <span>AI</span>
               </Link>
               
               {user && (

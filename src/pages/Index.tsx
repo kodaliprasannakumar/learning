@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import SavedDoodles from "@/components/SavedDoodles";
-import { Video, BookOpen, Puzzle, Shield, Star, Palette, Lightbulb, Globe, ClipboardCheck } from "lucide-react";
+import { Video, BookOpen, Puzzle, Shield, Star, Palette, Lightbulb, Globe, ClipboardCheck, Brain } from "lucide-react";
 
 export default function Index() {
   const { user, loading } = useAuth();
@@ -137,6 +137,25 @@ export default function Index() {
           <Link to="/quiz">
             <Button className="kid-button bg-green-600 hover:bg-green-600/80 text-white w-full py-5 text-lg">
               Take a Quiz
+            </Button>
+          </Link>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-8 max-w-5xl mx-auto mb-16">
+        <div className="card-glow-purple bg-gradient-to-br from-purple-100 to-indigo-50 p-8 rounded-2xl shadow-lg card-hover">
+          <div className="h-40 mb-6 flex items-center justify-center">
+            <div className="bg-purple-500/10 w-28 h-28 rounded-full flex items-center justify-center">
+              <Brain className="h-14 w-14 text-purple-600" />
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold mb-2 text-purple-600">AI Trainer Academy</h2>
+          <p className="mb-6 text-muted-foreground">
+            Learn how AI works by training your own models! Understand data, training, and testing through hands-on experience.
+          </p>
+          <Link to="/ai-trainer">
+            <Button className="kid-button bg-purple-600 hover:bg-purple-600/80 text-white w-full py-5 text-lg">
+              Train AI Models
             </Button>
           </Link>
         </div>
