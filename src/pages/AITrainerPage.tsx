@@ -311,23 +311,62 @@ const AITrainerPage = () => {
         // Improved pattern recognition logic
         const input = userInput.trim();
         
-        // Number sequence detection
-        const numberMatch = input.match(/(\d+),?\s*(\d+),?\s*(\d+)/);
-        if (numberMatch) {
-          const [, a, b, c] = numberMatch.map(Number);
-          const diff1 = b - a;
-          const diff2 = c - b;
+        // Number sequence detection - handle any length sequence
+        const numbers = input.match(/\d+/g);
+        if (numbers && numbers.length >= 2) {
+          const numArray = numbers.map(Number);
           
-          if (diff1 === diff2) {
-            // Arithmetic sequence
-            result = (c + diff1).toString();
-          } else {
-            // Try geometric or other patterns
-            const ratio = b / a;
-            if (c / b === ratio && ratio !== 0) {
-              result = (c * ratio).toString();
+          if (numArray.length === 2) {
+            // For 2 numbers, assume arithmetic sequence
+            const diff = numArray[1] - numArray[0];
+            result = (numArray[1] + diff).toString();
+          } else if (numArray.length >= 3) {
+            // Check for arithmetic sequence
+            const diffs = [];
+            for (let i = 1; i < numArray.length; i++) {
+              diffs.push(numArray[i] - numArray[i-1]);
+            }
+            
+            // Check if all differences are the same (arithmetic sequence)
+            const isArithmetic = diffs.every(diff => diff === diffs[0]);
+            
+            if (isArithmetic) {
+              const commonDiff = diffs[0];
+              result = (numArray[numArray.length - 1] + commonDiff).toString();
             } else {
-              result = 'Complex pattern detected';
+              // Check for geometric sequence
+              const ratios = [];
+              for (let i = 1; i < numArray.length; i++) {
+                if (numArray[i-1] !== 0) {
+                  ratios.push(numArray[i] / numArray[i-1]);
+                }
+              }
+              
+              const isGeometric = ratios.length > 0 && ratios.every(ratio => Math.abs(ratio - ratios[0]) < 0.0001);
+              
+              if (isGeometric) {
+                const commonRatio = ratios[0];
+                result = Math.round(numArray[numArray.length - 1] * commonRatio).toString();
+              } else {
+                // Check for quadratic or polynomial patterns (works with 3+ numbers)
+                if (numArray.length >= 3) {
+                  // Check second differences for quadratic
+                  const secondDiffs = [];
+                  for (let i = 1; i < diffs.length; i++) {
+                    secondDiffs.push(diffs[i] - diffs[i-1]);
+                  }
+                  
+                  const isQuadratic = secondDiffs.length > 0 && secondDiffs.every(diff => Math.abs(diff - secondDiffs[0]) < 0.0001);
+                  if (isQuadratic) {
+                    const nextFirstDiff = diffs[diffs.length - 1] + secondDiffs[0];
+                    result = (numArray[numArray.length - 1] + nextFirstDiff).toString();
+                  } else {
+                    result = 'Complex pattern detected';
+                  }
+                } else {
+                  result = 'Complex pattern detected';
+                }
+              }
             }
           }
         }
