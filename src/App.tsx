@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import SpaceQuestionsPage from "./pages/SpaceQuestionsPage";
 import QuizPage from "./pages/QuizPage";
 import AITrainerPage from "./pages/AITrainerPage";
+import Math from "./pages/Math";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
@@ -117,6 +118,11 @@ const AppRoutes = () => {
       <Route path="/ai-trainer" element={
         <ProtectedRoute>
           <AITrainerPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/math" element={
+        <ProtectedRoute>
+          <Math />
         </ProtectedRoute>
       } />
       <Route path="/auth" element={<AuthPage />} />

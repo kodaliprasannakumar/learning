@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/hooks/useAuth';
-import { Palette, Video, BookOpen, Puzzle, LogOut, LogIn, Menu, X, Lightbulb, Coins, Globe, ClipboardCheck, Brain } from 'lucide-react';
+import { Palette, Video, BookOpen, Puzzle, LogOut, LogIn, Menu, X, Lightbulb, Coins, Globe, ClipboardCheck, Brain, Sparkles } from 'lucide-react';
 import { CreditDisplay } from './CreditDisplay';
 
 const Header: React.FC = () => {
@@ -12,6 +12,9 @@ const Header: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [prevScrollPos, setPrevScrollPos] = useState(0);
   const [visible, setVisible] = useState(true);
+
+  // Check if we're on the Index page
+  const isIndexPage = location.pathname === '/';
 
   // Handle scroll behavior
   useEffect(() => {
@@ -54,338 +57,239 @@ const Header: React.FC = () => {
     setMobileMenuOpen(false);
   };
 
+  const navItems = [
+    { path: '/doodle', icon: Video, label: 'Doodle', gradient: 'from-cyan-500 to-blue-600', hoverClass: 'hover:from-cyan-500 hover:to-blue-600' },
+    { path: '/story', icon: BookOpen, label: 'Story', gradient: 'from-orange-500 to-amber-600', hoverClass: 'hover:from-orange-500 hover:to-amber-600' },
+    { path: '/puzzle', icon: Puzzle, label: 'Puzzle', gradient: 'from-violet-500 to-fuchsia-600', hoverClass: 'hover:from-violet-500 hover:to-fuchsia-600' },
+    { path: '/quote', icon: Lightbulb, label: 'Wisdom', gradient: 'from-emerald-500 to-teal-600', hoverClass: 'hover:from-emerald-500 hover:to-teal-600' },
+    { path: '/space', icon: Globe, label: 'Space', gradient: 'from-indigo-600 to-purple-600', hoverClass: 'hover:from-indigo-600 hover:to-purple-600' },
+    { path: '/quiz', icon: ClipboardCheck, label: 'Quiz', gradient: 'from-lime-500 to-green-600', hoverClass: 'hover:from-lime-500 hover:to-green-600' },
+    { path: '/ai-trainer', icon: Brain, label: 'AI Academy', gradient: 'from-rose-500 to-pink-600', hoverClass: 'hover:from-rose-500 hover:to-pink-600' },
+  ];
+
   return (
     <header 
-      className={`bg-gradient-to-r from-kid-pink/30 via-kid-yellow/30 to-kid-green/30 border-b-2 border-kid-pink/30 shadow-md sticky top-0 z-50 transition-transform duration-300 ${
+      className={`${
+        isIndexPage 
+          ? 'bg-transparent backdrop-blur-none border-none shadow-none' 
+          : 'bg-gradient-to-r from-white/95 via-blue-50/90 to-purple-50/90 backdrop-blur-lg border-b border-white/30 shadow-lg'
+      } sticky top-2 z-50 transition-all duration-300 ${
         visible ? 'translate-y-0' : '-translate-y-full'
-      }`}
+      } relative`}
     >
-      <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
+      <div className="container mx-auto px-4 sm:px-6 pt-4 pb-3 sm:pt-6 sm:pb-4">
         {/* Desktop Layout */}
         <div className="flex justify-between items-center">
-          {/* Logo - Left column */}
-          <div className="flex-1 flex items-center">
-            <Link to="/">
-              <img src="/images/AIR_1.png" alt="Botadoodle Logo" className="h-12 w-12 md:h-24 md:w-24" />
+          {/* Logo Section */}
+          <div className="flex items-center group">
+            <Link to="/" className="flex items-center">
+              <div className="relative">
+                <img src="/images/AIR_1.png" alt="Wizzle Logo" className="h-12 w-12 md:h-16 md:w-16 transition-transform duration-300 group-hover:scale-110" />
+                <div className="absolute -inset-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+              </div>
             </Link>
            
-            <h1 className="text-2xl sm:text-3xl font-bold ml-4">
-              <span className="text-kid-blue">Wiz</span><span className="text-red-400">zle</span>
-            </h1>
-            
-            {/* Beta Tag */}
-            <div className="ml-3 px-2 py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold rounded-full shadow-lg animate-pulse">
-              BETA
+            <div className="ml-4">
+              <h1 className="text-2xl sm:text-3xl font-bold">
+                <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-transparent bg-clip-text">Wiz</span>
+                <span className="bg-gradient-to-r from-orange-500 to-red-500 text-transparent bg-clip-text">zle</span>
+              </h1>
+              
+              {/* Beta Tag */}
+              <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs font-bold rounded-full shadow-md">
+                <Sparkles className="h-3 w-3" />
+                <span>BETA</span>
+              </div>
             </div>
-
           </div>
           
-          {/* Navigation - Center column (hidden on mobile) */}
-          <nav className="hidden md:flex flex-1 justify-center">
-            <div className="flex items-center gap-8 md:gap-10 bg-white/60 backdrop-blur-sm rounded-full px-8 py-3 shadow-md border-2 border-white/30">
-              <Link 
-                to="/doodle" 
-                className={`flex flex-col items-center text-sm text-foreground transition-all duration-300 ${
-                  isActive('/doodle') 
-                    ? 'text-kid-blue font-bold scale-110' 
-                    : 'hover:text-kid-blue hover:scale-110'
-                }`}
+          {/* Navigation - Center (hidden on mobile and on Index page) */}
+          {!isIndexPage && (
+            <nav className="hidden lg:flex">
+              <div className="flex items-center gap-2 bg-white/85 backdrop-blur-md rounded-2xl px-6 py-3 shadow-lg border border-white/40">
+                {navItems.map((item) => {
+                  const IconComponent = item.icon;
+                  const isItemActive = isActive(item.path);
+                  return (
+                    <Link 
+                      key={item.path}
+                      to={item.path} 
+                      className={`group flex flex-col items-center px-3 py-2 rounded-xl transition-all duration-300 ${
+                        isItemActive 
+                          ? 'scale-110 shadow-md' 
+                          : 'hover:scale-105 hover:shadow-sm'
+                      }`}
+                    >
+                      <div className={`p-2.5 rounded-lg mb-1.5 transition-all duration-300 ${
+                        isItemActive 
+                          ? `bg-gradient-to-br ${item.gradient} shadow-md` 
+                          : `bg-gray-100 bg-gradient-to-br ${item.hoverClass} hover:shadow-sm`
+                      }`}>
+                        <IconComponent className={`h-4 w-4 transition-all duration-300 ${
+                          isItemActive 
+                            ? 'text-white' 
+                            : 'text-gray-600 hover:text-white'
+                        }`} />
+                      </div>
+                      <span className={`text-xs font-medium transition-colors duration-300 ${
+                        isItemActive 
+                          ? 'text-purple-600 font-semibold' 
+                          : 'text-gray-600 group-hover:text-purple-600'
+                      }`}>
+                        {item.label}
+                      </span>
+                    </Link>
+                  );
+                })}
+                
+                <div className="w-px h-8 bg-gray-300 mx-2"></div>
+                
+                <Link 
+                  to="/credits" 
+                  className={`group flex flex-col items-center px-3 py-2 rounded-xl transition-all duration-300 ${
+                    isActive('/credits') 
+                      ? 'scale-110 shadow-md' 
+                      : 'hover:scale-105 hover:shadow-sm'
+                  }`}
+                >
+                  <div className={`p-2.5 rounded-lg mb-1.5 transition-all duration-300 ${
+                    isActive('/credits') 
+                      ? 'bg-gradient-to-br from-amber-500 to-yellow-500 shadow-md' 
+                      : 'bg-gray-100 hover:bg-gradient-to-br hover:from-amber-500 hover:to-yellow-500 hover:shadow-sm'
+                  }`}>
+                    <Coins className={`h-4 w-4 transition-all duration-300 ${
+                      isActive('/credits') 
+                        ? 'text-white' 
+                        : 'text-gray-600 hover:text-white'
+                    }`} />
+                  </div>
+                  <span className={`text-xs font-medium transition-colors duration-300 ${
+                    isActive('/credits') 
+                      ? 'text-amber-600 font-semibold' 
+                      : 'text-gray-600 group-hover:text-amber-600'
+                  }`}>
+                    Credits
+                  </span>
+                </Link>
+              </div>
+            </nav>
+          )}
+          
+          {/* Mobile menu button (hidden on Index page) */}
+          {!isIndexPage && (
+            <div className="lg:hidden flex items-center mx-4">
+              <button
+                onClick={toggleMobileMenu}
+                className="p-3 rounded-2xl bg-white/85 backdrop-blur-md shadow-md hover:shadow-lg border border-white/40 transition-all duration-300 hover:scale-105"
+                aria-label="Toggle menu"
               >
-                <div className={`p-2.5 rounded-full mb-1.5 transition-all duration-300 ${
-                  isActive('/doodle') 
-                    ? 'bg-gradient-to-br from-kid-blue/80 to-cyan-400 shadow-lg shadow-kid-blue/30 transform rotate-3' 
-                    : 'bg-white/80 hover:bg-gradient-to-br hover:from-kid-blue/20 hover:to-cyan-100 hover:shadow-md hover:rotate-3'
-                }`}>
-                  <Video className={`h-6 w-6 transition-colors ${isActive('/doodle') ? 'text-white' : 'text-gray-600 group-hover:text-kid-blue'}`} />
-                </div>
-                <span className="font-medium">Doodle</span>
-              </Link>
-              
-              <Link 
-                to="/story" 
-                className={`flex flex-col items-center text-sm text-foreground transition-all duration-300 ${
-                  isActive('/story') 
-                    ? 'text-amber-500 font-bold scale-110' 
-                    : 'hover:text-amber-500 hover:scale-110'
-                }`}
-              >
-                <div className={`p-2.5 rounded-full mb-1.5 transition-all duration-300 ${
-                  isActive('/story') 
-                    ? 'bg-gradient-to-br from-amber-500 to-yellow-300 shadow-lg shadow-amber-500/30 transform -rotate-3' 
-                    : 'bg-white/80 hover:bg-gradient-to-br hover:from-amber-500/20 hover:to-yellow-100 hover:shadow-md hover:-rotate-3'
-                }`}>
-                  <BookOpen className={`h-6 w-6 transition-colors ${isActive('/story') ? 'text-white' : 'text-gray-600 group-hover:text-amber-500'}`} />
-                </div>
-                <span className="font-medium">Story</span>
-              </Link>
-              
-              <Link 
-                to="/puzzle" 
-                className={`flex flex-col items-center text-sm text-foreground transition-all duration-300 ${
-                  isActive('/puzzle') 
-                    ? 'text-purple-600 font-bold scale-110' 
-                    : 'hover:text-purple-600 hover:scale-110'
-                }`}
-              >
-                <div className={`p-2.5 rounded-full mb-1.5 transition-all duration-300 ${
-                  isActive('/puzzle') 
-                    ? 'bg-gradient-to-br from-purple-600 to-violet-400 shadow-lg shadow-purple-600/30 transform rotate-3' 
-                    : 'bg-white/80 hover:bg-gradient-to-br hover:from-purple-600/20 hover:to-violet-100 hover:shadow-md hover:rotate-3'
-                }`}>
-                  <Puzzle className={`h-6 w-6 transition-colors ${isActive('/puzzle') ? 'text-white' : 'text-gray-600 group-hover:text-purple-600'}`} />
-                </div>
-                <span className="font-medium">Puzzle</span>
-              </Link>
-              
-              <Link 
-                to="/quote" 
-                className={`flex flex-col items-center text-sm text-foreground transition-all duration-300 ${
-                  isActive('/quote') 
-                    ? 'text-amber-600 font-bold scale-110' 
-                    : 'hover:text-amber-600 hover:scale-110'
-                }`}
-              >
-                <div className={`p-2.5 rounded-full mb-1.5 transition-all duration-300 ${
-                  isActive('/quote') 
-                    ? 'bg-gradient-to-br from-amber-600 to-orange-300 shadow-lg shadow-amber-600/30 transform -rotate-3' 
-                    : 'bg-white/80 hover:bg-gradient-to-br hover:from-amber-600/20 hover:to-orange-100 hover:shadow-md hover:-rotate-3'
-                }`}>
-                  <Lightbulb className={`h-6 w-6 transition-colors ${isActive('/quote') ? 'text-white' : 'text-gray-600 group-hover:text-amber-600'}`} />
-                </div>
-                <span className="font-medium">Quotes</span>
-              </Link>
-              
-              <Link 
-                to="/credits" 
-                className={`flex flex-col items-center text-sm text-foreground transition-all duration-300 ${
-                  isActive('/credits') 
-                    ? 'text-amber-600 font-bold scale-110' 
-                    : 'hover:text-amber-600 hover:scale-110'
-                }`}
-              >
-                <div className={`p-2.5 rounded-full mb-1.5 transition-all duration-300 ${
-                  isActive('/credits') 
-                    ? 'bg-gradient-to-br from-amber-500 to-yellow-300 shadow-lg shadow-amber-500/30 transform rotate-3' 
-                    : 'bg-white/80 hover:bg-gradient-to-br hover:from-amber-500/20 hover:to-yellow-100 hover:shadow-md hover:rotate-3'
-                }`}>
-                  <Coins className={`h-6 w-6 transition-colors ${isActive('/credits') ? 'text-white' : 'text-gray-600 group-hover:text-amber-500'}`} />
-                </div>
-                <span className="font-medium">Credits</span>
-              </Link>
-              
-              <Link 
-                to="/space" 
-                className={`flex flex-col items-center text-sm text-foreground transition-all duration-300 ${
-                  isActive('/space') 
-                    ? 'text-indigo-600 font-bold scale-110' 
-                    : 'hover:text-indigo-600 hover:scale-110'
-                }`}
-              >
-                <div className={`p-2.5 rounded-full mb-1.5 transition-all duration-300 ${
-                  isActive('/space') 
-                    ? 'bg-gradient-to-br from-indigo-600 to-blue-400 shadow-lg shadow-indigo-600/30 transform -rotate-3' 
-                    : 'bg-white/80 hover:bg-gradient-to-br hover:from-indigo-600/20 hover:to-blue-100 hover:shadow-md hover:-rotate-3'
-                }`}>
-                  <Globe className={`h-6 w-6 transition-colors ${isActive('/space') ? 'text-white' : 'text-gray-600 group-hover:text-indigo-600'}`} />
-                </div>
-                <span className="font-medium">Space</span>
-              </Link>
-
-              <Link 
-                to="/quiz" 
-                className={`flex flex-col items-center text-sm text-foreground transition-all duration-300 ${
-                  isActive('/quiz') 
-                    ? 'text-green-600 font-bold scale-110' 
-                    : 'hover:text-green-600 hover:scale-110'
-                }`}
-              >
-                <div className={`p-2.5 rounded-full mb-1.5 transition-all duration-300 ${
-                  isActive('/quiz') 
-                    ? 'bg-gradient-to-br from-green-600 to-emerald-400 shadow-lg shadow-green-600/30 transform rotate-3' 
-                    : 'bg-white/80 hover:bg-gradient-to-br hover:from-green-600/20 hover:to-emerald-100 hover:shadow-md hover:rotate-3'
-                }`}>
-                  <ClipboardCheck className={`h-6 w-6 transition-colors ${isActive('/quiz') ? 'text-white' : 'text-gray-600 group-hover:text-green-600'}`} />
-                </div>
-                <span className="font-medium">Quiz</span>
-              </Link>
-              
-              <Link 
-                to="/ai-trainer" 
-                className={`flex flex-col items-center text-sm text-foreground transition-all duration-300 ${
-                  isActive('/ai-trainer') 
-                    ? 'text-purple-600 font-bold scale-110' 
-                    : 'hover:text-purple-600 hover:scale-110'
-                }`}
-              >
-                <div className={`p-2.5 rounded-full mb-1.5 transition-all duration-300 ${
-                  isActive('/ai-trainer') 
-                    ? 'bg-gradient-to-br from-purple-600 to-blue-500 shadow-lg shadow-purple-600/30 transform -rotate-3' 
-                    : 'bg-white/80 hover:bg-gradient-to-br hover:from-purple-600/20 hover:to-blue-100 hover:shadow-md hover:-rotate-3'
-                }`}>
-                  <Brain className={`h-6 w-6 transition-colors ${isActive('/ai-trainer') ? 'text-white' : 'text-gray-600 group-hover:text-purple-600'}`} />
-                </div>
-                <span className="font-medium">AI</span>
-              </Link>
+                {mobileMenuOpen ? (
+                  <X className="h-6 w-6 text-gray-700" />
+                ) : (
+                  <Menu className="h-6 w-6 text-gray-700" />
+                )}
+              </button>
             </div>
-          </nav>
+          )}
           
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center mx-4">
-            <button
-              onClick={toggleMobileMenu}
-              className="p-2 rounded-full bg-white/50 backdrop-blur-sm shadow-sm hover:bg-white/70 transition-colors"
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? (
-                <X className="h-6 w-6 text-kid-blue" />
-              ) : (
-                <Menu className="h-6 w-6 text-kid-blue" />
-              )}
-            </button>
-          </div>
-          
-          {/* Auth section - Right column (visible on desktop, hidden on mobile) */}
-          <div className="hidden md:flex flex-1 justify-end items-center gap-3">
-            {user && <CreditDisplay className="mr-2" />}
+          {/* Auth section - Right (visible on desktop) */}
+          <div className="hidden lg:flex items-center gap-3">
+            {user && (
+              <div className={`${
+                isIndexPage 
+                  ? 'bg-white/20 backdrop-blur-md border border-white/30' 
+                  : 'bg-white/90 border border-white/40'
+              } rounded-full px-4 py-2 shadow-lg transition-all duration-300`}>
+                <CreditDisplay className="text-sm font-medium" />
+              </div>
+            )}
             
             {user ? (
               <Button 
                 variant="outline" 
                 onClick={handleSignOut} 
-                className="flex items-center gap-2.5 h-auto py-2.5 px-5 rounded-full bg-gradient-to-r from-red-100 to-red-50 border-2 border-red-300 text-red-500 hover:shadow-md hover:shadow-red-200/50 hover:-translate-y-1 transition-all duration-300"
+                className={`group flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all duration-300 hover:scale-105 ${
+                  isIndexPage 
+                    ? 'bg-white/20 backdrop-blur-md border border-white/30 text-gray-700 hover:bg-white/30 hover:text-gray-800 shadow-lg' 
+                    : 'bg-gradient-to-r from-red-100 to-pink-100 border border-red-300 text-red-600 hover:from-red-200 hover:to-pink-200 shadow-md'
+                }`}
               >
-                <LogOut className="h-5 w-5" />
-                <span className="font-medium">Sign Out</span>
+                <LogOut className="h-4 w-4 group-hover:rotate-12 transition-transform duration-300" />
+                <span>Sign Out</span>
               </Button>
             ) : (
               <Button 
                 variant="outline" 
                 onClick={() => navigate('/auth')} 
-                className="flex items-center gap-2.5 h-auto py-2.5 px-5 rounded-full bg-gradient-to-r from-blue-100/80 to-cyan-50 border-2 border-kid-blue/50 text-kid-blue hover:shadow-md hover:shadow-kid-blue/30 hover:-translate-y-1 transition-all duration-300"
+                className={`group flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all duration-300 hover:scale-105 ${
+                  isIndexPage 
+                    ? 'bg-white/20 backdrop-blur-md border border-white/30 text-gray-700 hover:bg-white/30 hover:text-gray-800 shadow-lg' 
+                    : 'bg-gradient-to-r from-blue-100 to-cyan-100 border border-blue-300 text-blue-600 hover:from-blue-200 hover:to-cyan-200 shadow-md'
+                }`}
               >
-                <LogIn className="h-5 w-5" />
-                <span className="font-medium">Sign In</span>
+                <LogIn className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                <span>Sign In</span>
               </Button>
             )}
           </div>
         </div>
         
-        {/* Mobile Menu (Dropdown) */}
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-white/95 backdrop-blur-sm mt-3 py-4 px-4 rounded-xl shadow-lg border-2 border-kid-pink/30 animate-in slide-in-from-top-5 duration-200">
+        {/* Mobile Menu (Dropdown) - hidden on Index page */}
+        {!isIndexPage && mobileMenuOpen && (
+          <div className="lg:hidden bg-white/95 backdrop-blur-lg mt-4 py-6 px-6 rounded-2xl shadow-xl border border-white/40 animate-in slide-in-from-top-5 duration-200">
             <nav className="flex flex-col gap-3">
-              <Link 
-                to="/doodle" 
-                className={`flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300 ${
-                  isActive('/doodle') 
-                    ? 'bg-gradient-to-r from-kid-blue/80 to-cyan-400/80 text-white font-medium shadow-md' 
-                    : 'hover:bg-gradient-to-r hover:from-kid-blue/10 hover:to-cyan-50 hover:text-kid-blue hover:shadow-sm'
-                }`}
-                onClick={closeMenu}
-              >
-                <Video className={`h-5 w-5 ${isActive('/doodle') ? 'text-white' : ''}`} />
-                <span>Doodle</span>
-              </Link>
-              
-              <Link 
-                to="/story" 
-                className={`flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300 ${
-                  isActive('/story') 
-                    ? 'bg-gradient-to-r from-amber-500/80 to-yellow-300/80 text-white font-medium shadow-md' 
-                    : 'hover:bg-gradient-to-r hover:from-amber-500/10 hover:to-yellow-50 hover:text-amber-500 hover:shadow-sm'
-                }`}
-                onClick={closeMenu}
-              >
-                <BookOpen className={`h-5 w-5 ${isActive('/story') ? 'text-white' : ''}`} />
-                <span>Story</span>
-              </Link>
-              
-              <Link 
-                to="/puzzle" 
-                className={`flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300 ${
-                  isActive('/puzzle') 
-                    ? 'bg-gradient-to-r from-purple-600/80 to-violet-400/80 text-white font-medium shadow-md' 
-                    : 'hover:bg-gradient-to-r hover:from-purple-600/10 hover:to-violet-50 hover:text-purple-600 hover:shadow-sm'
-                }`}
-                onClick={closeMenu}
-              >
-                <Puzzle className={`h-5 w-5 ${isActive('/puzzle') ? 'text-white' : ''}`} />
-                <span>Puzzle</span>
-              </Link>
-              
-              <Link 
-                to="/quote" 
-                className={`flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300 ${
-                  isActive('/quote') 
-                    ? 'bg-gradient-to-r from-amber-600/80 to-orange-300/80 text-white font-medium shadow-md' 
-                    : 'hover:bg-gradient-to-r hover:from-amber-600/10 hover:to-orange-50 hover:text-amber-600 hover:shadow-sm'
-                }`}
-                onClick={closeMenu}
-              >
-                <Lightbulb className={`h-5 w-5 ${isActive('/quote') ? 'text-white' : ''}`} />
-                <span>Quotes</span>
-              </Link>
+              {navItems.map((item) => {
+                const IconComponent = item.icon;
+                return (
+                  <Link 
+                    key={item.path}
+                    to={item.path} 
+                    className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-300 ${
+                      isActive(item.path) 
+                        ? `bg-gradient-to-r ${item.gradient} text-white font-medium shadow-md` 
+                        : `hover:bg-gradient-to-r hover:${item.gradient} hover:text-white hover:shadow-sm text-gray-700`
+                    }`}
+                    onClick={closeMenu}
+                  >
+                    <div className={`p-2 rounded-lg transition-all duration-300 ${
+                      isActive(item.path) 
+                        ? 'bg-white/20' 
+                        : 'bg-gray-100 group-hover:bg-white/20'
+                    }`}>
+                      <IconComponent className="h-5 w-5" />
+                    </div>
+                    <span className="font-medium">{item.label}</span>
+                  </Link>
+                );
+              })}
               
               <Link 
                 to="/credits" 
-                className={`flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300 ${
+                className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-300 ${
                   isActive('/credits') 
-                    ? 'bg-gradient-to-r from-amber-500/80 to-yellow-300/80 text-white font-medium shadow-md' 
-                    : 'hover:bg-gradient-to-r hover:from-amber-500/10 hover:to-yellow-50 hover:text-amber-500 hover:shadow-sm'
+                    ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-medium shadow-md' 
+                    : 'hover:bg-gradient-to-r hover:from-amber-500 hover:to-yellow-500 hover:text-white hover:shadow-sm text-gray-700'
                 }`}
                 onClick={closeMenu}
               >
-                <Coins className={`h-5 w-5 ${isActive('/credits') ? 'text-white' : ''}`} />
-                <span>Credits</span>
-              </Link>
-              
-              <Link 
-                to="/space" 
-                className={`flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300 ${
-                  isActive('/space') 
-                    ? 'bg-gradient-to-r from-indigo-600/80 to-blue-400/80 text-white font-medium shadow-md' 
-                    : 'hover:bg-gradient-to-r hover:from-indigo-600/10 hover:to-blue-50 hover:text-indigo-600 hover:shadow-sm'
-                }`}
-                onClick={closeMenu}
-              >
-                <Globe className={`h-5 w-5 ${isActive('/space') ? 'text-white' : ''}`} />
-                <span>Space</span>
-              </Link>
-
-              <Link 
-                to="/quiz" 
-                className={`flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300 ${
-                  isActive('/quiz') 
-                    ? 'bg-gradient-to-r from-green-600/80 to-emerald-400/80 text-white font-medium shadow-md' 
-                    : 'hover:bg-gradient-to-r hover:from-green-600/10 hover:to-emerald-50 hover:text-green-600 hover:shadow-sm'
-                }`}
-                onClick={closeMenu}
-              >
-                <ClipboardCheck className={`h-5 w-5 ${isActive('/quiz') ? 'text-white' : ''}`} />
-                <span>Quiz</span>
-              </Link>
-              
-              <Link 
-                to="/ai-trainer" 
-                className={`flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300 ${
-                  isActive('/ai-trainer') 
-                    ? 'bg-gradient-to-r from-purple-600/80 to-blue-500/80 text-white font-medium shadow-md' 
-                    : 'hover:bg-gradient-to-r hover:from-purple-600/10 hover:to-blue-100 hover:text-purple-600 hover:shadow-sm'
-                }`}
-                onClick={closeMenu}
-              >
-                <Brain className={`h-5 w-5 ${isActive('/ai-trainer') ? 'text-white' : ''}`} />
-                <span>AI</span>
+                <div className={`p-2 rounded-lg transition-all duration-300 ${
+                  isActive('/credits') 
+                    ? 'bg-white/20' 
+                    : 'bg-gray-100 group-hover:bg-white/20'
+                }`}>
+                  <Coins className="h-5 w-5" />
+                </div>
+                <span className="font-medium">Credits</span>
               </Link>
               
               {user && (
-                <div className="p-2.5 flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-600">Your Credits:</span>
+                <div className="p-4 flex justify-between items-center bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
+                  <span className="text-sm font-medium text-gray-700">Your Credits:</span>
                   <CreditDisplay displayType="full" />
                 </div>
               )}
               
-              <div className="mt-2 pt-2 border-t border-gray-200">
+              <div className="mt-4 pt-4 border-t border-gray-200">
                 {user ? (
                   <Button 
                     variant="outline" 
@@ -393,7 +297,7 @@ const Header: React.FC = () => {
                       handleSignOut();
                       closeMenu();
                     }} 
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-gradient-to-r from-red-100 to-red-50 border-2 border-red-300 text-red-500 hover:shadow-md hover:shadow-red-200/50 hover:-translate-y-1 transition-all duration-300"
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-red-100 to-pink-100 border border-red-300 text-red-600 hover:from-red-200 hover:to-pink-200 hover:shadow-md transition-all duration-300"
                   >
                     <LogOut className="h-5 w-5" />
                     <span className="font-medium">Sign Out</span>
@@ -405,7 +309,7 @@ const Header: React.FC = () => {
                       navigate('/auth');
                       closeMenu();
                     }} 
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-gradient-to-r from-blue-100/80 to-cyan-50 border-2 border-kid-blue/50 text-kid-blue hover:shadow-md hover:shadow-kid-blue/30 hover:-translate-y-1 transition-all duration-300"
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-blue-100 to-cyan-100 border border-blue-300 text-blue-600 hover:from-blue-200 hover:to-cyan-200 hover:shadow-md transition-all duration-300"
                   >
                     <LogIn className="h-5 w-5" />
                     <span className="font-medium">Sign In</span>
@@ -416,6 +320,13 @@ const Header: React.FC = () => {
           </div>
         )}
       </div>
+      
+      {/* Bottom line */}
+      <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${
+        isIndexPage 
+          ? 'bg-gradient-to-r from-transparent via-black/30 to-transparent' 
+          : 'bg-gradient-to-r from-transparent via-black/20 to-transparent'
+      } transition-all duration-300`}></div>
     </header>
   );
 };

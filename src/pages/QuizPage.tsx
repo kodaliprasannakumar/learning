@@ -7,7 +7,8 @@ import { useCreditSystem } from '@/hooks/useCreditSystem';
 import { useToast } from '@/components/ui/use-toast';
 
 // Default quiz URL - will be configurable
-const DEFAULT_QUIZ_URL = "https://app.sli.do/event/b21LX4r31EQZJUQ4ahji3U/live/polls";
+const DEFAULT_QUIZ_URL = "https://app.sli.do/event/s76aTosMeKSyekQU5dGqAQ/live/polls";
+//https://app.sli.do/event/s76aTosMeKSyekQU5dGqAQ
 const QUIZ_COMPLETION_REWARD = 5;
 
 export default function QuizPage() {
