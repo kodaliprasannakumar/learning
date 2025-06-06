@@ -3,29 +3,13 @@ import { Card } from '@/components/ui/card';
 import PuzzleGame from '@/components/PuzzleGame';
 import { useAuth } from '@/hooks/useAuth';
 import { Puzzle, Lightbulb, Sparkles, Coins } from 'lucide-react';
-import { useCreditSystem } from '@/hooks/useCreditSystem';
-import { toast } from '@/components/ui/use-toast';
-
-// Credit rewards
-const PUZZLE_COMPLETION_REWARD = 3;
 
 const PuzzlePage = () => {
   const [response, setResponse] = useState<string | null>(null);
   const { user } = useAuth();
-  const { earnCredits } = useCreditSystem();
 
   const handlePuzzleComplete = async (aiResponse: string) => {
     setResponse(aiResponse);
-    
-    // Reward credits for completion
-    const success = await earnCredits(PUZZLE_COMPLETION_REWARD, "Completed a puzzle");
-    if (success) {
-      toast({
-        title: "Great job!",
-        description: `You earned ${PUZZLE_COMPLETION_REWARD} credits for completing the puzzle!`,
-        variant: "default",
-      });
-    }
   };
 
   return (
@@ -85,9 +69,9 @@ const PuzzlePage = () => {
             </div>
             <div className="space-y-4">
               <div className="bg-white/50 p-4 rounded-xl border border-blue-100">
-                <h3 className="text-lg font-medium text-blue-700 mb-2">Puzzle Rewards</h3>
+                <h3 className="text-lg font-medium text-blue-700 mb-2">How Credits Work</h3>
                 <p className="text-blue-600">
-                  Complete puzzles correctly to earn {PUZZLE_COMPLETION_REWARD} credits each time!
+                  Each question you ask costs 1 credit. Build and ask questions to learn and explore!
                 </p>
               </div>
               <div className="bg-white/50 p-4 rounded-xl border border-blue-100">

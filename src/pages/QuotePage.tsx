@@ -29,7 +29,7 @@ export default function QuotePage() {
   const [showExplanation, setShowExplanation] = useState(false);
 
   // Credit costs
-  const CORRECT_ANSWER_REWARD = 2;
+  const CORRECT_ANSWER_REWARD = 1;
   const EXPLANATION_COST = 2;
 
   // Demo quotes array - in a real app, these would come from an API
@@ -434,7 +434,7 @@ export default function QuotePage() {
                 </li>
                 <li className="flex justify-between text-sm">
                   <span>Daily login bonus</span>
-                  <span className="font-bold text-green-600">+5</span>
+                  <span className="font-bold text-green-600">+2</span>
                 </li>
               </ul>
             </div>

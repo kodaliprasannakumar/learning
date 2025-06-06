@@ -295,14 +295,14 @@ const DoodlePage = () => {
       return;
     }
     
-    // Check if we have enough credits and deduct them
-    if (credits < 5) {
-      toast.error(`Not enough credits. You need 5 credits to generate an image. You have ${credits} credits.`);
-      return;
-    }
+          // Check if we have enough credits and deduct them
+      if (credits < 3) {
+        toast.error(`Not enough credits. You need 3 credits to generate an image. You have ${credits} credits.`);
+        return;
+      }
     
     // First spend the credits
-    const success = await spendCredits(5, "Generate AI image");
+            const success = await spendCredits(3, "Generate AI image");
     if (!success) {
       toast.error("Transaction failed. Could not process credit transaction.");
       return;
@@ -382,7 +382,7 @@ const DoodlePage = () => {
     if (credits < 5) {
       useToastToast({
         title: "Not enough credits",
-        description: "You need 5 credits to generate an image. You have " + credits + " credits.",
+        description: "You need 3 credits to generate an image. You have " + credits + " credits.",
         variant: "destructive"
       });
       return;
@@ -611,7 +611,7 @@ const DoodlePage = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Image Generation</AlertDialogTitle>
             <AlertDialogDescription>
-              Generating an AI image will cost <span className="font-semibold text-amber-600">5 credits</span>.
+                                Generating an AI image will cost <span className="font-semibold text-amber-600">3 credits</span>.
               You currently have {credits} credits.
               
               <div className="mt-4 p-3 bg-purple-50 rounded-lg">
@@ -646,7 +646,7 @@ const DoodlePage = () => {
               className="bg-purple-600 hover:bg-purple-700 text-white"
             >
               <Coins className="h-4 w-4 mr-2" />
-              Spend 5 Credits
+                                Spend 3 Credits
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/hooks/useAuth';
-import { Palette, Video, BookOpen, Puzzle, LogOut, LogIn, Menu, X, Lightbulb, Coins, Globe, ClipboardCheck, Brain, Sparkles } from 'lucide-react';
+import { Palette, Video, BookOpen, Puzzle, LogOut, LogIn, Menu, X, Lightbulb, Globe, ClipboardCheck, Brain, Sparkles } from 'lucide-react';
 import { CreditDisplay } from './CreditDisplay';
 
 const Header: React.FC = () => {
@@ -93,9 +93,9 @@ const Header: React.FC = () => {
               <h1 className="text-2xl sm:text-3xl font-bold">
                 <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-transparent bg-clip-text">Wiz</span>
                 <span className="bg-gradient-to-r from-orange-500 to-red-500 text-transparent bg-clip-text">zle</span>
-              </h1>
-              
-              {/* Beta Tag */}
+            </h1>
+            
+            {/* Beta Tag */}
               <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs font-bold rounded-full shadow-md">
                 <Sparkles className="h-3 w-3" />
                 <span>BETA</span>
@@ -111,26 +111,26 @@ const Header: React.FC = () => {
                   const IconComponent = item.icon;
                   const isItemActive = isActive(item.path);
                   return (
-                    <Link 
+              <Link 
                       key={item.path}
                       to={item.path} 
                       className={`group flex flex-col items-center px-3 py-2 rounded-xl transition-all duration-300 ${
                         isItemActive 
                           ? 'scale-110 shadow-md' 
                           : 'hover:scale-105 hover:shadow-sm'
-                      }`}
-                    >
+                }`}
+              >
                       <div className={`p-2.5 rounded-lg mb-1.5 transition-all duration-300 ${
                         isItemActive 
                           ? `bg-gradient-to-br ${item.gradient} shadow-md` 
                           : `bg-gray-100 bg-gradient-to-br ${item.hoverClass} hover:shadow-sm`
-                      }`}>
+                }`}>
                         <IconComponent className={`h-4 w-4 transition-all duration-300 ${
                           isItemActive 
                             ? 'text-white' 
                             : 'text-gray-600 hover:text-white'
                         }`} />
-                      </div>
+                </div>
                       <span className={`text-xs font-medium transition-colors duration-300 ${
                         isItemActive 
                           ? 'text-purple-600 font-semibold' 
@@ -138,58 +138,30 @@ const Header: React.FC = () => {
                       }`}>
                         {item.label}
                       </span>
-                    </Link>
+              </Link>
                   );
                 })}
                 
-                <div className="w-px h-8 bg-gray-300 mx-2"></div>
-                
-                <Link 
-                  to="/credits" 
-                  className={`group flex flex-col items-center px-3 py-2 rounded-xl transition-all duration-300 ${
-                    isActive('/credits') 
-                      ? 'scale-110 shadow-md' 
-                      : 'hover:scale-105 hover:shadow-sm'
-                  }`}
-                >
-                  <div className={`p-2.5 rounded-lg mb-1.5 transition-all duration-300 ${
-                    isActive('/credits') 
-                      ? 'bg-gradient-to-br from-amber-500 to-yellow-500 shadow-md' 
-                      : 'bg-gray-100 hover:bg-gradient-to-br hover:from-amber-500 hover:to-yellow-500 hover:shadow-sm'
-                  }`}>
-                    <Coins className={`h-4 w-4 transition-all duration-300 ${
-                      isActive('/credits') 
-                        ? 'text-white' 
-                        : 'text-gray-600 hover:text-white'
-                    }`} />
-                  </div>
-                  <span className={`text-xs font-medium transition-colors duration-300 ${
-                    isActive('/credits') 
-                      ? 'text-amber-600 font-semibold' 
-                      : 'text-gray-600 group-hover:text-amber-600'
-                  }`}>
-                    Credits
-                  </span>
-                </Link>
-              </div>
-            </nav>
+
+            </div>
+          </nav>
           )}
           
           {/* Mobile menu button (hidden on Index page) */}
           {!isIndexPage && (
             <div className="lg:hidden flex items-center mx-4">
-              <button
-                onClick={toggleMobileMenu}
+            <button
+              onClick={toggleMobileMenu}
                 className="p-3 rounded-2xl bg-white/85 backdrop-blur-md shadow-md hover:shadow-lg border border-white/40 transition-all duration-300 hover:scale-105"
-                aria-label="Toggle menu"
-              >
-                {mobileMenuOpen ? (
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? (
                   <X className="h-6 w-6 text-gray-700" />
-                ) : (
+              ) : (
                   <Menu className="h-6 w-6 text-gray-700" />
-                )}
-              </button>
-            </div>
+              )}
+            </button>
+          </div>
           )}
           
           {/* Auth section - Right (visible on desktop) */}
@@ -241,16 +213,16 @@ const Header: React.FC = () => {
               {navItems.map((item) => {
                 const IconComponent = item.icon;
                 return (
-                  <Link 
+              <Link 
                     key={item.path}
                     to={item.path} 
                     className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-300 ${
                       isActive(item.path) 
                         ? `bg-gradient-to-r ${item.gradient} text-white font-medium shadow-md` 
                         : `hover:bg-gradient-to-r hover:${item.gradient} hover:text-white hover:shadow-sm text-gray-700`
-                    }`}
-                    onClick={closeMenu}
-                  >
+                }`}
+                onClick={closeMenu}
+              >
                     <div className={`p-2 rounded-lg transition-all duration-300 ${
                       isActive(item.path) 
                         ? 'bg-white/20' 
@@ -259,28 +231,9 @@ const Header: React.FC = () => {
                       <IconComponent className="h-5 w-5" />
                     </div>
                     <span className="font-medium">{item.label}</span>
-                  </Link>
+              </Link>
                 );
               })}
-              
-              <Link 
-                to="/credits" 
-                className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-300 ${
-                  isActive('/credits') 
-                    ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-medium shadow-md' 
-                    : 'hover:bg-gradient-to-r hover:from-amber-500 hover:to-yellow-500 hover:text-white hover:shadow-sm text-gray-700'
-                }`}
-                onClick={closeMenu}
-              >
-                <div className={`p-2 rounded-lg transition-all duration-300 ${
-                  isActive('/credits') 
-                    ? 'bg-white/20' 
-                    : 'bg-gray-100 group-hover:bg-white/20'
-                }`}>
-                  <Coins className="h-5 w-5" />
-                </div>
-                <span className="font-medium">Credits</span>
-              </Link>
               
               {user && (
                 <div className="p-4 flex justify-between items-center bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">

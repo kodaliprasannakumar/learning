@@ -28,7 +28,7 @@ interface StoryPage {
 }
 
 // Credit costs constants
-const GENERATE_STORY_COST = 5;
+const GENERATE_STORY_COST = 3;
 const GENERATE_ILLUSTRATION_COST = 3;
 const STORY_REWARD = 3;
 

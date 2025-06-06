@@ -8,7 +8,6 @@ import DoodlePage from "./pages/DoodlePage";
 import StoryPage from "./pages/StoryPage";
 import PuzzlePage from "./pages/PuzzlePage";
 import QuotePage from "./pages/QuotePage";
-import CreditsPage from "./pages/CreditsPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 import SpaceQuestionsPage from "./pages/SpaceQuestionsPage";
@@ -98,11 +97,6 @@ const AppRoutes = () => {
       <Route path="/quote" element={
         <ProtectedRoute>
           <QuotePage />
-        </ProtectedRoute>
-      } />
-      <Route path="/credits" element={
-        <ProtectedRoute>
-          <CreditsPage />
         </ProtectedRoute>
       } />
       <Route path="/space" element={

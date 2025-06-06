@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Plus, Send, X, Lightbulb, Puzzle, MessageSquare, Sparkles, Wand2, Volume2, VolumeX } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { generateText, validateSentence as validateSentenceApi } from '@/integrations/aws/lambda';
+import { useCreditSystem } from '@/hooks/useCreditSystem';
 
 interface PuzzlePiece {
   id: string;
@@ -53,6 +54,7 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const { credits, spendCredits } = useCreditSystem();
 
   // Initialize puzzle pieces
   useEffect(() => {
@@ -316,10 +318,23 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
       return;
     }
     
+    // Check if user has enough credits (1 credit per question)
+    if (credits < 1) {
+      toast.error("You need 1 credit to ask a question. Complete other activities to earn more credits!");
+      return;
+    }
+    
     setIsSubmitting(true);
     setAiResponse('');
     
     try {
+      // Spend 1 credit for asking the question
+      const creditSpent = await spendCredits(1, `Asked puzzle question: ${question.substring(0, 30)}...`);
+      if (!creditSpent) {
+        toast.error("Failed to process credit. Please try again.");
+        return;
+      }
+      
       // Use the new Lambda integration module
       const aiText = await generateText(question);
       setAiResponse(aiText);
@@ -719,9 +734,9 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
               </Button>
               
               <Button 
-                disabled={isSubmitting || pieces.length === 0}
+                disabled={isSubmitting || pieces.length === 0 || credits < 1}
                 onClick={handleSubmitPuzzle}
-                className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
+                className={`bg-gradient-to-r ${credits < 1 ? 'from-gray-400 to-gray-500' : 'from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600'} text-white`}
               >
                 {isSubmitting ? (
                   <>
@@ -731,7 +746,7 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
                 ) : (
                   <>
                     <Send className="h-4 w-4 mr-2" />
-                    Ask Question
+                    Ask Question (1 💰)
                   </>
                 )}
               </Button>
