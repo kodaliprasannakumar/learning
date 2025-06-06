@@ -181,17 +181,14 @@ export default function Index() {
 
   return (
     <>
-      {/* Hero Section - Extended to top */}
+      {/* Hero Section - Simplified Background */}
       <section className="relative h-[95vh] bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50 overflow-hidden -mt-32 pt-32">
-        <div className="absolute inset-0 bg-gradient-to-br from-pink-400/10 via-purple-500/10 to-cyan-500/10"></div>
         <div className="relative container mx-auto px-4 pt-20 pb-16 lg:pt-24 lg:pb-20">
           <div className="text-center max-w-4xl mx-auto">
-            {/* Floating Decorative Elements */}
-            <div className="absolute top-10 left-10 w-20 h-20 bg-gradient-to-br from-pink-400/20 to-purple-500/20 rounded-full blur-xl animate-pulse" style={{ animationDelay: '0s', animationDuration: '4s' }}></div>
-            <div className="absolute top-20 right-10 w-16 h-16 bg-gradient-to-br from-cyan-400/30 to-blue-500/30 rounded-lg rotate-45 animate-pulse" style={{ animationDelay: '2s', animationDuration: '5s' }}></div>
-            <div className="absolute bottom-20 left-20 w-12 h-12 bg-gradient-to-br from-amber-400/25 to-orange-500/25 rounded-full animate-pulse" style={{ animationDelay: '1s', animationDuration: '3s' }}></div>
-            <div className="absolute top-32 left-1/4 w-8 h-8 bg-gradient-to-br from-emerald-400/20 to-teal-500/20 rounded-lg animate-pulse" style={{ animationDelay: '3s', animationDuration: '6s' }}></div>
-            <div className="absolute bottom-32 right-1/4 w-14 h-14 bg-gradient-to-br from-violet-400/25 to-fuchsia-500/25 rounded-full blur-sm animate-pulse" style={{ animationDelay: '1.5s', animationDuration: '4.5s' }}></div>
+            {/* Simplified Floating Elements - Reduced from 5 to 3 */}
+            <div className="absolute top-10 left-10 w-16 h-16 bg-pink-200/40 rounded-full animate-pulse" style={{ animationDuration: '4s' }}></div>
+            <div className="absolute top-20 right-10 w-12 h-12 bg-cyan-200/40 rounded-lg rotate-45 animate-pulse" style={{ animationDuration: '5s' }}></div>
+            <div className="absolute bottom-20 left-20 w-10 h-10 bg-amber-200/40 rounded-full animate-pulse" style={{ animationDuration: '3s' }}></div>
 
             {/* Main Hero Content */}
             <div className="animate-fade-in">
@@ -200,7 +197,7 @@ export default function Index() {
                 <span>Welcome to Your Creative Universe</span>
               </div>
               
-              <h1 className="text-5xl lg:text-7xl font-bold mb-16 ">
+              <h1 className="text-5xl lg:text-7xl font-bold mb-16">
                 <div className="overflow-hidden">
                   <span 
                     className={`bg-gradient-to-r from-pink-600 via-purple-600 via-blue-600 to-cyan-600 text-transparent leading-[1.2] bg-clip-text inline-block transform transition-all duration-1000 ease-out ${
@@ -263,9 +260,9 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Activities Grid */}
-      <div className="bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50">
-        <section id="activities-section" className="container mx-auto px-4 py-16">
+      {/* Activities Grid - Single Background */}
+      <section id="activities-section" className="bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50 py-16">
+        <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-bold mb-6 bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 text-transparent bg-clip-text">
               Choose Your Adventure
@@ -288,14 +285,12 @@ export default function Index() {
                 return (
                   <div
                     key={activity.id}
-                    className="group relative animate-fade-in"
-                    style={{ animationDelay: activity.delay }}
+                    className="group relative"
                   >
-                    <div className={`absolute inset-0 bg-gradient-to-br ${activity.bgGradient} rounded-2xl transform group-hover:scale-105 transition-transform duration-300`}></div>
-                    <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 border border-white/20">
+                    <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 border border-white/20 hover:scale-105">
                       {/* Icon */}
                       <div className="mb-3">
-                        <div className={`w-12 h-12 bg-gradient-to-br ${activity.gradient} rounded-xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300`}>
+                        <div className={`w-12 h-12 bg-gradient-to-br ${activity.gradient} rounded-xl flex items-center justify-center mb-2`}>
                           <IconComponent className="h-6 w-6 text-white" />
                         </div>
                       </div>
@@ -310,7 +305,7 @@ export default function Index() {
 
                       {/* CTA Button */}
                       <Link to={activity.path}>
-                        <Button className={`w-full bg-gradient-to-r ${activity.gradient} hover:opacity-90 text-white py-2 rounded-xl font-semibold transform group-hover:scale-105 transition-all duration-200 shadow-md text-xs`}>
+                        <Button className={`w-full bg-gradient-to-r ${activity.gradient} hover:opacity-90 text-white py-2 rounded-xl font-semibold transition-all duration-200 shadow-md text-xs`}>
                           Get Started
                           <ArrowRight className="ml-1 h-3 w-3" />
                         </Button>
@@ -331,14 +326,12 @@ export default function Index() {
                 return (
                   <div
                     key={activity.id}
-                    className="group relative animate-fade-in"
-                    style={{ animationDelay: activity.delay }}
+                    className="group relative"
                   >
-                    <div className={`absolute inset-0 bg-gradient-to-br ${activity.bgGradient} rounded-2xl transform group-hover:scale-105 transition-transform duration-300`}></div>
-                    <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 border border-white/20">
+                    <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 border border-white/20 hover:scale-105">
                       {/* Icon */}
                       <div className="mb-3">
-                        <div className={`w-12 h-12 bg-gradient-to-br ${activity.gradient} rounded-xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300`}>
+                        <div className={`w-12 h-12 bg-gradient-to-br ${activity.gradient} rounded-xl flex items-center justify-center mb-2`}>
                           <IconComponent className="h-6 w-6 text-white" />
                         </div>
                       </div>
@@ -353,7 +346,7 @@ export default function Index() {
 
                       {/* CTA Button */}
                       <Link to={activity.path}>
-                        <Button className={`w-full bg-gradient-to-r ${activity.gradient} hover:opacity-90 text-white py-2 rounded-xl font-semibold transform group-hover:scale-105 transition-all duration-200 shadow-md text-xs`}>
+                        <Button className={`w-full bg-gradient-to-r ${activity.gradient} hover:opacity-90 text-white py-2 rounded-xl font-semibold transition-all duration-200 shadow-md text-xs`}>
                           Get Started
                           <ArrowRight className="ml-1 h-3 w-3" />
                         </Button>
@@ -375,11 +368,9 @@ export default function Index() {
                 return (
                   <div
                     key={activity.id}
-                    className={`group relative animate-fade-in ${isComingSoon ? 'opacity-75' : ''}`}
-                    style={{ animationDelay: activity.delay }}
+                    className={`group relative ${isComingSoon ? 'opacity-75' : ''}`}
                   >
-                    <div className={`absolute inset-0 bg-gradient-to-br ${activity.bgGradient} rounded-2xl transform ${!isComingSoon ? 'group-hover:scale-105' : ''} transition-transform duration-300`}></div>
-                    <div className={`relative bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg ${!isComingSoon ? 'hover:shadow-xl' : ''} transition-all duration-300 border border-white/20 ${isComingSoon ? 'cursor-not-allowed' : ''}`}>
+                    <div className={`relative bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg ${!isComingSoon ? 'hover:shadow-xl hover:scale-105' : ''} transition-all duration-300 border border-white/20 ${isComingSoon ? 'cursor-not-allowed' : ''}`}>
                       {/* Coming Soon Badge */}
                       {isComingSoon && (
                         <div className="absolute top-2 right-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
@@ -389,7 +380,7 @@ export default function Index() {
                       
                       {/* Icon */}
                       <div className="mb-3">
-                        <div className={`w-12 h-12 bg-gradient-to-br ${activity.gradient} rounded-xl flex items-center justify-center mb-2 ${!isComingSoon ? 'group-hover:scale-110' : ''} transition-transform duration-300 ${isComingSoon ? 'opacity-60' : ''}`}>
+                        <div className={`w-12 h-12 bg-gradient-to-br ${activity.gradient} rounded-xl flex items-center justify-center mb-2 ${isComingSoon ? 'opacity-60' : ''}`}>
                           <IconComponent className="h-6 w-6 text-white" />
                         </div>
                       </div>
@@ -413,7 +404,7 @@ export default function Index() {
                         </Button>
                       ) : (
                         <Link to={activity.path}>
-                          <Button className={`w-full bg-gradient-to-r ${activity.gradient} hover:opacity-90 text-white py-2 rounded-xl font-semibold transform group-hover:scale-105 transition-all duration-200 shadow-md text-xs`}>
+                          <Button className={`w-full bg-gradient-to-r ${activity.gradient} hover:opacity-90 text-white py-2 rounded-xl font-semibold transition-all duration-200 shadow-md text-xs`}>
                             Get Started
                             <ArrowRight className="ml-1 h-3 w-3" />
                           </Button>
@@ -435,14 +426,12 @@ export default function Index() {
                 return (
                   <div
                     key={activity.id}
-                    className="group relative animate-fade-in"
-                    style={{ animationDelay: activity.delay }}
+                    className="group relative"
                   >
-                    <div className={`absolute inset-0 bg-gradient-to-br ${activity.bgGradient} rounded-2xl transform group-hover:scale-105 transition-transform duration-300`}></div>
-                    <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 border border-white/20">
+                    <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 border border-white/20 hover:scale-105">
                       {/* Icon */}
                       <div className="mb-3">
-                        <div className={`w-12 h-12 bg-gradient-to-br ${activity.gradient} rounded-xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300`}>
+                        <div className={`w-12 h-12 bg-gradient-to-br ${activity.gradient} rounded-xl flex items-center justify-center mb-2`}>
                           <IconComponent className="h-6 w-6 text-white" />
                         </div>
                       </div>
@@ -457,7 +446,7 @@ export default function Index() {
 
                       {/* CTA Button */}
                       <Link to={activity.path}>
-                        <Button className={`w-full bg-gradient-to-r ${activity.gradient} hover:opacity-90 text-white py-2 rounded-xl font-semibold transform group-hover:scale-105 transition-all duration-200 shadow-md text-xs`}>
+                        <Button className={`w-full bg-gradient-to-r ${activity.gradient} hover:opacity-90 text-white py-2 rounded-xl font-semibold transition-all duration-200 shadow-md text-xs`}>
                           Get Started
                           <ArrowRight className="ml-1 h-3 w-3" />
                         </Button>
@@ -468,83 +457,68 @@ export default function Index() {
               })}
             </div>
           </div>
+        </div>
+      </section>
 
-
-        </section>
-      </div>
-
-      {/* Saved Doodles Section */}
+      {/* Saved Doodles Section
       {user && !loading && (
-        <section className="container mx-auto px-4 py-16">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-emerald-600 via-cyan-600 to-blue-600 text-transparent bg-clip-text">
-              Your Creative Journey
-            </h2>
-            <p className="text-xl text-gray-600">
-              Look at all the amazing things you've created!
-            </p>
-          </div>
-          <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
-            <SavedDoodles />
+        <section className="bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50 py-16">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-emerald-600 via-cyan-600 to-blue-600 text-transparent bg-clip-text">
+                Your Creative Journey
+              </h2>
+              <p className="text-xl text-gray-600">
+                Look at all the amazing things you've created!
+              </p>
+            </div>
+            <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
+              <SavedDoodles />
+            </div>
           </div>
         </section>
-      )}
+      )} */}
 
       {/* Features Section */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="bg-gradient-to-br from-white/90 via-cyan-50/60 to-purple-50/60 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20 max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-teal-600 via-blue-600 to-indigo-600 text-transparent bg-clip-text">
-              Safe, Fun & Educational
-            </h2>
-            <p className="text-xl text-gray-600">
-              Designed with care for young creators and their families
-            </p>
-          </div>
+      <section className="bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50 py-16">
+        <div className="container mx-auto px-4">
+          <div className="bg-white rounded-3xl p-12 shadow-xl max-w-6xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-teal-600 via-blue-600 to-indigo-600 text-transparent bg-clip-text">
+                Safe, Fun & Educational
+              </h2>
+              <p className="text-xl text-gray-600">
+                Designed with care for young creators and their families
+              </p>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {features.map((feature, index) => {
-              const IconComponent = feature.icon;
-              return (
-                <div
-                  key={index}
-                  className="text-center group animate-fade-in"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <div className={`w-20 h-20 ${feature.bg} rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                    <IconComponent className={`h-10 w-10 ${feature.color}`} />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {features.map((feature, index) => {
+                const IconComponent = feature.icon;
+                return (
+                  <div
+                    key={index}
+                    className="text-center group"
+                  >
+                    <div className={`w-20 h-20 ${feature.bg} rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                      <IconComponent className={`h-10 w-10 ${feature.color}`} />
+                    </div>
+                    <h3 className="text-2xl font-bold mb-4 text-gray-800">
+                      {feature.title}
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed">
+                      {feature.description}
+                    </p>
                   </div>
-                  <h3 className="text-2xl font-bold mb-4 text-gray-800">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    {feature.description}
-                  </p>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
 
       {/* Call to Action */}
-      <section className="container mx-auto px-4 py-16 text-center">
-        <div className="bg-gradient-to-br from-orange-500 via-pink-500 to-purple-600 rounded-3xl p-12 shadow-2xl text-white max-w-4xl mx-auto">
-          <Sparkles className="h-16 w-16 mx-auto mb-6 opacity-80" />
-          <h2 className="text-4xl font-bold mb-6">
-            Ready to Start Creating?
-          </h2>
-          <p className="text-xl mb-8 opacity-90">
-            Join thousands of young creators who are already bringing their imagination to life!
-          </p>
-          <Link to="/doodle">
-            <Button className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-6 text-lg rounded-full font-semibold shadow-lg transform hover:scale-105 transition-all duration-200">
-              <Rocket className="mr-2 h-5 w-5" />
-              Begin Your Journey
-            </Button>
-          </Link>
-        </div>
-      </section>
+
     </>
   );
 }
