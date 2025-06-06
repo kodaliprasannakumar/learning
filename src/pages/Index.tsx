@@ -20,12 +20,25 @@ import {
   Play,
   ArrowRight,
   Calculator,
-  Clock
+  Clock,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 
 export default function Index() {
   const { user, loading } = useAuth();
   const [animationPhase, setAnimationPhase] = useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Hero images for slideshow
+  const heroImages = [
+    { src: "/images/hero/pic1.png", alt: "AI Generated Art 1" },
+    { src: "/images/hero/pic2.png", alt: "AI Generated Art 2" },
+    { src: "/images/hero/pic3.png", alt: "AI Generated Art 3" },
+    { src: "/images/hero/pic4.png", alt: "AI Generated Art 4" },
+    { src: "/images/hero/pic5.png", alt: "AI Generated Art 5" },
+    { src: "/images/hero/pic6.png", alt: "AI Generated Art 6" },
+  ];
 
   useEffect(() => {
     const phases = [
@@ -52,6 +65,23 @@ export default function Index() {
       clearInterval(loopTimer);
     };
   }, []);
+
+  // Slideshow effect
+  useEffect(() => {
+    const slideTimer = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
+    }, 4000); // Change image every 4 seconds
+
+    return () => clearInterval(slideTimer);
+  }, [heroImages.length]);
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + heroImages.length) % heroImages.length);
+  };
 
   const scrollToActivities = () => {
     const activitiesSection = document.getElementById('activities-section');
@@ -184,76 +214,171 @@ export default function Index() {
       {/* Hero Section - Simplified Background */}
       <section className="relative h-[95vh] bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50 overflow-hidden -mt-32 pt-32">
         <div className="relative container mx-auto px-4 pt-20 pb-16 lg:pt-24 lg:pb-20">
-          <div className="text-center max-w-4xl mx-auto">
-            {/* Simplified Floating Elements - Reduced from 5 to 3 */}
-            <div className="absolute top-10 left-10 w-16 h-16 bg-pink-200/40 rounded-full animate-pulse" style={{ animationDuration: '4s' }}></div>
-            <div className="absolute top-20 right-10 w-12 h-12 bg-cyan-200/40 rounded-lg rotate-45 animate-pulse" style={{ animationDuration: '5s' }}></div>
-            <div className="absolute bottom-20 left-20 w-10 h-10 bg-amber-200/40 rounded-full animate-pulse" style={{ animationDuration: '3s' }}></div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
+            
+            {/* Left Column - Text Content */}
+            <div className="text-center lg:text-left">
+              {/* Main Hero Content */}
+              <div className="animate-fade-in">
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 text-white px-6 py-3 rounded-full text-sm font-medium mb-8 shadow-lg">
+                  <Sparkles className="h-4 w-4" />
+                  <span>Welcome to Your Creative Universe</span>
+                </div>
+                
+                <h1 className="text-4xl lg:text-6xl font-bold mb-8">
+                  <div className="overflow-hidden">
+                    <span 
+                      className={`bg-gradient-to-r from-pink-600 via-purple-600 via-blue-600 to-cyan-600 text-transparent leading-[1.2] bg-clip-text inline-block transform transition-all duration-1000 ease-out ${
+                        animationPhase >= 1 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
+                      }`}
+                    >
+                      Imagination
+                    </span>
+                  </div>
+                  <br />
+                  <div className="flex gap-4 justify-center lg:justify-start">
+                    <span 
+                      className={`text-gray-800 inline-block transform transition-all duration-1000 ease-out ${
+                        animationPhase >= 2 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
+                      }`}
+                      style={{ transitionDelay: '0.3s' }}
+                    >
+                      Meets
+                    </span>
+                    <span 
+                      className={`text-gray-800 inline-block transform transition-all duration-1000 ease-out ${
+                        animationPhase >= 3 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
+                      }`}
+                      style={{ transitionDelay: '0.6s' }}
+                    >
+                      AI
+                    </span>
+                    <span 
+                      className={`text-gray-800 inline-block transform transition-all duration-1000 ease-out ${
+                        animationPhase >= 4 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
+                      }`}
+                      style={{ transitionDelay: '0.9s' }}
+                    >
+                      Magic
+                    </span>
+                  </div>
+                </h1>
+                
+                <p className="text-lg lg:text-xl text-gray-600 mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                  Transform your wildest ideas into reality with our collection of 
+                  <span className="font-semibold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text"> AI-powered creative tools</span>. 
+                  Draw, write, learn, and explore in a safe, fun environment designed just for you!
+                </p>
 
-            {/* Main Hero Content */}
-            <div className="animate-fade-in">
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 text-white px-6 py-3 rounded-full text-sm font-medium mb-16 shadow-lg">
-                <Sparkles className="h-4 w-4" />
-                <span>Welcome to Your Creative Universe</span>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center">
+                  <Button 
+                    onClick={scrollToActivities}
+                    className="bg-gradient-to-r from-pink-600 via-purple-600 to-cyan-600 hover:from-pink-700 hover:via-purple-700 hover:to-cyan-700 text-white px-8 py-4 text-lg rounded-full shadow-xl transform hover:scale-105 transition-all duration-200"
+                  >
+                    <Play className="mr-2 h-5 w-5" />
+                    Start Creating Now
+                  </Button>
+                  <Button variant="outline" className="border-2 border-purple-200 hover:border-purple-300 px-8 py-4 text-lg rounded-full">
+                    <span className="text-gray-700">Learn More</span>
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </div>
               </div>
-              
-              <h1 className="text-5xl lg:text-7xl font-bold mb-16">
-                <div className="overflow-hidden">
-                  <span 
-                    className={`bg-gradient-to-r from-pink-600 via-purple-600 via-blue-600 to-cyan-600 text-transparent leading-[1.2] bg-clip-text inline-block transform transition-all duration-1000 ease-out ${
-                      animationPhase >= 1 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
-                    }`}
-                  >
-                    Imagination
-                  </span>
-                </div>
-                <br />
-                <div className="flex gap-4 justify-center">
-                  <span 
-                    className={`text-gray-800 inline-block transform transition-all duration-1000 ease-out ${
-                      animationPhase >= 2 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
-                    }`}
-                    style={{ transitionDelay: '0.3s' }}
-                  >
-                    Meets
-                  </span>
-                  <span 
-                    className={`text-gray-800 inline-block transform transition-all duration-1000 ease-out ${
-                      animationPhase >= 3 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
-                    }`}
-                    style={{ transitionDelay: '0.6s' }}
-                  >
-                    AI
-                  </span>
-                  <span 
-                    className={`text-gray-800 inline-block transform transition-all duration-1000 ease-out ${
-                      animationPhase >= 4 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
-                    }`}
-                    style={{ transitionDelay: '0.9s' }}
-                  >
-                    Magic
-                  </span>
-                </div>
-              </h1>
-              
-              <p className="text-xl lg:text-2xl text-gray-600 mb-16 max-w-3xl mx-auto leading-relaxed">
-                Transform your wildest ideas into reality with our collection of 
-                <span className="font-semibold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text"> AI-powered creative tools</span>. 
-                Draw, write, learn, and explore in a safe, fun environment designed just for you!
-              </p>
+            </div>
 
-              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                <Button 
-                  onClick={scrollToActivities}
-                  className="bg-gradient-to-r from-pink-600 via-purple-600 to-cyan-600 hover:from-pink-700 hover:via-purple-700 hover:to-cyan-700 text-white px-8 py-6 text-lg rounded-full shadow-xl transform hover:scale-105 transition-all duration-200"
-                >
-                  <Play className="mr-2 h-5 w-5" />
-                  Start Creating Now
-                </Button>
-                <Button variant="outline" className="border-2 border-purple-200 hover:border-purple-300 px-8 py-6 text-lg rounded-full">
-                  <span className="text-gray-700">Learn More</span>
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
+            {/* Right Column - Image Slideshow */}
+            <div className="relative">
+              {/* Simplified Floating Elements */}
+              <div className="absolute -top-10 -left-10 w-16 h-16 bg-pink-200/40 rounded-full animate-pulse" style={{ animationDuration: '4s' }}></div>
+              <div className="absolute -top-5 -right-5 w-12 h-12 bg-cyan-200/40 rounded-lg rotate-45 animate-pulse" style={{ animationDuration: '5s' }}></div>
+              <div className="absolute -bottom-5 -left-5 w-10 h-10 bg-amber-200/40 rounded-full animate-pulse" style={{ animationDuration: '3s' }}></div>
+
+              {/* Image Slideshow Container with Kids Frame */}
+              <div className="relative">
+                {/* Outer decorative frame */}
+                <div className="absolute -inset-4 bg-gradient-to-r from-pink-300 via-purple-300 via-blue-300 to-cyan-300 rounded-[2rem] opacity-60 animate-pulse" style={{ animationDuration: '3s' }}></div>
+                
+                {/* Corner decorations */}
+                <div className="absolute -top-6 -left-6 w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full shadow-lg flex items-center justify-center transform rotate-12">
+                  <Star className="h-6 w-6 text-white" />
+                </div>
+                <div className="absolute -top-6 -right-6 w-12 h-12 bg-gradient-to-br from-pink-400 to-red-400 rounded-full shadow-lg flex items-center justify-center transform -rotate-12">
+                  <Heart className="h-6 w-6 text-white" />
+                </div>
+                <div className="absolute -bottom-6 -left-6 w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-400 rounded-full shadow-lg flex items-center justify-center transform -rotate-12">
+                  <Sparkles className="h-6 w-6 text-white" />
+                </div>
+                <div className="absolute -bottom-6 -right-6 w-12 h-12 bg-gradient-to-br from-purple-400 to-indigo-400 rounded-full shadow-lg flex items-center justify-center transform rotate-12">
+                  <Palette className="h-6 w-6 text-white" />
+                </div>
+
+
+
+                {/* Main frame */}
+                <div className="relative bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border-4 border-white/60">
+                  {/* Inner colorful border */}
+                  <div className="absolute inset-4 rounded-2xl border-4 border-dashed border-gradient-to-r from-pink-300 via-purple-300 to-cyan-300 opacity-40"></div>
+
+                  <div className="relative h-80 lg:h-96 rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200" style={{ zIndex: 2 }}>
+                  {/* Images */}
+                  {heroImages.map((image, index) => (
+                    <div
+                      key={index}
+                      className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+                        index === currentImageIndex 
+                          ? 'opacity-100 scale-100' 
+                          : 'opacity-0 scale-105'
+                      }`}
+                    >
+                      <img
+                        src={image.src}
+                        alt={image.alt}
+                        className="w-full h-full object-cover rounded-2xl"
+                        loading={index === 0 ? "eager" : "lazy"}
+                      />
+                    </div>
+                  ))}
+
+                  {/* Navigation Arrows */}
+                  <button
+                    onClick={prevImage}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={nextImage}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+
+                  {/* Dots Indicator */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                    {heroImages.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentImageIndex(index)}
+                        className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                          index === currentImageIndex 
+                            ? 'bg-white shadow-lg scale-125' 
+                            : 'bg-white/60 hover:bg-white/80'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                  {/* Image Caption */}
+                  <div className="mt-4 text-center">
+                    <p className="text-sm text-gray-600 font-medium">
+                      ✨ Created with Wizzle AI Tools
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {heroImages[currentImageIndex].alt}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
