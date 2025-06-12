@@ -95,16 +95,54 @@ const Header: React.FC = () => {
                 <span className="bg-gradient-to-r from-orange-500 to-red-500 text-transparent bg-clip-text">zle</span>
             </h1>
             
-            {/* Beta Tag */}
+            {/* Alpha Tag */}
               <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs font-bold rounded-full shadow-md">
                 <Sparkles className="h-3 w-3" />
-                <span>BETA</span>
+                <span>ALPHA</span>
               </div>
             </div>
           </div>
+
+          {/* Age Group Navigation - Center (only on landing pages) */}
+          {(location.pathname === '/' || location.pathname === '/air-mids' || location.pathname === '/air-highs') && (
+            <div className="hidden md:flex items-center gap-2 bg-white/85 backdrop-blur-md rounded-2xl px-4 py-2 shadow-lg border border-white/40">
+              <Link 
+                to="/" 
+                className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+                  location.pathname === '/' 
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md' 
+                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                }`}
+              >
+                Air Kids
+              </Link>
+              <Link 
+                to="/air-mids" 
+                className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 relative ${
+                  location.pathname === '/air-mids' 
+                    ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-md' 
+                    : 'text-gray-700 hover:bg-green-50 hover:text-green-600'
+                }`}
+              >
+                Air Mids
+                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full">Soon</span>
+              </Link>
+              <Link 
+                to="/air-highs" 
+                className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 relative ${
+                  location.pathname === '/air-highs' 
+                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md' 
+                    : 'text-gray-700 hover:bg-purple-50 hover:text-purple-600'
+                }`}
+              >
+                Air Highs
+                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full">Soon</span>
+              </Link>
+            </div>
+          )}
           
-          {/* Navigation - Center (hidden on mobile and on Index page) */}
-          {!isIndexPage && (
+          {/* Navigation - Center (hidden on mobile, Index page, and other age group pages) */}
+          {!isIndexPage && location.pathname !== '/air-mids' && location.pathname !== '/air-highs' && (
             <nav className="hidden lg:flex">
               <div className="flex items-center gap-2 bg-white/85 backdrop-blur-md rounded-2xl px-6 py-3 shadow-lg border border-white/40">
                 {navItems.map((item) => {
@@ -147,8 +185,8 @@ const Header: React.FC = () => {
           </nav>
           )}
           
-          {/* Mobile menu button (hidden on Index page) */}
-          {!isIndexPage && (
+          {/* Mobile menu button (hidden on Index page and other age group pages) */}
+          {!isIndexPage && location.pathname !== '/air-mids' && location.pathname !== '/air-highs' && (
             <div className="lg:hidden flex items-center mx-4">
             <button
               onClick={toggleMobileMenu}
@@ -172,7 +210,7 @@ const Header: React.FC = () => {
                   ? 'bg-white/20 backdrop-blur-md border border-white/30' 
                   : 'bg-white/90 border border-white/40'
               } rounded-full px-4 py-2 shadow-lg transition-all duration-300`}>
-                <CreditDisplay className="text-sm font-medium" />
+                <CreditDisplay displayType="full" className="text-sm font-medium" />
               </div>
             )}
             
@@ -206,9 +244,56 @@ const Header: React.FC = () => {
           </div>
         </div>
         
-        {/* Mobile Menu (Dropdown) - hidden on Index page */}
-        {!isIndexPage && mobileMenuOpen && (
+        {/* Mobile Menu (Dropdown) - hidden on Index page and other age group pages */}
+        {!isIndexPage && location.pathname !== '/air-mids' && location.pathname !== '/air-highs' && mobileMenuOpen && (
           <div className="lg:hidden bg-white/95 backdrop-blur-lg mt-4 py-6 px-6 rounded-2xl shadow-xl border border-white/40 animate-in slide-in-from-top-5 duration-200">
+            {/* Age Group Navigation - Mobile (only on landing pages) */}
+            {(location.pathname === '/' || location.pathname === '/air-mids' || location.pathname === '/air-highs') && (
+              <div className="mb-6 pb-4 border-b border-gray-200">
+                <h3 className="text-sm font-semibold text-gray-600 mb-3">Age Groups</h3>
+                <div className="flex flex-col gap-2">
+                  <Link 
+                    to="/" 
+                    className={`px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
+                      location.pathname === '/' 
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md' 
+                        : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                    }`}
+                    onClick={closeMenu}
+                  >
+                    Air Kids (Elementary)
+                  </Link>
+                  <div className="relative">
+                    <Link 
+                      to="/air-mids" 
+                      className={`block px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
+                        location.pathname === '/air-mids' 
+                          ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-md' 
+                          : 'text-gray-700 hover:bg-green-50 hover:text-green-600'
+                      }`}
+                      onClick={closeMenu}
+                    >
+                      Air Mids (Middle School)
+                    </Link>
+                    <span className="absolute top-2 right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full">Soon</span>
+                  </div>
+                  <div className="relative">
+                    <Link 
+                      to="/air-highs" 
+                      className={`block px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
+                        location.pathname === '/air-highs' 
+                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md' 
+                          : 'text-gray-700 hover:bg-purple-50 hover:text-purple-600'
+                      }`}
+                      onClick={closeMenu}
+                    >
+                      Air Highs (High School)
+                    </Link>
+                    <span className="absolute top-2 right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full">Soon</span>
+                  </div>
+                </div>
+              </div>
+            )}
             <nav className="flex flex-col gap-3">
               {navItems.map((item) => {
                 const IconComponent = item.icon;
@@ -274,12 +359,7 @@ const Header: React.FC = () => {
         )}
       </div>
       
-      {/* Bottom line */}
-      <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${
-        isIndexPage 
-          ? 'bg-gradient-to-r from-transparent via-black/30 to-transparent' 
-          : 'bg-gradient-to-r from-transparent via-black/20 to-transparent'
-      } transition-all duration-300`}></div>
+
     </header>
   );
 };

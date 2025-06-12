@@ -379,7 +379,7 @@ const DoodlePage = () => {
 
   // Add a confirmation check before generating
   const handleGenerateClick = () => {
-    if (credits < 5) {
+    if (credits < 3) {
       useToastToast({
         title: "Not enough credits",
         description: "You need 3 credits to generate an image. You have " + credits + " credits.",

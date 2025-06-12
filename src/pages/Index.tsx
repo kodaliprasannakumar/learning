@@ -161,18 +161,6 @@ export default function Index() {
       delay: '500ms'
     },
     {
-      id: 'math',
-      title: 'Math Adventure',
-      description: 'Explore magical number worlds and solve fun math challenges',
-      icon: Calculator,
-      path: '/math',
-      color: 'orange',
-      gradient: 'from-orange-500 via-red-500 to-pink-600',
-      bgGradient: 'from-orange-50 via-red-50 to-pink-100',
-      delay: '550ms',
-      comingSoon: true
-    },
-    {
       id: 'ai-trainer',
       title: 'AI Trainer Academy',
       description: 'Learn AI by training your own intelligent models',
@@ -181,7 +169,7 @@ export default function Index() {
       color: 'violet',
       gradient: 'from-rose-500 via-pink-500 to-purple-600',
       bgGradient: 'from-rose-50 via-pink-50 to-purple-100',
-      delay: '600ms'
+      delay: '550ms'
     }
   ];
 
@@ -211,8 +199,8 @@ export default function Index() {
 
   return (
     <>
-      {/* Hero Section - Simplified Background */}
-      <section className="relative h-[95vh] bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50 overflow-hidden -mt-32 pt-32">
+      {/* Hero Section - Lightweight Gradient Background */}
+      <section className="relative h-[95vh] bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-pink-50/30 overflow-hidden -mt-32 pt-32">
         <div className="relative container mx-auto px-4 pt-20 pb-16 lg:pt-24 lg:pb-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
             
@@ -288,11 +276,6 @@ export default function Index() {
 
             {/* Right Column - Image Slideshow */}
             <div className="relative">
-              {/* Simplified Floating Elements */}
-              <div className="absolute -top-10 -left-10 w-16 h-16 bg-pink-200/40 rounded-full animate-pulse" style={{ animationDuration: '4s' }}></div>
-              <div className="absolute -top-5 -right-5 w-12 h-12 bg-cyan-200/40 rounded-lg rotate-45 animate-pulse" style={{ animationDuration: '5s' }}></div>
-              <div className="absolute -bottom-5 -left-5 w-10 h-10 bg-amber-200/40 rounded-full animate-pulse" style={{ animationDuration: '3s' }}></div>
-
               {/* Image Slideshow Container with Kids Frame */}
               <div className="relative">
                 {/* Outer decorative frame */}
@@ -312,62 +295,57 @@ export default function Index() {
                   <Palette className="h-6 w-6 text-white" />
                 </div>
 
-
-
                 {/* Main frame */}
                 <div className="relative bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border-4 border-white/60">
-                  {/* Inner colorful border */}
-                  <div className="absolute inset-4 rounded-2xl border-4 border-dashed border-gradient-to-r from-pink-300 via-purple-300 to-cyan-300 opacity-40"></div>
-
                   <div className="relative h-80 lg:h-96 rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200" style={{ zIndex: 2 }}>
-                  {/* Images */}
-                  {heroImages.map((image, index) => (
-                    <div
-                      key={index}
-                      className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
-                        index === currentImageIndex 
-                          ? 'opacity-100 scale-100' 
-                          : 'opacity-0 scale-105'
-                      }`}
-                    >
-                      <img
-                        src={image.src}
-                        alt={image.alt}
-                        className="w-full h-full object-cover rounded-2xl"
-                        loading={index === 0 ? "eager" : "lazy"}
-                      />
-                    </div>
-                  ))}
-
-                  {/* Navigation Arrows */}
-                  <button
-                    onClick={prevImage}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={nextImage}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </button>
-
-                  {/* Dots Indicator */}
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                    {heroImages.map((_, index) => (
-                      <button
+                    {/* Images */}
+                    {heroImages.map((image, index) => (
+                      <div
                         key={index}
-                        onClick={() => setCurrentImageIndex(index)}
-                        className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                        className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
                           index === currentImageIndex 
-                            ? 'bg-white shadow-lg scale-125' 
-                            : 'bg-white/60 hover:bg-white/80'
+                            ? 'opacity-100 scale-100' 
+                            : 'opacity-0 scale-105'
                         }`}
-                      />
+                      >
+                        <img
+                          src={image.src}
+                          alt={image.alt}
+                          className="w-full h-full object-cover rounded-2xl"
+                          loading={index === 0 ? "eager" : "lazy"}
+                        />
+                      </div>
                     ))}
+
+                    {/* Navigation Arrows */}
+                    <button
+                      onClick={prevImage}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={nextImage}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+
+                    {/* Dots Indicator */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                      {heroImages.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setCurrentImageIndex(index)}
+                          className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                            index === currentImageIndex 
+                              ? 'bg-white shadow-lg scale-125' 
+                              : 'bg-white/60 hover:bg-white/80'
+                          }`}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
 
                   {/* Image Caption */}
                   <div className="mt-4 text-center">
@@ -487,9 +465,9 @@ export default function Index() {
               <h3 className="text-xl font-bold text-center mb-6 bg-gradient-to-r from-indigo-600 to-orange-600 text-transparent bg-clip-text">
                 Explore & Discover
               </h3>
-              {[activities[4], activities[6]].map((activity) => {
+              {[activities[4]].map((activity) => {
                 const IconComponent = activity.icon;
-                const isComingSoon = activity.comingSoon;
+                const isComingSoon = (activity as any).comingSoon;
                 return (
                   <div
                     key={activity.id}
@@ -546,7 +524,7 @@ export default function Index() {
               <h3 className="text-xl font-bold text-center mb-6 bg-gradient-to-r from-lime-600 to-green-600 text-transparent bg-clip-text">
                 Test & Challenge
               </h3>
-              {[activities[5], activities[7]].map((activity) => {
+              {[activities[5], activities[6]].map((activity) => {
                 const IconComponent = activity.icon;
                 return (
                   <div

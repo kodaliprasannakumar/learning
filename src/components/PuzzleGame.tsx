@@ -289,10 +289,23 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
       return;
     }
     
+    // Check if user has enough credits (1 credit per validation)
+    if (credits < 1) {
+      toast.error("You need 1 credit to check your sentence. Complete other activities to earn more credits!");
+      return;
+    }
+    
     setIsValidating(true);
     setAiValidation(null);
     
     try {
+      // Spend 1 credit for checking the sentence
+      const creditSpent = await spendCredits(1, `Checked sentence: ${sentence.substring(0, 30)}...`);
+      if (!creditSpent) {
+        toast.error("Failed to process credit. Please try again.");
+        return;
+      }
+      
       // Use the new Lambda integration module
       const validationText = await validateSentenceApi(sentence);
       setAiValidation(validationText);
@@ -716,9 +729,9 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
             <div className="flex flex-wrap gap-3 mt-4">
               <Button 
                 variant="outline" 
-                className="border-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                className={`border-2 ${credits < 1 ? 'border-gray-300 text-gray-500' : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800'}`}
                 onClick={validateSentence}
-                disabled={isValidating || pieces.length === 0}
+                disabled={isValidating || pieces.length === 0 || credits < 1}
               >
                 {isValidating ? (
                   <>
@@ -728,7 +741,7 @@ const PuzzleGame = ({ initialPrompt = "Arrange the pieces to form a question", o
                 ) : (
                   <>
                     <Lightbulb className="h-4 w-4 mr-2" />
-                    Check Sentence
+                    Check Sentence (1 💰)
                   </>
                 )}
               </Button>

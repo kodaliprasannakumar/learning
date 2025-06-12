@@ -14,6 +14,8 @@ import SpaceQuestionsPage from "./pages/SpaceQuestionsPage";
 import QuizPage from "./pages/QuizPage";
 import AITrainerPage from "./pages/AITrainerPage";
 import Math from "./pages/Math";
+import AirMids from "./pages/AirMids";
+import AirHighs from "./pages/AirHighs";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
@@ -79,6 +81,8 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
+      <Route path="/air-mids" element={<AirMids />} />
+      <Route path="/air-highs" element={<AirHighs />} />
       <Route path="/doodle" element={
         <ProtectedRoute>
           <DoodlePage />
