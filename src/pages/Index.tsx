@@ -200,76 +200,76 @@ export default function Index() {
   return (
     <>
       {/* Hero Section - Lightweight Gradient Background */}
-      <section className="relative h-[95vh] bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-pink-50/30 overflow-hidden -mt-32 pt-32">
+      <section className="relative h-[95vh] bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-pink-50/30 overflow-hidden -mt-32 pt-40">
         <div className="relative container mx-auto px-4 pt-20 pb-16 lg:pt-24 lg:pb-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
             
             {/* Left Column - Text Content */}
             <div className="text-center lg:text-left">
-              {/* Main Hero Content */}
-              <div className="animate-fade-in">
+            {/* Main Hero Content */}
+            <div className="animate-fade-in">
                 <div className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 text-white px-6 py-3 rounded-full text-sm font-medium mb-8 shadow-lg">
-                  <Sparkles className="h-4 w-4" />
-                  <span>Welcome to Your Creative Universe</span>
-                </div>
-                
+                <Sparkles className="h-4 w-4" />
+                <span>Welcome to Your Creative Universe</span>
+              </div>
+              
                 <h1 className="text-4xl lg:text-6xl font-bold mb-8">
-                  <div className="overflow-hidden">
-                    <span 
-                      className={`bg-gradient-to-r from-pink-600 via-purple-600 via-blue-600 to-cyan-600 text-transparent leading-[1.2] bg-clip-text inline-block transform transition-all duration-1000 ease-out ${
-                        animationPhase >= 1 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
-                      }`}
-                    >
-                      Imagination
-                    </span>
-                  </div>
-                  <br />
+                <div className="overflow-hidden">
+                  <span 
+                    className={`bg-gradient-to-r from-pink-600 via-purple-600 via-blue-600 to-cyan-600 text-transparent leading-[1.2] bg-clip-text inline-block transform transition-all duration-1000 ease-out ${
+                      animationPhase >= 1 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
+                    }`}
+                  >
+                    Imagination
+                  </span>
+                </div>
+                <br />
                   <div className="flex gap-4 justify-center lg:justify-start">
-                    <span 
-                      className={`text-gray-800 inline-block transform transition-all duration-1000 ease-out ${
-                        animationPhase >= 2 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
-                      }`}
-                      style={{ transitionDelay: '0.3s' }}
-                    >
-                      Meets
-                    </span>
-                    <span 
-                      className={`text-gray-800 inline-block transform transition-all duration-1000 ease-out ${
-                        animationPhase >= 3 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
-                      }`}
-                      style={{ transitionDelay: '0.6s' }}
-                    >
-                      AI
-                    </span>
-                    <span 
-                      className={`text-gray-800 inline-block transform transition-all duration-1000 ease-out ${
-                        animationPhase >= 4 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
-                      }`}
-                      style={{ transitionDelay: '0.9s' }}
-                    >
-                      Magic
-                    </span>
-                  </div>
-                </h1>
-                
+                  <span 
+                    className={`text-gray-800 inline-block transform transition-all duration-1000 ease-out ${
+                      animationPhase >= 2 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
+                    }`}
+                    style={{ transitionDelay: '0.3s' }}
+                  >
+                    Meets
+                  </span>
+                  <span 
+                    className={`text-gray-800 inline-block transform transition-all duration-1000 ease-out ${
+                      animationPhase >= 3 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
+                    }`}
+                    style={{ transitionDelay: '0.6s' }}
+                  >
+                    AI
+                  </span>
+                  <span 
+                    className={`text-gray-800 inline-block transform transition-all duration-1000 ease-out ${
+                      animationPhase >= 4 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
+                    }`}
+                    style={{ transitionDelay: '0.9s' }}
+                  >
+                    Magic
+                  </span>
+                </div>
+              </h1>
+              
                 <p className="text-lg lg:text-xl text-gray-600 mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                  Transform your wildest ideas into reality with our collection of 
-                  <span className="font-semibold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text"> AI-powered creative tools</span>. 
-                  Draw, write, learn, and explore in a safe, fun environment designed just for you!
-                </p>
+                Transform your wildest ideas into reality with our collection of 
+                <span className="font-semibold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text"> AI-powered creative tools</span>. 
+                Draw, write, learn, and explore in a safe, fun environment designed just for you!
+              </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center">
-                  <Button 
-                    onClick={scrollToActivities}
+                <Button 
+                  onClick={scrollToActivities}
                     className="bg-gradient-to-r from-pink-600 via-purple-600 to-cyan-600 hover:from-pink-700 hover:via-purple-700 hover:to-cyan-700 text-white px-8 py-4 text-lg rounded-full shadow-xl transform hover:scale-105 transition-all duration-200"
-                  >
-                    <Play className="mr-2 h-5 w-5" />
-                    Start Creating Now
-                  </Button>
+                >
+                  <Play className="mr-2 h-5 w-5" />
+                  Start Creating Now
+                </Button>
                   <Button variant="outline" className="border-2 border-purple-200 hover:border-purple-300 px-8 py-4 text-lg rounded-full">
-                    <span className="text-gray-700">Learn More</span>
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
+                  <span className="text-gray-700">Learn More</span>
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
                 </div>
               </div>
             </div>
@@ -381,8 +381,8 @@ export default function Index() {
             {/* Create & Express Column */}
             <div className="space-y-6">
               <h3 className="text-xl font-bold text-center mb-6 bg-gradient-to-r from-cyan-600 to-amber-600 text-transparent bg-clip-text">
-                Create & Express
-              </h3>
+              Create & Express
+            </h3>
               {activities.slice(0, 2).map((activity) => {
                 const IconComponent = activity.icon;
                 return (
@@ -417,13 +417,13 @@ export default function Index() {
                   </div>
                 );
               })}
-            </div>
+          </div>
 
             {/* Think & Learn Column */}
             <div className="space-y-6">
               <h3 className="text-xl font-bold text-center mb-6 bg-gradient-to-r from-violet-600 to-emerald-600 text-transparent bg-clip-text">
-                Think & Learn
-              </h3>
+              Think & Learn
+            </h3>
               {[activities[2], activities[3]].map((activity) => {
                 const IconComponent = activity.icon;
                 return (
@@ -458,13 +458,13 @@ export default function Index() {
                   </div>
                 );
               })}
-            </div>
+          </div>
 
             {/* Explore & Discover Column */}
             <div className="space-y-6">
               <h3 className="text-xl font-bold text-center mb-6 bg-gradient-to-r from-indigo-600 to-orange-600 text-transparent bg-clip-text">
-                Explore & Discover
-              </h3>
+              Explore & Discover
+            </h3>
               {[activities[4]].map((activity) => {
                 const IconComponent = activity.icon;
                 const isComingSoon = (activity as any).comingSoon;
@@ -517,13 +517,13 @@ export default function Index() {
                   </div>
                 );
               })}
-            </div>
+          </div>
 
             {/* Test & Challenge Column */}
             <div className="space-y-6">
               <h3 className="text-xl font-bold text-center mb-6 bg-gradient-to-r from-lime-600 to-green-600 text-transparent bg-clip-text">
-                Test & Challenge
-              </h3>
+              Test & Challenge
+            </h3>
               {[activities[5], activities[6]].map((activity) => {
                 const IconComponent = activity.icon;
                 return (
@@ -559,24 +559,24 @@ export default function Index() {
                 );
               })}
             </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
       {/* Saved Doodles Section
       {user && !loading && (
         <section className="bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50 py-16">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-emerald-600 via-cyan-600 to-blue-600 text-transparent bg-clip-text">
-                Your Creative Journey
-              </h2>
-              <p className="text-xl text-gray-600">
-                Look at all the amazing things you've created!
-              </p>
-            </div>
-            <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
-              <SavedDoodles />
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-emerald-600 via-cyan-600 to-blue-600 text-transparent bg-clip-text">
+              Your Creative Journey
+            </h2>
+            <p className="text-xl text-gray-600">
+              Look at all the amazing things you've created!
+            </p>
+          </div>
+          <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
+            <SavedDoodles />
             </div>
           </div>
         </section>
@@ -586,35 +586,35 @@ export default function Index() {
       <section className="bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50 py-16">
         <div className="container mx-auto px-4">
           <div className="bg-white rounded-3xl p-12 shadow-xl max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-teal-600 via-blue-600 to-indigo-600 text-transparent bg-clip-text">
-                Safe, Fun & Educational
-              </h2>
-              <p className="text-xl text-gray-600">
-                Designed with care for young creators and their families
-              </p>
-            </div>
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-teal-600 via-blue-600 to-indigo-600 text-transparent bg-clip-text">
+              Safe, Fun & Educational
+            </h2>
+            <p className="text-xl text-gray-600">
+              Designed with care for young creators and their families
+            </p>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {features.map((feature, index) => {
-                const IconComponent = feature.icon;
-                return (
-                  <div
-                    key={index}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {features.map((feature, index) => {
+              const IconComponent = feature.icon;
+              return (
+                <div
+                  key={index}
                     className="text-center group"
-                  >
-                    <div className={`w-20 h-20 ${feature.bg} rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                      <IconComponent className={`h-10 w-10 ${feature.color}`} />
-                    </div>
-                    <h3 className="text-2xl font-bold mb-4 text-gray-800">
-                      {feature.title}
-                    </h3>
-                    <p className="text-gray-600 leading-relaxed">
-                      {feature.description}
-                    </p>
+                >
+                  <div className={`w-20 h-20 ${feature.bg} rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                    <IconComponent className={`h-10 w-10 ${feature.color}`} />
                   </div>
-                );
-              })}
+                  <h3 className="text-2xl font-bold mb-4 text-gray-800">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    {feature.description}
+                  </p>
+                </div>
+              );
+            })}
             </div>
           </div>
         </div>

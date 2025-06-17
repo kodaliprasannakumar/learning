@@ -295,11 +295,11 @@ const DoodlePage = () => {
       return;
     }
     
-          // Check if we have enough credits and deduct them
+    // Check if we have enough credits and deduct them
       if (credits < 3) {
         toast.error(`Not enough credits. You need 3 credits to generate an image. You have ${credits} credits.`);
-        return;
-      }
+      return;
+    }
     
     // First spend the credits
             const success = await spendCredits(3, "Generate AI image");

@@ -32,7 +32,7 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
   const [credits, setCredits] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
-
+  
   // Function to fetch user's credit balance from Supabase
   const fetchCredits = async () => {
     if (!user) {
@@ -126,7 +126,7 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
         console.error("Error checking daily bonus:", profileError);
         return;
       }
-
+      
       const lastBonusDate = profile?.last_credit_refresh_date 
         ? new Date(profile.last_credit_refresh_date).toISOString().split('T')[0]
         : null;
@@ -168,7 +168,7 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
 
       const newCredits = (currentProfile?.credits_balance || 0) + amount;
       const newLifetimeCredits = (currentProfile?.lifetime_credits || 0) + amount;
-
+      
       // Update profile with new credit balance
       const { error: updateError } = await supabase
         .from('profiles')

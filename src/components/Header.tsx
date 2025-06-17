@@ -10,35 +10,8 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [prevScrollPos, setPrevScrollPos] = useState(0);
-  const [visible, setVisible] = useState(true);
-
   // Check if we're on the Index page
   const isIndexPage = location.pathname === '/';
-
-  // Handle scroll behavior
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollPos = window.scrollY;
-      const isScrollingDown = prevScrollPos < currentScrollPos;
-      const isScrollingUp = prevScrollPos > currentScrollPos;
-      const isMinimalScroll = currentScrollPos < 10;
-      
-      // Always show header at the top of the page or when scrolling up
-      if (isMinimalScroll || isScrollingUp) {
-        setVisible(true);
-      } 
-      // Hide when scrolling down and not at the top
-      else if (isScrollingDown && currentScrollPos > 50) {
-        setVisible(false);
-      }
-      
-      setPrevScrollPos(currentScrollPos);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [prevScrollPos]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -73,9 +46,7 @@ const Header: React.FC = () => {
         isIndexPage 
           ? 'bg-transparent backdrop-blur-none border-none shadow-none' 
           : 'bg-gradient-to-r from-white/95 via-blue-50/90 to-purple-50/90 backdrop-blur-lg border-b border-white/30 shadow-lg'
-      } sticky top-2 z-50 transition-all duration-300 ${
-        visible ? 'translate-y-0' : '-translate-y-full'
-      } relative`}
+      } fixed top-0 left-0 right-0 z-50 transition-all duration-300`}
     >
       <div className="container mx-auto px-4 sm:px-6 pt-4 pb-3 sm:pt-6 sm:pb-4">
         {/* Desktop Layout */}
@@ -102,7 +73,7 @@ const Header: React.FC = () => {
               </div>
             </div>
           </div>
-
+          
           {/* Age Group Navigation - Center (only on landing pages) */}
           {(location.pathname === '/' || location.pathname === '/air-mids' || location.pathname === '/air-highs') && (
             <div className="hidden md:flex items-center gap-2 bg-white/85 backdrop-blur-md rounded-2xl px-4 py-2 shadow-lg border border-white/40">
