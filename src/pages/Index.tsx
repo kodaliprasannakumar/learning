@@ -22,7 +22,8 @@ import {
   Calculator,
   Clock,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Music
 } from "lucide-react";
 
 export default function Index() {
@@ -170,6 +171,17 @@ export default function Index() {
       gradient: 'from-rose-500 via-pink-500 to-purple-600',
       bgGradient: 'from-rose-50 via-pink-50 to-purple-100',
       delay: '550ms'
+    },
+    {
+      id: 'music',
+      title: 'Music Maker Studio',
+      description: 'Create amazing music with AI assistance and virtual instruments',
+      icon: Music,
+      path: '/music',
+      color: 'indigo',
+      gradient: 'from-purple-500 via-indigo-500 to-blue-600',
+      bgGradient: 'from-purple-50 via-indigo-50 to-blue-100',
+      delay: '600ms'
     }
   ];
 
@@ -465,7 +477,7 @@ export default function Index() {
               <h3 className="text-xl font-bold text-center mb-6 bg-gradient-to-r from-indigo-600 to-orange-600 text-transparent bg-clip-text">
               Explore & Discover
             </h3>
-              {[activities[4]].map((activity) => {
+              {[activities[4], activities[7]].map((activity) => {
                 const IconComponent = activity.icon;
                 const isComingSoon = (activity as any).comingSoon;
                 return (

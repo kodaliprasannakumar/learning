@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useCreditSystem } from '@/hooks/useCreditSystem';
-import { formatDistanceToNow } from 'date-fns';
 
 type CreditDisplayProps = {
   className?: string;
@@ -15,7 +14,7 @@ export const CreditDisplay = ({
   className, 
   displayType = 'compact' 
 }: CreditDisplayProps) => {
-  const { credits, isLoading, transactions } = useCreditSystem();
+  const { credits, isLoading } = useCreditSystem();
   const [showAnimation, setShowAnimation] = useState<boolean>(false);
   const [lastSeenCredits, setLastSeenCredits] = useState<number | null>(null);
   const [animatedValue, setAnimatedValue] = useState<number>(0);
@@ -80,37 +79,27 @@ export const CreditDisplay = ({
             </div>
           </div>
           
-          <div className="max-h-[300px] overflow-y-auto">
-            <h4 className="p-3 text-sm font-medium text-amber-800 bg-amber-100/70">Recent Transactions</h4>
-            {transactions.length === 0 ? (
-              <div className="p-6 text-center text-gray-500 text-sm">
-                No transactions yet
-              </div>
-            ) : (
-              <ul className="p-2">
-                {transactions.map(tx => (
-                  <li key={tx.id} className="flex items-center justify-between p-2 border-b border-amber-100 last:border-0">
-                    <div>
-                      <div className="font-medium text-sm">{tx.description}</div>
-                      <div className="text-xs text-gray-500">
-                        {formatDistanceToNow(new Date(tx.created_at), { addSuffix: true })}
-                      </div>
-                    </div>
-                    <div className={cn(
-                      "font-bold",
-                      tx.transaction_type === 'earn' ? 'text-green-600' : 'text-red-500'
-                    )}>
-                      {tx.transaction_type === 'earn' ? '+' : '-'}{tx.amount}
-                    </div>
+          <div className="p-4">
+            <h4 className="text-sm font-medium text-amber-800 mb-3">How to Earn Credits</h4>
+            <ul className="space-y-2 text-sm text-amber-700">
+              <li className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                Complete activities and challenges
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                Answer questions correctly
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                Create and save your work
                   </li>
-                ))}
               </ul>
-            )}
           </div>
           
           <div className="p-3 border-t border-amber-200/50 bg-white/30 text-center">
             <p className="text-xs text-gray-600">
-              Earn credits by completing activities and logging in daily!
+              Earn credits by completing activities and challenges!
             </p>
           </div>
         </PopoverContent>

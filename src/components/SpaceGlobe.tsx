@@ -5,6 +5,11 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import OpenAI from 'openai';
 
+import { Volume2, VolumeX, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+
 // Space questions related to specific planets in our solar system
 const PLANET_QUESTIONS = [
   {
@@ -12,7 +17,8 @@ const PLANET_QUESTIONS = [
     question: "Why is the Sun so hot?",
     color: 0xFDB813, // bright yellow-orange
     texture: "/textures/sun.jpg",
-    rotationSpeed: 0.001
+    rotationSpeed: 0.001,
+    relativeRadius: 10.0 // Not to scale, but largest object
   },
   {
     planet: "Mercury",
@@ -20,7 +26,8 @@ const PLANET_QUESTIONS = [
     color: 0x999999, // gray
     texture: "/textures/mercury.jpg",
     rotationSpeed: 0.004,
-    orbitSpeed: 0.008
+    orbitSpeed: 0.008,
+    relativeRadius: 0.38
   },
   {
     planet: "Venus",
@@ -28,7 +35,8 @@ const PLANET_QUESTIONS = [
     color: 0xE6C229, // yellowy-orange
     texture: "/textures/venus.jpg",
     rotationSpeed: 0.002, // Venus rotates very slowly in reality
-    orbitSpeed: 0.006
+    orbitSpeed: 0.006,
+    relativeRadius: 0.95
   },
   {
     planet: "Earth",
@@ -36,7 +44,8 @@ const PLANET_QUESTIONS = [
     color: 0x1A73E8, // blue
     texture: "/textures/earth.jpg",
     rotationSpeed: 0.005,
-    orbitSpeed: 0.005
+    orbitSpeed: 0.005,
+    relativeRadius: 1.0
   },
   {
     planet: "Mars",
@@ -44,7 +53,8 @@ const PLANET_QUESTIONS = [
     color: 0xE34234, // red
     texture: "/textures/mars.jpg",
     rotationSpeed: 0.005,
-    orbitSpeed: 0.004
+    orbitSpeed: 0.004,
+    relativeRadius: 0.53
   },
   {
     planet: "Jupiter",
@@ -52,7 +62,8 @@ const PLANET_QUESTIONS = [
     color: 0xD5A150, // orange-brown
     texture: "/textures/jupiter.jpg",
     rotationSpeed: 0.008, // Jupiter rotates quite fast
-    orbitSpeed: 0.002
+    orbitSpeed: 0.002,
+    relativeRadius: 4.5 // Scaled down from 11.2 to be manageable
   },
   {
     planet: "Saturn",
@@ -60,7 +71,8 @@ const PLANET_QUESTIONS = [
     color: 0xEAD6B8, // beige
     texture: "/textures/saturn.jpg",
     rotationSpeed: 0.007,
-    orbitSpeed: 0.0015
+    orbitSpeed: 0.0015,
+    relativeRadius: 4.0 // Scaled down from 9.4
   },
   {
     planet: "Uranus",
@@ -68,7 +80,8 @@ const PLANET_QUESTIONS = [
     color: 0x5B92E5, // light blue
     texture: "/textures/uranus.jpg",
     rotationSpeed: 0.006,
-    orbitSpeed: 0.001
+    orbitSpeed: 0.001,
+    relativeRadius: 2.5 // Scaled down from 4.0
   },
   {
     planet: "Neptune",
@@ -76,7 +89,8 @@ const PLANET_QUESTIONS = [
     color: 0x3E66F9, // dark blue
     texture: "/textures/neptune.jpg",
     rotationSpeed: 0.006,
-    orbitSpeed: 0.0008
+    orbitSpeed: 0.0008,
+    relativeRadius: 2.4 // Scaled down from 3.8
   },
   {
     planet: "Pluto",
@@ -84,7 +98,8 @@ const PLANET_QUESTIONS = [
     color: 0xCCCCCC, // light gray
     texture: "/textures/pluto.jpg",
     rotationSpeed: 0.003,
-    orbitSpeed: 0.0005
+    orbitSpeed: 0.0005,
+    relativeRadius: 0.18
   },
   {
     planet: "Asteroids",
@@ -103,23 +118,34 @@ const PLANET_QUESTIONS = [
   }
 ];
 
+const SCALE_FACTOR = 1.5; // Increase this to make all planets bigger
+
 interface SpaceGlobeProps {
   onAnswerGenerated?: (question: string, answer: string) => void;
   credits?: number;
+  flyToTarget: string | null;
+  onFlyToComplete: () => void;
 }
 
-const SpaceGlobe: React.FC<SpaceGlobeProps> = ({ onAnswerGenerated, credits = 0 }) => {
+const SpaceGlobe: React.FC<SpaceGlobeProps> = ({ onAnswerGenerated, credits = 0, flyToTarget, onFlyToComplete }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const frameIdRef = useRef<number | null>(null);
+  const planetsRef = useRef<{ mesh: THREE.Mesh; container: THREE.Object3D; }[]>([]);
   
   const [activeQuestion, setActiveQuestion] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hoveredPlanet, setHoveredPlanet] = useState<string | null>(null);
   const [answer, setAnswer] = useState<string | null>(null);
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPlanet, setSelectedPlanet] = useState<{ name: string; } | null>(null);
+  const [customQuestion, setCustomQuestion] = useState('');
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   
   // Convert credits to number to ensure proper comparison
   const creditAmount = Number(credits);
@@ -139,8 +165,12 @@ const SpaceGlobe: React.FC<SpaceGlobeProps> = ({ onAnswerGenerated, credits = 0 
 
   // Setup Three.js
   useEffect(() => {
-    // Don't initialize if credits are 0
-    if (!containerRef.current || creditAmount <= 0) return;
+    // Don't initialize if credits are 0 - This was causing the re-render bug.
+    // The UI overlay handles the 0 credit case now.
+    if (!containerRef.current) return;
+    
+    // Storing planets in a ref to access them from other effects
+    const planets: { mesh: THREE.Mesh; container: THREE.Object3D; }[] = [];
     
     // Create scene
     const scene = new THREE.Scene();
@@ -250,885 +280,580 @@ const SpaceGlobe: React.FC<SpaceGlobeProps> = ({ onAnswerGenerated, credits = 0 
       
       const brightStarMesh = new THREE.Points(brightStars, brightStarMaterial);
       scene.add(brightStarMesh);
-      
-      // Create a few tiny colored nebulas
-      for (let i = 0; i < 5; i++) {
-        const nebulaParticleCount = 500;
-        const nebulaGeometry = new THREE.BufferGeometry();
-        const nebulaVertices = [];
-        const nebulaColors = [];
-        
-        // Random nebula position far from center
-        const nebulaX = THREE.MathUtils.randFloatSpread(1000) + (Math.random() > 0.5 ? 500 : -500);
-        const nebulaY = THREE.MathUtils.randFloatSpread(1000);
-        const nebulaZ = THREE.MathUtils.randFloatSpread(1000) + (Math.random() > 0.5 ? 500 : -500);
-        
-        // Random nebula color
-        const nebulaHue = Math.random();
-        let nebulaColor;
-        
-        if (nebulaHue < 0.33) {
-          nebulaColor = new THREE.Color(0x4477aa); // Blue
-        } else if (nebulaHue < 0.66) {
-          nebulaColor = new THREE.Color(0xaa4477); // Purple
-        } else {
-          nebulaColor = new THREE.Color(0x44aa77); // Green
-        }
-        
-        for (let j = 0; j < nebulaParticleCount; j++) {
-          // Create a cloud-like distribution
-          const x = nebulaX + THREE.MathUtils.randFloatSpread(200);
-          const y = nebulaY + THREE.MathUtils.randFloatSpread(200);
-          const z = nebulaZ + THREE.MathUtils.randFloatSpread(200);
-          
-          nebulaVertices.push(x, y, z);
-          
-          // Adjust color opacity based on distance from center
-          const distFromCenter = Math.sqrt(
-            Math.pow(x - nebulaX, 2) + 
-            Math.pow(y - nebulaY, 2) + 
-            Math.pow(z - nebulaZ, 2)
-          );
-          
-          const opacity = Math.max(0, 1 - (distFromCenter / 100));
-          
-          nebulaColors.push(
-            nebulaColor.r,
-            nebulaColor.g,
-            nebulaColor.b
-          );
-        }
-        
-        nebulaGeometry.setAttribute('position', new THREE.Float32BufferAttribute(nebulaVertices, 3));
-        nebulaGeometry.setAttribute('color', new THREE.Float32BufferAttribute(nebulaColors, 3));
-        
-        const nebulaMaterial = new THREE.PointsMaterial({
-          size: 3,
-          transparent: true,
-          opacity: 0.2,
-          vertexColors: true,
-          sizeAttenuation: true,
-          blending: THREE.AdditiveBlending
-        });
-        
-        const nebulaMesh = new THREE.Points(nebulaGeometry, nebulaMaterial);
-        scene.add(nebulaMesh);
-      }
     };
     
-    // Create a flat circle representing the orbital plane
-    const createOrbitalPlane = () => {
-      const planeGeometry = new THREE.CircleGeometry(60, 64);
-      const planeMaterial = new THREE.MeshBasicMaterial({
-        color: 0x333366,
-        transparent: true,
-        opacity: 0.1,
-        side: THREE.DoubleSide
-      });
-      
-      const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-      plane.rotation.x = Math.PI / 2;
-      plane.position.y = -0.5;
-      scene.add(plane);
-      
-      // Add grid lines
-      const gridHelper = new THREE.GridHelper(120, 20, 0x444477, 0x444477);
-      gridHelper.position.y = -0.4;
-      scene.add(gridHelper);
-    };
-    
-    // Create the sun
+    // Create the Sun
     const createSun = () => {
-      const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
-      
-      // Load sun texture
-      const sunQuestion = PLANET_QUESTIONS.find(q => q.planet === "Sun");
-      let sunMaterial;
-      
-      if (sunQuestion && sunQuestion.texture) {
-        const texture = textureLoader.load(sunQuestion.texture);
-        sunMaterial = new THREE.MeshBasicMaterial({
-          map: texture,
-        });
-      } else {
-        // Fallback to color if texture not available
-        sunMaterial = new THREE.MeshBasicMaterial({
-          color: 0xFFAA33
-        });
-      }
-      
+      const sunGeometry = new THREE.SphereGeometry(5, 64, 64);
+      const sunTexture = textureLoader.load('/textures/sun.jpg');
+      const sunMaterial = new THREE.MeshBasicMaterial({ map: sunTexture });
       const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+      sun.userData.name = 'Sun';
+      sun.userData.isPlanet = true; // For click detection
       
-      // Add glow effect
-      const sunGlowGeometry = new THREE.SphereGeometry(5.6, 32, 32);
-      const sunGlowMaterial = new THREE.MeshBasicMaterial({
-        color: 0xFFAA33,
+      const pointLight = new THREE.PointLight(0xFFFFFF, 1.5, 500);
+      sun.add(pointLight);
+      
+      // Add sun glow effect
+      const sunGlowMaterial = new THREE.SpriteMaterial({
+        map: textureLoader.load('/textures/glow.png'),
+        color: 0xFFD700,
         transparent: true,
-        opacity: 0.2,
-        side: THREE.BackSide
+        blending: THREE.AdditiveBlending,
+        opacity: 0.7
       });
-      
-      const sunGlow = new THREE.Mesh(sunGlowGeometry, sunGlowMaterial);
+      const sunGlow = new THREE.Sprite(sunGlowMaterial);
+      sunGlow.scale.set(15, 15, 1);
       sun.add(sunGlow);
-      
-      // Add stronger glow
-      const outerGlowGeometry = new THREE.SphereGeometry(7, 32, 32);
-      const outerGlowMaterial = new THREE.MeshBasicMaterial({
-        color: 0xFFDD88,
-        transparent: true,
-        opacity: 0.1,
-        side: THREE.BackSide
-      });
-      
-      const outerGlow = new THREE.Mesh(outerGlowGeometry, outerGlowMaterial);
-      sun.add(outerGlow);
-      
-      // Add light
-      const sunLight = new THREE.PointLight(0xFFFFFF, 2, 300);
-      sun.add(sunLight);
-      
-      // Add a second, yellow-tinted light for atmosphere
-      const sunAtmosphereLight = new THREE.PointLight(0xFFEEBB, 0.8, 150);
-      sun.add(sunAtmosphereLight);
-      
-      scene.add(sun);
-      
-      // Add sun question
-      if (sunQuestion) {
-        const questionObj = createQuestionIndicator(sunQuestion.question, sunQuestion.color);
-        questionObj.position.set(0, 7, 0);
-        scene.add(questionObj);
-      }
       
       return sun;
     };
     
-    // Create orbit rings
-    const createOrbitRing = (radius: number) => {
-      const ringGeometry = new THREE.RingGeometry(radius - 0.1, radius + 0.1, 128);
-      const ringMaterial = new THREE.MeshBasicMaterial({
-        color: 0x666666,
-        transparent: true,
-        opacity: 0.4,
-        side: THREE.DoubleSide
-      });
+    // We'll create planets inside this function
+    const createPlanet = (name: string, radius: number, orbitRadius: number, color: number, texturePath: string | null) => {
+      const geometry = new THREE.SphereGeometry(radius, 32, 32);
       
-      const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-      ring.rotation.x = Math.PI / 2;
-      scene.add(ring);
+      let material;
       
-      return ring;
-    };
-    
-    // Create a question indicator
-    const createQuestionIndicator = (question: string, color: number) => {
-      const group = new THREE.Group();
-      
-      // Create question mark sphere
-      const sphereGeometry = new THREE.SphereGeometry(0.6, 16, 16);
-      const sphereMaterial = new THREE.MeshBasicMaterial({
-        color: color,
-        transparent: true,
-        opacity: 0.8
-      });
-      
-      const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-      
-      // Create orbit ring around question
-      const ringGeometry = new THREE.RingGeometry(0.8, 0.9, 32);
-      const ringMaterial = new THREE.MeshBasicMaterial({
-        color: color,
-        transparent: true,
-        opacity: 0.5,
-        side: THREE.DoubleSide
-      });
-      
-      const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-      ring.rotation.x = Math.PI / 2;
-      
-      group.add(sphere);
-      group.add(ring);
-      
-      // Store question data
-      group.userData = {
-        question,
-        isQuestion: true,
-        planet: question
-      };
-      
-      return group;
-    };
-    
-    // Create a planet with a question
-    const createPlanet = (name: string, radius: number, orbitRadius: number, color: number) => {
-      const planetGeometry = new THREE.SphereGeometry(radius, 32, 32);
-      
-      // Find planet data and texture
-      const planetData = PLANET_QUESTIONS.find(q => q.planet === name);
-      let planetMaterial;
-      
-      if (planetData && planetData.texture) {
+      if (texturePath) {
         // Use texture if available
-        const texture = textureLoader.load(planetData.texture);
-        planetMaterial = new THREE.MeshPhongMaterial({ 
+        const texture = textureLoader.load(texturePath);
+        material = new THREE.MeshStandardMaterial({ 
           map: texture,
-          shininess: 25,
-          specular: new THREE.Color(0x333333)
+          roughness: 0.8,
+          metalness: 0.2
         });
       } else {
         // Fallback to color
-        planetMaterial = new THREE.MeshPhongMaterial({ 
+        material = new THREE.MeshStandardMaterial({ 
           color,
-          shininess: 25,
-          specular: new THREE.Color(0x333333)
+          roughness: 0.5,
+          metalness: 0.5
         });
       }
       
-      const planet = new THREE.Mesh(planetGeometry, planetMaterial);
+      const planet = new THREE.Mesh(geometry, material);
+      planet.userData.isPlanet = true;
+      planet.userData.name = name;
+      planet.userData.radius = radius;
+      planet.position.x = 0; // Start at center
       
-      // Add subtle glow to each planet
-      const glowColor = planetData ? new THREE.Color(planetData.color) : new THREE.Color(color);
-      const glowSize = radius * 1.2;
-      const glowGeometry = new THREE.SphereGeometry(glowSize, 32, 32);
-      const glowMaterial = new THREE.MeshBasicMaterial({
-        color: glowColor,
-        transparent: true,
-        opacity: 0.1,
-        side: THREE.BackSide
-      });
+      const orbitContainer = new THREE.Object3D();
+      orbitContainer.add(planet);
       
-      const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-      planet.add(glow);
-      
-      // Create a planet group to handle positioning
-      const planetGroup = new THREE.Group();
-      
-      // Add the planet to the group
-      planetGroup.add(planet);
-      
-      // Position planet group in its orbit
       const angle = Math.random() * Math.PI * 2;
-      planetGroup.position.x = Math.cos(angle) * orbitRadius;
-      planetGroup.position.z = Math.sin(angle) * orbitRadius;
-      
-      // Store planet data on both the group and the mesh
-      planetGroup.userData = {
-        name,
-        isPlanet: true,
-        orbitRadius,
-        orbitAngle: angle,
-        orbitSpeed: planetData?.orbitSpeed || 0
-      };
-      
-      // Set the same userData on the planet mesh
-      planet.userData = {
-        name,
-        isPlanet: true,
-        rotationSpeed: planetData?.rotationSpeed || 0.005
-      };
-      
-      scene.add(planetGroup);
-      
-      // Find question for this planet
-      const planetQuestion = PLANET_QUESTIONS.find(q => q.planet === name);
-      if (planetQuestion) {
-        const questionObj = createQuestionIndicator(planetQuestion.question, planetQuestion.color);
-        questionObj.position.set(0, radius * 1.8, 0);
-        planet.add(questionObj);
-      }
-      
-      // Add special features for specific planets
-      if (name === "Saturn") {
-        // Add rings to Saturn
-        const ringGeometry = new THREE.RingGeometry(radius * 1.4, radius * 2.0, 64);
-        const ringTexture = textureLoader.load("/textures/saturn_rings.png");
-        const ringMaterial = new THREE.MeshPhongMaterial({
-          map: ringTexture,
-          side: THREE.DoubleSide,
-          transparent: true,
-          opacity: 0.9,
-          shininess: 25,
-          specular: new THREE.Color(0x666666)
-        });
-        const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-        ring.rotation.x = Math.PI / 2;
-        planet.add(ring);
-      } else if (name === "Earth") {
-        // Add clouds to Earth
-        const cloudGeometry = new THREE.SphereGeometry(radius * 1.02, 32, 32);
-        const cloudTexture = textureLoader.load("/textures/earth_clouds.png");
-        const cloudMaterial = new THREE.MeshLambertMaterial({
-          map: cloudTexture,
-          transparent: true,
-          opacity: 0.6
-        });
-        const clouds = new THREE.Mesh(cloudGeometry, cloudMaterial);
-        planet.add(clouds);
-        
-        // Add faint atmosphere glow
-        const atmosphereGeometry = new THREE.SphereGeometry(radius * 1.15, 32, 32);
-        const atmosphereMaterial = new THREE.MeshBasicMaterial({
-          color: 0x8888ff,
-          transparent: true,
-          opacity: 0.15,
-          side: THREE.BackSide
-        });
-        const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
-        planet.add(atmosphere);
-      } else if (name === "Jupiter") {
-        // Add a point light to Jupiter to simulate its radiation
-        const jupiterLight = new THREE.PointLight(0xffaa66, 0.3, 10);
-        jupiterLight.position.set(0, 0, 0);
-        planet.add(jupiterLight);
-      }
-      
-      return planetGroup;
+      // Store all necessary animation data on the MESH's userData, not the container
+      planet.userData.orbitRadius = orbitRadius;
+      planet.userData.orbitAngle = angle;
+      planet.userData.rotationSpeed = PLANET_QUESTIONS.find(p => p.planet === name)?.rotationSpeed || 0.005;
+      planet.userData.orbitSpeed = PLANET_QUESTIONS.find(p => p.planet === name)?.orbitSpeed || 0.001;
+
+      return { mesh: planet, container: orbitContainer };
     };
-    
-    // Create asteroid belt
+
+    const createSatellite = (name: string, size: number, orbitRadius: number, orbitSpeed: number, parent: THREE.Object3D) => {
+      const satGeometry = new THREE.BoxGeometry(size, size, size * 2);
+      const satMaterial = new THREE.MeshStandardMaterial({ color: 0xC0C0C0 }); // Silver
+      const satellite = new THREE.Mesh(satGeometry, satMaterial);
+      
+      // Add "solar panels"
+      const panelGeometry = new THREE.BoxGeometry(size * 3, size * 0.8, 0.1);
+      const panelMaterial = new THREE.MeshStandardMaterial({ color: 0x00008B }); // Dark blue
+      const panel1 = new THREE.Mesh(panelGeometry, panelMaterial);
+      panel1.position.x = size * 2;
+      const panel2 = panel1.clone();
+      panel2.position.x = -size * 2;
+      satellite.add(panel1, panel2);
+
+      satellite.position.x = orbitRadius;
+
+      const orbitContainer = new THREE.Object3D();
+      parent.add(orbitContainer);
+
+      orbitContainer.add(satellite);
+
+      satellite.userData = {
+        isSatellite: true,
+        name,
+        orbitSpeed,
+        question: `What is the ${name} satellite?` // Generic question
+      };
+
+      return { mesh: satellite, container: orbitContainer };
+    };
+
+    // Create the asteroid belt
     const createAsteroidBelt = (innerRadius: number, outerRadius: number) => {
-      const asteroidCount = 1000;
-      const asteroidGeometry = new THREE.BufferGeometry();
-      const asteroidVertices = [];
+      const asteroids = new THREE.Group();
+      const asteroidMaterial = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.8 });
       
-      for (let i = 0; i < asteroidCount; i++) {
-        const radius = innerRadius + Math.random() * (outerRadius - innerRadius);
+      for (let i = 0; i < 1500; i++) {
+        const size = Math.random() * 0.15 + 0.05;
+        const geometry = new THREE.DodecahedronGeometry(size, 0);
+        
         const angle = Math.random() * Math.PI * 2;
+        const radius = innerRadius + Math.random() * (outerRadius - innerRadius);
         
-        const x = Math.cos(angle) * radius;
-        const y = (Math.random() - 0.5) * 0.3; // Slight height variation
-        const z = Math.sin(angle) * radius;
-        
-        asteroidVertices.push(x, y, z);
+        const asteroid = new THREE.Mesh(geometry, asteroidMaterial);
+        asteroid.position.set(
+          Math.cos(angle) * radius,
+          (Math.random() - 0.5) * 1, // Add some vertical spread
+          Math.sin(angle) * radius
+        );
+        asteroid.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+        asteroids.add(asteroid);
       }
-      
-      asteroidGeometry.setAttribute('position', new THREE.Float32BufferAttribute(asteroidVertices, 3));
-      
-      const asteroidMaterial = new THREE.PointsMaterial({
-        color: 0xBBAA99,
-        size: 0.15,
-        sizeAttenuation: true
-      });
-      
-      const asteroids = new THREE.Points(asteroidGeometry, asteroidMaterial);
       scene.add(asteroids);
+    };
+
+    // Create a single comet
+    const createComet = () => {
+      const comet = new THREE.Group();
       
-      // Add asteroid belt question
-      const asteroidQuestion = PLANET_QUESTIONS.find(q => q.planet === "Asteroids");
-      if (asteroidQuestion) {
-        const questionObj = createQuestionIndicator(asteroidQuestion.question, asteroidQuestion.color);
-        questionObj.position.set((innerRadius + outerRadius) / 2, 2, 0);
-        scene.add(questionObj);
-      }
+      // Comet head
+      const headGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+      const headMaterial = new THREE.MeshBasicMaterial({ color: 0xAADDFF });
+      const head = new THREE.Mesh(headGeometry, headMaterial);
+      comet.add(head);
       
-      return asteroids;
+      // Comet tail
+      const tailGeometry = new THREE.ConeGeometry(0.2, 2, 8);
+      const tailMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0xAADDFF,
+        transparent: true,
+        opacity: 0.3
+      });
+      const tail = new THREE.Mesh(tailGeometry, tailMaterial);
+      tail.position.y = -1;
+      tail.rotation.x = Math.PI; // Point it away
+      head.add(tail);
+      
+      scene.add(comet);
+      return comet;
     };
     
-    // Create a comet
-    const createComet = () => {
-      const cometGroup = new THREE.Group();
+    createStarfield();
+    const sun = createSun();
+    scene.add(sun);
+    
+    // Create all the planets
+    PLANET_QUESTIONS.forEach(p => {
+      if (p.planet === 'Sun' || p.planet === 'Asteroids' || p.planet === 'Comets') return;
+
+      const orbitRadius = PLANET_QUESTIONS.indexOf(p) * 12 + 15;
       
-      // Comet nucleus
-      const cometGeometry = new THREE.SphereGeometry(0.5, 16, 16);
-      const cometMaterial = new THREE.MeshBasicMaterial({
-        color: 0xFFFFFF
-      });
-      
-      const comet = new THREE.Mesh(cometGeometry, cometMaterial);
-      cometGroup.add(comet);
-      
-      // Comet tail - particle system
-      const tailParticleCount = 200;
-      const tailParticles = new THREE.BufferGeometry();
-      const tailPositions = new Float32Array(tailParticleCount * 3);
-      const tailColors = new Float32Array(tailParticleCount * 3);
-      
-      for (let i = 0; i < tailParticleCount; i++) {
-        const distance = (i / tailParticleCount) * 6; // Longer tail
-        const spread = 0.2 * distance; // Wider spread as we get further
-        
-        // Position with spread that increases with distance
-        tailPositions[i * 3] = -distance;
-        tailPositions[i * 3 + 1] = THREE.MathUtils.randFloatSpread(spread);
-        tailPositions[i * 3 + 2] = THREE.MathUtils.randFloatSpread(spread);
-        
-        // Color gradient from white to blue to transparent
-        const intensity = 1 - (i / tailParticleCount);
-        tailColors[i * 3] = intensity;
-        tailColors[i * 3 + 1] = intensity;
-        tailColors[i * 3 + 2] = Math.min(1, intensity * 1.5); // More blue in the tail
-      }
-      
-      tailParticles.setAttribute('position', new THREE.BufferAttribute(tailPositions, 3));
-      tailParticles.setAttribute('color', new THREE.BufferAttribute(tailColors, 3));
-      
-      const tailMaterial = new THREE.PointsMaterial({
-        size: 0.2,
-        transparent: true,
-        opacity: 0.8,
-        vertexColors: true,
-        blending: THREE.AdditiveBlending,
-      });
-      
-      const tail = new THREE.Points(tailParticles, tailMaterial);
-      cometGroup.add(tail);
-      
-      // Create a glow around the nucleus
-      const glowGeometry = new THREE.SphereGeometry(0.7, 16, 16);
-      const glowMaterial = new THREE.MeshBasicMaterial({
-        color: 0x88CCFF,
-        transparent: true,
-        opacity: 0.4,
-        side: THREE.BackSide
-      });
-      const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-      cometGroup.add(glow);
-      
-      // Position comet and set orbit parameters
-      const distance = 60;
-      const angle = Math.PI / 4;
-      const inclination = Math.PI / 6; // Tilt from orbital plane
-      
-      // Position the comet
-      cometGroup.position.set(
-        Math.cos(angle) * distance,
-        Math.sin(inclination) * distance,
-        Math.sin(angle) * distance
+      const planetObj = createPlanet(
+        p.planet,
+        (p.relativeRadius || 1.0) * SCALE_FACTOR, // Use new relativeRadius and scale factor
+        orbitRadius,
+        p.color,
+        p.texture
       );
       
-      // Store comet data
-      cometGroup.userData = {
-        isComet: true,
-        orbitDistance: distance,
-        orbitAngle: angle,
-        orbitInclination: inclination,
-        orbitSpeed: 0.002,
-        name: "Comet"
-      };
-      
-      // Rotate the tail to point away from sun
-      tail.rotation.z = Math.PI;
-      
-      scene.add(cometGroup);
-      
-      // Add comet question
-      const cometQuestion = PLANET_QUESTIONS.find(q => q.planet === "Comets");
-      if (cometQuestion) {
-        const questionObj = createQuestionIndicator(cometQuestion.question, cometQuestion.color);
-        questionObj.position.set(0, 1, 0);
-        cometGroup.add(questionObj);
-      }
-      
-      return cometGroup;
-    };
-    
-    // Build the solar system
-    createStarfield();
-    createOrbitalPlane();
-    
-    // Create sun at the center
-    createSun();
-    
-    // Create orbital rings and planets
-    const orbitalDistances = [
-      10, // Mercury
-      15, // Venus
-      20, // Earth
-      25, // Mars
-      35, // Asteroid belt inner
-      40, // Asteroid belt outer
-      45, // Jupiter
-      52, // Saturn
-      59, // Uranus
-      66, // Neptune
-      74  // Pluto
-    ];
-    
-    // Create orbit rings
-    orbitalDistances.forEach((distance, index) => {
-      if (index !== 4 && index !== 5) { // Skip asteroid belt indexes
-        createOrbitRing(distance);
+      planets.push(planetObj);
+      planetsRef.current = planets; // Update the ref
+      scene.add(planetObj.container);
+
+      // If this is Earth, add the ISS
+      if (p.planet === "Earth") {
+        createSatellite("International Space Station", 0.2, (p.relativeRadius || 1.0) * SCALE_FACTOR + 1.5, 0.01, planetObj.mesh);
       }
     });
-    
-    // Create planets
-    createPlanet("Mercury", 0.8, orbitalDistances[0], PLANET_QUESTIONS[1].color);
-    createPlanet("Venus", 1.2, orbitalDistances[1], PLANET_QUESTIONS[2].color);
-    createPlanet("Earth", 1.3, orbitalDistances[2], PLANET_QUESTIONS[3].color);
-    createPlanet("Mars", 1.0, orbitalDistances[3], PLANET_QUESTIONS[4].color);
-    
-    // Asteroid belt
-    createAsteroidBelt(orbitalDistances[4], orbitalDistances[5]);
-    
-    createPlanet("Jupiter", 3.0, orbitalDistances[6], PLANET_QUESTIONS[5].color);
-    createPlanet("Saturn", 2.6, orbitalDistances[7], PLANET_QUESTIONS[6].color);
-    createPlanet("Uranus", 1.8, orbitalDistances[8], PLANET_QUESTIONS[7].color);
-    createPlanet("Neptune", 1.7, orbitalDistances[9], PLANET_QUESTIONS[8].color);
-    createPlanet("Pluto", 0.6, orbitalDistances[10], PLANET_QUESTIONS[9].color);
-    
-    // Create a comet
-    createComet();
-    
-    // Raycaster for interaction
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-    
-    // Handle mouse move
+
+    createAsteroidBelt(60, 80);
+    const comet = createComet();
+
+    // Mouse move for hover
     const handleMouseMove = (event: MouseEvent) => {
-      // Calculate mouse position in normalized device coordinates
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      if (!rendererRef.current || !cameraRef.current) return;
+      const rect = rendererRef.current.domElement.getBoundingClientRect();
+      const mouse = new THREE.Vector2(
+        ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        -((event.clientY - rect.top) / rect.height) * 2 + 1
+      );
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(mouse, cameraRef.current);
       
-      // Update the raycaster
-      raycaster.setFromCamera(mouse, camera);
+      const allPlanetMeshes = planets.map(p => p.mesh).concat(sun);
+      const intersects = raycaster.intersectObjects(allPlanetMeshes);
       
-      // Check for intersections
-      const intersects = raycaster.intersectObjects(scene.children, true);
+      if (intersects.length > 0 && intersects[0].object.userData.name) {
+        setHoveredPlanet(intersects[0].object.userData.name);
+      } else {
+        setHoveredPlanet(null);
+      }
+    };
+
+    // Click handler
+    const handleClick = (event: MouseEvent) => {
+      if (!rendererRef.current || !cameraRef.current) return;
+      const rect = rendererRef.current.domElement.getBoundingClientRect();
+      const mouse = new THREE.Vector2(
+        ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        -((event.clientY - rect.top) / rect.height) * 2 + 1
+      );
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(mouse, cameraRef.current);
       
-      // Reset cursor and remove all highlight lights
-      document.body.style.cursor = 'auto';
-      setHoveredPlanet(null);
-      
-      // Remove previous highlight lights
-      scene.traverse((object) => {
-        if (object.userData && object.userData.isHighlight) {
-          object.parent?.remove(object);
+      const allClickableMeshes = planets.map(p => p.mesh).concat(sun);
+      scene.traverse(obj => {
+        if (obj.userData.isSatellite) {
+          allClickableMeshes.push(obj as THREE.Mesh);
         }
       });
+
+      const intersects = raycaster.intersectObjects(allClickableMeshes);
       
-      // Find first valid intersection
-      for (let i = 0; i < intersects.length; i++) {
-        const object = intersects[i].object;
-        let userData = null;
-        let targetObject = null;
+      if (intersects.length > 0) {
+        const clickedObject = intersects[0].object;
         
-        // Check if the object itself has the required userData
-        if (object.userData && (object.userData.isQuestion || object.userData.isPlanet)) {
-          userData = object.userData;
-          targetObject = object;
-        } 
-        // If not, traverse up the parent chain
-        else {
-          let parent = object.parent;
-          while (parent && !userData) {
-            if (parent.userData && (parent.userData.isQuestion || parent.userData.isPlanet)) {
-              userData = parent.userData;
-              targetObject = parent;
-              break;
-            }
-            parent = parent.parent;
+        // Handle planet clicks (including Sun)
+        if (clickedObject.userData.isPlanet) {
+          const planetData = PLANET_QUESTIONS.find(p => p.planet === clickedObject.userData.name);
+          if (planetData) {
+            setSelectedPlanet({ name: planetData.planet });
+            setCustomQuestion(planetData.question); // Pre-fill with default question
+            setIsModalOpen(true);
+            setAnswer(null); // Clear previous answer
+            stopSpeaking(); // Stop any previous speech
           }
         }
         
-        // Handle found userData
-        if (userData && targetObject) {
-          document.body.style.cursor = 'pointer';
-          
-          // Add highlight effect
-          if (userData.isPlanet || userData.isQuestion) {
-            // Create a spotlight for the hovered object
-            const highlightLight = new THREE.PointLight(0xffffcc, 1, 10);
-            highlightLight.position.set(0, 0, 0);
-            highlightLight.userData = { isHighlight: true };
-            
-            // If it's a question node, find its parent planet
-            if (userData.isQuestion) {
-              setHoveredPlanet(userData.question);
-              targetObject.add(highlightLight);
-            } else if (userData.isPlanet) {
-              setHoveredPlanet(userData.name);
-              targetObject.add(highlightLight);
-            }
-            
-            break;
-          }
+        // Handle satellite clicks
+        if (clickedObject.userData.isSatellite) {
+          setSelectedPlanet({ name: clickedObject.userData.name });
+          setCustomQuestion(clickedObject.userData.question);
+          setIsModalOpen(true);
+          setAnswer(null);
+          stopSpeaking();
         }
       }
     };
-    
-    // Handle clicks
-    const handleClick = (event: MouseEvent) => {
-      // Calculate mouse position in normalized device coordinates
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-      
-      // Update the raycaster
-      raycaster.setFromCamera(mouse, camera);
-      
-      // Check for intersections
-      const intersects = raycaster.intersectObjects(scene.children, true);
-      
-      // Find first valid intersection
-      for (let i = 0; i < intersects.length; i++) {
-        const object = intersects[i].object;
-        let userData = null;
-        
-        // Check if the object itself has the required userData
-        if (object.userData && object.userData.isQuestion) {
-          userData = object.userData;
-        } 
-        // If not, traverse up the parent chain
-        else {
-          let parent = object.parent;
-          while (parent && !userData) {
-            if (parent.userData && parent.userData.isQuestion) {
-              userData = parent.userData;
-              break;
-            }
-            parent = parent.parent;
-          }
-        }
-        
-        // Handle found question
-        if (userData && userData.isQuestion) {
-          const question = userData.question;
-          setActiveQuestion(question);
-          generateAnswer(question);
-          break;
-        }
-      }
-    };
-    
-    // Add event listeners
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('click', handleClick);
-    
-    // Handle window resize
+
     const handleResize = () => {
-      if (!containerRef.current || !cameraRef.current || !rendererRef.current) return;
-      
-      const width = containerRef.current.clientWidth;
-      const height = containerRef.current.clientHeight;
-      
+      if (!rendererRef.current || !cameraRef.current) return;
+      const width = containerRef.current!.clientWidth;
+      const height = containerRef.current!.clientHeight;
       cameraRef.current.aspect = width / height;
       cameraRef.current.updateProjectionMatrix();
-      
       rendererRef.current.setSize(width, height);
     };
-    
-    window.addEventListener('resize', handleResize);
-    
-    // Animation loop
+
+    const clock = new THREE.Clock();
+    let initialAnimationTime = 0;
+    const initialAnimationDuration = 4; // in seconds
+
     const animate = () => {
-      if (controlsRef.current) {
-        controlsRef.current.update();
-      }
-      
-      // Update planets - rotation only, no orbital movement
-      scene.traverse((object) => {
-        // Handle planet rotation
-        if (object instanceof THREE.Mesh && object.userData && object.userData.isPlanet) {
-          // Rotate the planet on its axis
-          object.rotation.y += object.userData.rotationSpeed || 0;
-        }
-        
-        // Orbital movement is commented out to stop planets from revolving around the sun
-        /*
-        if (object instanceof THREE.Group && object.userData && object.userData.isPlanet) {
-          // Update orbit position
-          if (object.userData.orbitSpeed) {
-            object.userData.orbitAngle += object.userData.orbitSpeed;
-            const orbitRadius = object.userData.orbitRadius;
-            
-            // Update position based on orbit angle
-            object.position.x = Math.cos(object.userData.orbitAngle) * orbitRadius;
-            object.position.z = Math.sin(object.userData.orbitAngle) * orbitRadius;
-          }
-        }
-        
-        // Handle comet movement - also stopped
-        if (object instanceof THREE.Group && object.userData && object.userData.isComet) {
-          // Update comet position
-          object.userData.orbitAngle += object.userData.orbitSpeed;
-          const distance = object.userData.orbitDistance;
-          const inclination = object.userData.orbitInclination;
-          
-          // 3D orbit considering inclination
-          object.position.x = Math.cos(object.userData.orbitAngle) * distance;
-          object.position.z = Math.sin(object.userData.orbitAngle) * distance;
-          object.position.y = Math.sin(object.userData.orbitAngle + Math.PI) * Math.sin(inclination) * distance * 0.3;
-          
-          // Always point the comet towards the direction of travel
-          const tangent = new THREE.Vector3(
-            -Math.sin(object.userData.orbitAngle),
-            Math.cos(object.userData.orbitAngle + Math.PI) * Math.sin(inclination) * 0.3,
-            Math.cos(object.userData.orbitAngle)
-          ).normalize();
-          
-          object.lookAt(
-            object.position.x + tangent.x,
-            object.position.y + tangent.y,
-            object.position.z + tangent.z
-          );
-        }
-        */
-      });
-      
-      if (rendererRef.current && sceneRef.current && cameraRef.current) {
-        rendererRef.current.render(sceneRef.current, cameraRef.current);
-      }
-      
       frameIdRef.current = requestAnimationFrame(animate);
+      controlsRef.current?.update();
+
+      const delta = clock.getDelta();
+
+      // Initial dispersion animation
+      if (initialAnimationTime < initialAnimationDuration) {
+        initialAnimationTime += delta;
+        const progress = Math.min(initialAnimationTime / initialAnimationDuration, 1);
+        
+        // Ease-out function: starts fast, slows down
+        const easedProgress = 1 - Math.pow(1 - progress, 3);
+
+        planets.forEach(p => {
+          const { orbitRadius, orbitAngle, rotationSpeed } = p.mesh.userData;
+          
+          // Set the container's rotation to its final starting angle
+          p.container.rotation.y = orbitAngle;
+
+          // Animate the planet's position *inside* the container, moving it outwards
+          p.mesh.position.x = orbitRadius * easedProgress;
+
+          // Also rotate the planet on its own axis during dispersion
+          p.mesh.rotation.y += rotationSpeed * easedProgress;
+        });
+      } else {
+        // Regular orbital animation
+        planets.forEach(p => {
+          // Now, simply rotate the container to make the planet revolve around the sun
+          p.container.rotation.y += p.mesh.userData.orbitSpeed / 10 || 0.001;
+          // And continue rotating the planet on its own axis
+          p.mesh.rotation.y += p.mesh.userData.rotationSpeed;
+        });
+
+        // Animate satellites
+        scene.traverse(obj => {
+          if (obj.userData.isSatellite) {
+            const container = obj.parent as THREE.Object3D;
+            if (container) {
+              container.rotation.y += obj.userData.orbitSpeed;
+            }
+          }
+        });
+      }
+      
+      // Animate comet
+      const time = clock.getElapsedTime() * 0.1;
+      comet.position.set(
+        Math.cos(time * 0.5) * 80,
+        Math.sin(time * 0.3) * 10,
+        Math.sin(time * 0.5) * 80
+      );
+      comet.lookAt(scene.position);
+
+      rendererRef.current!.render(sceneRef.current!, cameraRef.current!);
     };
     
     animate();
     
-    // Clean up
+    // Add event listeners
+    containerRef.current.addEventListener('mousemove', handleMouseMove);
+    containerRef.current.addEventListener('click', handleClick);
+    window.addEventListener('resize', handleResize);
+    
+    // This will be called when the component unmounts
     return () => {
       if (frameIdRef.current) {
         cancelAnimationFrame(frameIdRef.current);
       }
-      
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('click', handleClick);
-      window.removeEventListener('resize', handleResize);
-      
-      if (containerRef.current && rendererRef.current) {
-        containerRef.current.removeChild(rendererRef.current.domElement);
+      if (containerRef.current) {
+        containerRef.current.removeEventListener('mousemove', handleMouseMove);
+        containerRef.current.removeEventListener('click', handleClick);
       }
-      
-      // Dispose geometries and materials
-      scene.traverse((object) => {
-        if (object instanceof THREE.Mesh) {
-          if (object.geometry) {
-            object.geometry.dispose();
-          }
-          
-          if (object.material) {
-            if (Array.isArray(object.material)) {
-              object.material.forEach(material => material.dispose());
-            } else {
-              object.material.dispose();
-            }
-          }
-        }
-      });
+      window.removeEventListener('resize', handleResize);
     };
-  }, [creditAmount]);
-  
-  // Generate answer using AI
-  const generateAnswer = async (question: string) => {
+  }, []); // Run only once on mount
+
+  // Fly-to animation effect
+  useEffect(() => {
+    if (!flyToTarget || !cameraRef.current || !controlsRef.current) return;
+
+    const targetPlanet = planetsRef.current.find(p => p.mesh.userData.name === flyToTarget);
+    if (!targetPlanet) return;
+
+    const camera = cameraRef.current;
+    const controls = controlsRef.current;
+
+    // Get world position of the target planet
+    const targetPosition = new THREE.Vector3();
+    targetPlanet.mesh.getWorldPosition(targetPosition);
+
+    // Calculate the desired camera position (offset from the planet)
+    const planetRadius = targetPlanet.mesh.userData.radius || 1.0;
+    const offset = new THREE.Vector3(0, 3, planetRadius * 6);
+    const newCameraPosition = targetPosition.clone().add(offset);
+
+    // Animation logic
+    const duration = 1.5; // seconds
+    const clock = new THREE.Clock();
+
+    const startCameraPos = camera.position.clone();
+    const startTargetPos = controls.target.clone();
+
+    const tick = () => {
+        const elapsedTime = clock.getElapsedTime();
+        const progress = Math.min(elapsedTime / duration, 1);
+        const easedProgress = 0.5 * (1 - Math.cos(Math.PI * progress)); // Ease-in-out
+
+        // Interpolate camera position
+        camera.position.lerpVectors(startCameraPos, newCameraPosition, easedProgress);
+
+        // Interpolate controls target
+        controls.target.lerpVectors(startTargetPos, targetPosition, easedProgress);
+
+        if (progress < 1) {
+            requestAnimationFrame(tick);
+        } else {
+            // Animation complete
+            camera.position.copy(newCameraPosition);
+            controls.target.copy(targetPosition);
+            onFlyToComplete();
+        }
+    };
+
+    tick();
+
+  }, [flyToTarget, onFlyToComplete]);
+
+  // Clean up speech synthesis on unmount
+  useEffect(() => {
+    return () => {
+      // Ensure any speaking is stopped when the component unmounts
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  const handleCloseAnswer = () => {
+    stopSpeaking();
+    setAnswer(null);
+    setActiveQuestion(null);
+  };
+
+  const speak = (text: string | null) => {
+    if (!('speechSynthesis' in window) || !text) return;
+
+    // Stop any previous speech
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.9; // Slightly slower for kids
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+    };
+
+    utteranceRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const stopSpeaking = () => {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+  };
+
+  const handleAskQuestion = () => {
+    if (!customQuestion || !selectedPlanet) return;
+    generateAnswer(customQuestion, selectedPlanet.name);
+    setIsModalOpen(false);
+  };
+
+  const generateAnswer = async (question: string, planetName: string) => {
+    if (loading || !question) return;
+    stopSpeaking();
     if (creditAmount <= 0) {
-      setAnswer("You've run out of credits! Please purchase more credits to continue exploring the universe.");
+      // You can replace this with a toast notification
+      alert("You don't have enough credits to ask a question.");
       return;
     }
     
     setLoading(true);
+    setAnswer(null); // Clear previous answer
+    setActiveQuestion(question);
     
     try {
-      const response = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+      const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
         messages: [
           {
-            role: 'system',
-            content: `You are a friendly space educator who explains complex cosmic concepts to children aged 6-12. 
-            Keep your answers simple, engaging, and age-appropriate. Use friendly language and simple analogies.
-            Limit your response to 2-3 short paragraphs.`
+            role: "system",
+            content: "You are a friendly and knowledgeable space expert talking to a young child (around 7-10 years old). Explain complex topics simply, using analogies they can understand. Keep your answers concise, engaging, and exciting. Start with a fun greeting like 'Great question!' or 'Wow, what a cosmic query!'"
           },
           {
-            role: 'user',
-            content: question
+            role: "user",
+            content: `Regarding the planet ${planetName}, a child asked: "${question}"`
           }
         ],
-        temperature: 0.7,
-        max_tokens: 250,
+        max_tokens: 150,
       });
       
-      const generatedAnswer = response.choices[0]?.message.content || "I'm not sure about that. Let's explore another question!";
-      setAnswer(generatedAnswer);
+      const result = completion.choices[0].message.content;
+      setAnswer(result);
+      
+      if (result) {
+        speak(result);
+      }
       
       if (onAnswerGenerated) {
-        onAnswerGenerated(question, generatedAnswer);
+        onAnswerGenerated(question, result || "Sorry, I couldn't find an answer to that!");
       }
     } catch (error) {
-      console.error('Error generating answer:', error);
-      setAnswer("Oops! I couldn't find the answer to that question right now. Let's try another!");
+      console.error("Error generating answer:", error);
+      setAnswer("Oops! My space radio seems to be malfunctioning. Please try again!");
     } finally {
       setLoading(false);
     }
   };
   
-  // Render credits depleted message if no credits
-  if (creditAmount <= 0) {
     return (
-      <div className="relative w-full h-[600px] overflow-hidden rounded-xl bg-gradient-to-b from-gray-900 to-indigo-950 flex flex-col items-center justify-center">
-        <div className="text-center p-8 max-w-md">
-          <h2 className="text-3xl font-bold text-white mb-4">Space Explorer Locked</h2>
-          <p className="text-xl text-gray-200 mb-6">
-            You've run out of credits to explore the cosmos!
-          </p>
-          <div className="w-48 h-48 mx-auto mb-6 opacity-30">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-gray-400">
-              <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
-            </svg>
+    <div className="relative">
+      <div ref={containerRef} style={{ width: '100%', height: '600px', position: 'relative', borderRadius: '12px', overflow: 'hidden' }}>
+        {creditAmount <= 0 && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/80">
+            <h2 className="text-2xl font-bold text-white mb-2">Out of Credits!</h2>
+            <p className="text-white">Please earn more credits to explore space.</p>
           </div>
-          <p className="text-gray-300 mb-8">
-            Purchase more credits to continue your journey through the solar system and discover the answers to fascinating space questions!
-          </p>
-          <button className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 px-6 rounded-full text-lg hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 shadow-lg">
-            Get More Credits
-          </button>
-        </div>
+        )}
+
+        {/* Loading Indicator */}
+        {loading && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-cyan-400"></div>
+            <p className="text-white text-lg mt-4">Getting answer from the cosmos...</p>
       </div>
-    );
-  }
-  
-  return (
-    <div className="relative w-full h-[600px] overflow-hidden rounded-xl bg-gradient-to-b from-gray-900 to-indigo-950">
-      {/* Credits display */}
-      <div className="absolute top-4 left-4 bg-indigo-900/70 text-white px-4 py-2 rounded-lg backdrop-blur-sm z-10 flex items-center space-x-2">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM5.94 5.5c.944-.945 2.56-.276 5.74 1.057.588.245 1.023.5 1.506.75C15.307 8.392 17 9.1 17 11c0 1.5-2.683 2.88-6.043 4.092-1.984.872-3.79 1.558-5.507 1.935-.79.173-1.432.272-1.962.325-.53.053-.96.052-1.294-.002A1.06 1.06 0 012 16.43v-1.26c0-.478.232-.916.603-1.172 2.354-1.612 4.153-2.563 5.8-3.18.63-.234 1.223-.491 1.81-.759.588-.267 1.152-.544 1.697-.822 1.42-.724 2.375-1.5 2.375-2.238 0-.724-.955-1.5-2.375-2.238a21.032 21.032 0 00-1.697-.822c-.587-.268-1.18-.525-1.81-.76-1.647-.616-3.446-1.566-5.8-3.178A1.801 1.801 0 012 4.18v1.695c.329-.033.674-.019 1.036.03z" />
-        </svg>
-        <span className="font-mono font-bold">{creditAmount}Credits</span>
-      </div>
-      
-      {/* Three.js container */}
-      <div ref={containerRef} className="absolute inset-0" />
-      
-      {/* Planet hover */}
-      {hoveredPlanet && !activeQuestion && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-indigo-900/70 text-white px-6 py-3 rounded-lg shadow-lg border border-cyan-500 z-10 backdrop-blur-sm animate-fade-in">
-          <p className="text-xl font-bold">{hoveredPlanet}</p>
-          {PLANET_QUESTIONS.some(q => q.question === hoveredPlanet) && (
-            <p className="text-sm opacity-80">Click to explore this cosmic question! (Uses 1 credit)</p>
-          )}
+        )}
+
+        {/* Tooltip for hovered planet */}
+        {hoveredPlanet && !isModalOpen && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-lg text-center shadow-lg backdrop-blur-sm">
+            <p className="font-bold">{hoveredPlanet}</p>
+            <p className="text-sm">{PLANET_QUESTIONS.find(p => p.planet === hoveredPlanet)?.question}</p>
         </div>
       )}
       
-      {/* Selected question and answer */}
-      {activeQuestion && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-[90%] max-w-[600px] bg-indigo-900/70 text-white p-6 rounded-lg shadow-lg border border-fuchsia-500 z-10 backdrop-blur-sm animate-fade-in">
-          <h3 className="text-2xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-fuchsia-400">{activeQuestion}</h3>
-          
-          {loading ? (
-            <div className="flex justify-center items-center py-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
-              <p className="ml-3">Exploring the cosmos for answers...</p>
+        {/* Display Answer */}
+        {answer && (
+          <div className="absolute bottom-4 left-4 right-4 bg-black/60 p-4 rounded-lg text-white backdrop-blur-sm shadow-lg max-w-2xl mx-auto">
+            <div className="flex justify-between items-start gap-4">
+              <div className="flex-grow">
+                <h3 className="font-bold text-lg mb-2 text-cyan-300">{activeQuestion}</h3>
+                <p className="text-sm">{answer}</p>
             </div>
-          ) : (
-            <>
-              {answer && <p className="text-lg leading-relaxed whitespace-pre-line">{answer}</p>}
-              <button 
-                onClick={() => {
-                  setActiveQuestion(null);
-                  setAnswer(null);
-                }}
-                className="mt-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-2 px-6 rounded-full transition-all duration-300 shadow-lg hover:shadow-cyan-500/20"
-              >
-                Explore Another Question
-              </button>
-            </>
-          )}
+              <div className="flex flex-col gap-2 flex-shrink-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => (isSpeaking ? stopSpeaking() : speak(answer))}
+                  className="text-cyan-300 hover:text-white"
+                  aria-label={isSpeaking ? 'Stop reading' : 'Read aloud'}
+                >
+                  {isSpeaking ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleCloseAnswer}
+                  className="text-cyan-300 hover:text-white"
+                  aria-label="Close answer"
+                >
+                  <X className="h-6 w-6" />
+                </Button>
+              </div>
+            </div>
         </div>
       )}
-      
-      {/* Instructions */}
-      <div className="absolute top-4 right-4 bg-indigo-900/50 text-white px-4 py-2 rounded-lg backdrop-blur-sm z-10">
-        <p className="text-sm">Scroll to zoom • Drag to rotate</p>
       </div>
+
+      {isModalOpen && selectedPlanet && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <Card className="w-[90%] max-w-md">
+            <CardHeader>
+              <CardTitle className="text-2xl">Ask about {selectedPlanet.name}</CardTitle>
+              <CardDescription>
+                You can ask the default question or type your own!
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Input
+                value={customQuestion}
+                onChange={(e) => setCustomQuestion(e.target.value)}
+                placeholder="Type your question here..."
+                className="text-lg"
+              />
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAskQuestion} disabled={!customQuestion.trim()}>
+                Ask AI (1 Credit)
+              </Button>
+            </CardFooter>
+          </Card>
+      </div>
+      )}
     </div>
   );
 };

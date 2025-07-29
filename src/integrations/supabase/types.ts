@@ -88,40 +88,126 @@ export type Database = {
           },
         ]
       }
+      music_compositions: {
+        Row: {
+          ai_assistance_used: boolean | null
+          bpm: number | null
+          collaboration_enabled: boolean | null
+          composition_data: Json
+          created_at: string | null
+          difficulty_level: number | null
+          genre: string | null
+          id: string
+          is_public: boolean | null
+          like_count: number | null
+          metadata: Json | null
+          play_count: number | null
+          published_at: string | null
+          template_used: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ai_assistance_used?: boolean | null
+          bpm?: number | null
+          collaboration_enabled?: boolean | null
+          composition_data: Json
+          created_at?: string | null
+          difficulty_level?: number | null
+          genre?: string | null
+          id?: string
+          is_public?: boolean | null
+          like_count?: number | null
+          metadata?: Json | null
+          play_count?: number | null
+          published_at?: string | null
+          template_used?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ai_assistance_used?: boolean | null
+          bpm?: number | null
+          collaboration_enabled?: boolean | null
+          composition_data?: Json
+          created_at?: string | null
+          difficulty_level?: number | null
+          genre?: string | null
+          id?: string
+          is_public?: boolean | null
+          like_count?: number | null
+          metadata?: Json | null
+          play_count?: number | null
+          published_at?: string | null
+          template_used?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "music_compositions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "auth_users_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           account_type: string
           avatar_url: string | null
+          completed_lessons: string[] | null
           created_at: string | null
           credits_balance: number
           id: string
-          last_credit_refresh_date: string | null
           lifetime_credits: number
+          music_achievements: string[] | null
+          music_progress_data: Json | null
+          music_skill_level: number | null
           parent_id: string | null
+          practice_time_minutes: number | null
+          total_compositions: number | null
+          unlocked_instruments: string[] | null
           user_type: string | null
           username: string | null
         }
         Insert: {
           account_type?: string
           avatar_url?: string | null
+          completed_lessons?: string[] | null
           created_at?: string | null
           credits_balance?: number
           id: string
-          last_credit_refresh_date?: string | null
           lifetime_credits?: number
+          music_achievements?: string[] | null
+          music_progress_data?: Json | null
+          music_skill_level?: number | null
           parent_id?: string | null
+          practice_time_minutes?: number | null
+          total_compositions?: number | null
+          unlocked_instruments?: string[] | null
           user_type?: string | null
           username?: string | null
         }
         Update: {
           account_type?: string
           avatar_url?: string | null
+          completed_lessons?: string[] | null
           created_at?: string | null
           credits_balance?: number
           id?: string
-          last_credit_refresh_date?: string | null
           lifetime_credits?: number
+          music_achievements?: string[] | null
+          music_progress_data?: Json | null
+          music_skill_level?: number | null
           parent_id?: string | null
+          practice_time_minutes?: number | null
+          total_compositions?: number | null
+          unlocked_instruments?: string[] | null
           user_type?: string | null
           username?: string | null
         }

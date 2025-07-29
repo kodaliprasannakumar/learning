@@ -17,6 +17,7 @@ import QuotePage from '@/pages/QuotePage';
 import SpaceQuestionsPage from '@/pages/SpaceQuestionsPage';
 import QuizPage from '@/pages/QuizPage';
 import AITrainerPage from '@/pages/AITrainerPage';
+import MusicStudioPage from '@/pages/MusicStudioPage';
 import Math from '@/pages/Math';
 
 export const AppRoutes: React.FC = () => {
@@ -97,6 +98,14 @@ export const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <AITrainerPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/music" 
+        element={
+          <ProtectedRoute>
+            <MusicStudioPage />
           </ProtectedRoute>
         } 
       />

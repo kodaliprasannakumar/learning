@@ -10,7 +10,6 @@ export const CREDIT_COSTS = {
 } as const;
 
 export const CREDIT_REWARDS = {
-  DAILY_LOGIN: 5,
   COMPLETE_PUZZLE: 1,
   COMPLETE_MATH_GAME: 1,
   SHARE_CREATION: 2,

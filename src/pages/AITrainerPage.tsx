@@ -119,25 +119,78 @@ const AITrainerPage = () => {
     toast.success('Great example! The AI is learning! ✨');
   };
 
-  // Simple AI prediction (mock implementation for kids)
+  // Improved AI prediction that learns from user examples
   const makeSimplePrediction = (input: string): boolean => {
     if (!input.trim()) return false;
     
-    // Simple keyword-based prediction for demo
-    const happyWords = ['love', 'happy', 'fun', 'great', 'awesome', 'good', 'amazing', 'yes', 'play', 'friend'];
-    const sadWords = ['sad', 'bad', 'hate', 'boring', 'no', 'mean', 'lost', 'hurt', 'angry'];
-    
     const lowerInput = input.toLowerCase();
-    const happyScore = happyWords.filter(word => lowerInput.includes(word)).length;
-    const sadScore = sadWords.filter(word => lowerInput.includes(word)).length;
+    const inputWords = lowerInput.split(/\s+/);
     
-    // If tied or no matches, use examples
-    if (happyScore === sadScore) {
-      const similarExample = examples.find(ex => 
-        ex.text.toLowerCase().includes(lowerInput) || 
-        lowerInput.includes(ex.text.toLowerCase())
+    // First, check training examples (highest priority)
+    let bestExampleMatch = { score: 0, isHappy: false };
+    
+    examples.forEach(example => {
+      const exampleWords = example.text.toLowerCase().split(/\s+/);
+      
+      // Calculate word overlap score
+      const commonWords = inputWords.filter(word => 
+        exampleWords.some(exWord => 
+          word.includes(exWord) || exWord.includes(word) || word === exWord
+        )
       );
-      return similarExample?.isHappy ?? (Math.random() > 0.5);
+      
+      // Calculate similarity score (0-1)
+      const similarityScore = commonWords.length / Math.max(inputWords.length, exampleWords.length);
+      
+      // Boost score for exact phrase matches
+      if (example.text.toLowerCase().includes(lowerInput) || lowerInput.includes(example.text.toLowerCase())) {
+        const boostScore = similarityScore + 0.3;
+        if (boostScore > bestExampleMatch.score) {
+          bestExampleMatch = { score: boostScore, isHappy: example.isHappy };
+        }
+      } else if (similarityScore > bestExampleMatch.score) {
+        bestExampleMatch = { score: similarityScore, isHappy: example.isHappy };
+      }
+    });
+    
+    // If we have a good match from training examples, use it
+    if (bestExampleMatch.score > 0.2) {
+      return bestExampleMatch.isHappy;
+    }
+    
+    // Fallback to keyword matching (but weighted by training data)
+    const happyWords = ['love', 'happy', 'fun', 'great', 'awesome', 'good', 'amazing', 'yes', 'play', 'friend', 'enjoy', 'excited', 'wonderful'];
+    const sadWords = ['sad', 'bad', 'hate', 'boring', 'no', 'mean', 'lost', 'hurt', 'angry', 'terrible', 'awful', 'upset'];
+    
+    let happyScore = 0;
+    let sadScore = 0;
+    
+    // Count keyword matches
+    inputWords.forEach(word => {
+      if (happyWords.some(hw => word.includes(hw) || hw.includes(word))) {
+        happyScore += 1;
+      }
+      if (sadWords.some(sw => word.includes(sw) || sw.includes(word))) {
+        sadScore += 1;
+      }
+    });
+    
+    // Weight based on training examples
+    const happyExamples = examples.filter(ex => ex.isHappy).length;
+    const sadExamples = examples.filter(ex => !ex.isHappy).length;
+    const totalExamples = examples.length;
+    
+    if (totalExamples > 0) {
+      // Adjust scores based on training data distribution
+      happyScore *= (1 + happyExamples / totalExamples);
+      sadScore *= (1 + sadExamples / totalExamples);
+    }
+    
+    // If still tied, use a slight bias based on most recent training examples
+    if (happyScore === sadScore && examples.length > 0) {
+      const recentExamples = examples.slice(-3); // Last 3 examples
+      const recentHappyCount = recentExamples.filter(ex => ex.isHappy).length;
+      return recentHappyCount >= recentExamples.length / 2;
     }
     
     return happyScore > sadScore;
@@ -197,136 +250,146 @@ const AITrainerPage = () => {
 
   if (!selectedGame) {
   return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-100 via-blue-100 to-indigo-100 p-6">
-        <div className="max-w-6xl mx-auto">
-        <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-12"
-          >
-            <h1 className="text-4xl font-bold text-gray-800 mb-4 flex items-center justify-center gap-3">
-              <Brain className="h-10 w-10 text-purple-600" />
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold py-4 leading-[1.4] bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
               AI Teacher
           </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
               Teach the AI robot by showing it examples, then test how well it learned! 🤖✨
             </p>
-        </motion.div>
+                </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {aiGames.map((game, index) => (
+          <div className="grid grid-cols-1 gap-8 mb-8">
+            <Card className="p-6 bg-gradient-to-br from-purple-100 to-pink-50 border-2 border-purple-200 rounded-xl shadow-md">
+              <div className="flex items-center justify-center gap-3 mb-6">
+                <Brain className="h-8 w-8 text-purple-600" />
+                <h2 className="text-xl font-bold text-purple-700">Choose Your AI Training Game</h2>
+          </div>
+          
+              <div className="bg-white rounded-lg p-4 border border-purple-100 shadow-sm">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {aiGames.map((game, index) => (
               <motion.div
-                key={game.id}
+                      key={game.id}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ scale: 1.02 }}
+                      transition={{ duration: 0.6, delay: index * 0.1 }}
+                      whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-              >
-                <Card className="p-8 h-full cursor-pointer transition-all duration-300 hover:shadow-xl">
-                  <div className="text-center space-y-4">
-                    <div className={`w-20 h-20 mx-auto rounded-full bg-gradient-to-br ${game.color} flex items-center justify-center text-4xl shadow-lg`}>
-                      {game.emoji}
-                    </div>
-                    
-                    <h3 className="text-2xl font-bold text-gray-800">{game.title}</h3>
-                    <p className="text-gray-600">{game.description}</p>
-                    
-                    <Button
-                      onClick={() => startGame(game.id)}
-                      className={`w-full text-white bg-gradient-to-r ${game.color} hover:shadow-lg transition-all duration-300`}
-                      disabled={credits < CREDIT_COST}
                     >
-                      Start Teaching! ({CREDIT_COST} credit)
-                    </Button>
+                      <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer">
+                        <div className={`absolute inset-0 bg-gradient-to-br ${game.color} opacity-90`} />
+                        <div className="relative p-6 text-white text-center">
+                          <div className="text-4xl mb-3">{game.emoji}</div>
+                          <h3 className="text-xl font-bold mb-2">{game.title}</h3>
+                          <p className="text-sm opacity-90 mb-4">{game.description}</p>
+                          <Button
+                            onClick={() => startGame(game.id)}
+                            disabled={credits < CREDIT_COST}
+                            className="bg-white text-gray-800 hover:bg-gray-100 font-semibold px-6 py-2 rounded-full transition-all duration-200 transform hover:scale-105"
+                          >
+                            <Sparkles className="mr-2 h-4 w-4" />
+                            Start Teaching! ({CREDIT_COST} credit)
+                          </Button>
+                  </div>
+                      </Card>
+                    </motion.div>
+                  ))}
+                    </div>
+              </div>
+            </Card>
+            
+            <Card className="p-6 bg-gradient-to-br from-blue-100 to-purple-50 border-2 border-blue-200 rounded-xl shadow-md">
+              <div className="flex items-center mb-4 gap-2">
+                <Rocket className="h-6 w-6 text-blue-500" />
+                <h2 className="text-xl font-bold text-blue-700">How to Play:</h2>
+                        </div>
+              <div className="bg-white/50 p-4 rounded-xl border border-blue-100">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex items-start">
+                    <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-0.5">
+                      1
+                        </div>
+                    <p className="text-blue-700 font-medium">Show the AI examples by typing sentences</p>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-0.5">
+                      2
+                    </div>
+                    <p className="text-blue-700 font-medium">Tell the AI if each example is happy or sad</p>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-0.5">
+                      3
+                    </div>
+                    <p className="text-blue-700 font-medium">Test the AI with new sentences!</p>
+                  </div>
+                    </div>
                   </div>
                 </Card>
-              </motion.div>
-            ))}
-                    </div>
-                    
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="mt-16 text-center"
-          >
-            <Card className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200">
-              <h3 className="text-xl font-bold text-gray-800 mb-2">How to Play:</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">1</div>
-                  <span>Show the AI examples by typing sentences</span>
-                        </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">2</div>
-                  <span>Tell the AI if each example is happy or sad</span>
-                        </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold">3</div>
-                  <span>Test the AI with new sentences!</span>
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
           </div>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-blue-100 to-indigo-100 p-6">
-      <div className="max-w-4xl mx-auto">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-              {currentGame?.emoji} {currentGame?.title}
-            </h1>
+                return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold py-4 leading-[1.4] bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
+            {currentGame?.emoji} {currentGame?.title}
+          </h1>
+          <div className="flex items-center justify-center gap-2 mb-4">
             <Button onClick={resetGame} variant="outline" className="flex items-center gap-2">
               <ArrowRight className="h-4 w-4 rotate-180" />
               Back to Games
                       </Button>
                   </div>
-
-          <div className="flex items-center justify-center gap-4 mb-6">
-            <Badge variant={currentMode === 'teach' ? 'default' : 'secondary'} className="text-lg px-4 py-2">
-              1. Teaching Mode
-            </Badge>
-            <ArrowRight className="h-5 w-5 text-gray-400" />
-            <Badge variant={currentMode === 'test' ? 'default' : 'secondary'} className="text-lg px-4 py-2">
-              2. Testing Mode
-            </Badge>
+            </div>
+        
+        <div className="grid grid-cols-1 gap-8 mb-8">
+          <Card className="p-6 bg-gradient-to-br from-purple-100 to-pink-50 border-2 border-purple-200 rounded-xl shadow-md">
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <Badge variant={currentMode === 'teach' ? 'default' : 'secondary'} className="text-lg px-4 py-2">
+                1. Teaching Mode
+              </Badge>
+              <ArrowRight className="h-5 w-5 text-gray-400" />
+              <Badge variant={currentMode === 'test' ? 'default' : 'secondary'} className="text-lg px-4 py-2">
+                2. Testing Mode
+              </Badge>
           </div>
-        </motion.div>
-
-        {currentMode === 'teach' ? (
-          <TeachingMode 
-            game={currentGame!}
-            examples={examples}
-            onAddExample={addExample}
-            onStartTesting={() => setCurrentMode('test')}
-          />
-        ) : (
-          <TestingMode
-            game={currentGame!}
-            examples={examples}
-            testInput={testInput}
-            onTestInputChange={setTestInput}
-            prediction={prediction}
-            showResult={showResult}
-            score={score}
-            questionsAsked={questionsAsked}
-            onTest={testAI}
-            onFeedback={handleFeedback}
-            onBackToTeaching={() => setCurrentMode('teach')}
-          />
-        )}
+            
+            <div className="bg-white rounded-lg p-4 border border-purple-100 shadow-sm">
+              {currentMode === 'teach' ? (
+                <TeachingMode 
+                  game={currentGame!}
+                  examples={examples}
+                  onAddExample={addExample}
+                  onStartTesting={() => setCurrentMode('test')}
+                />
+              ) : (
+                <TestingMode
+                  game={currentGame!}
+                  examples={examples}
+                  testInput={testInput}
+                  onTestInputChange={setTestInput}
+                  prediction={prediction}
+                  showResult={showResult}
+                  score={score}
+                  questionsAsked={questionsAsked}
+                  onTest={testAI}
+                  onFeedback={handleFeedback}
+                  onBackToTeaching={() => setCurrentMode('teach')}
+                />
+              )}
                     </div>
+          </Card>
                   </div>
+      </div>
+    </div>
   );
 };
 
@@ -351,8 +414,8 @@ const TeachingMode = ({
 
   return (
     <div className="space-y-6">
-      <Card className="p-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-purple-800 mb-4 flex items-center gap-2">
           <Sparkles className="h-6 w-6 text-yellow-500" />
           Teach the AI Robot!
         </h2>
@@ -382,16 +445,16 @@ const TeachingMode = ({
               onClick={() => handleAdd(false)}
               disabled={!newExample.trim()}
               className="bg-red-500 hover:bg-red-600 text-white flex items-center gap-2"
-                    >
+            >
               <X className="h-4 w-4" />
               This is {game.id === 'happy-sad' ? 'Sad' : game.id === 'good-bad' ? 'Bad' : 'Boring'}
                     </Button>
                 </div>
               </div>
-      </Card>
-
-      <Card className="p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">
+                    </div>
+                    
+      <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
+        <h3 className="text-xl font-bold text-purple-800 mb-4">
           Examples the AI has learned ({examples.length}):
                   </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-64 overflow-y-auto">
@@ -403,7 +466,7 @@ const TeachingMode = ({
                   ? 'bg-green-50 border-green-200 text-green-800' 
                   : 'bg-red-50 border-red-200 text-red-800'
               }`}
-                      >
+            >
               <div className="flex items-center gap-2">
                 {example.isHappy ? <Heart className="h-4 w-4" /> : <X className="h-4 w-4" />}
                 <span className="text-sm">{example.text}</span>
@@ -427,8 +490,8 @@ const TeachingMode = ({
                         </Button>
                       </motion.div>
         )}
-      </Card>
                     </div>
+                  </div>
   );
 };
 
@@ -460,17 +523,17 @@ const TestingMode = ({
 }) => {
   return (
     <div className="space-y-6">
-      <Card className="p-6">
+      <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-purple-800 flex items-center gap-2">
             <Trophy className="h-6 w-6 text-yellow-500" />
             Test the AI Robot!
           </h2>
           <div className="text-right">
             <div className="text-sm text-gray-600">Score: {score}/{questionsAsked}</div>
             <div className="text-sm text-gray-600">Questions left: {5 - questionsAsked}</div>
-                  </div>
                 </div>
+              </div>
 
         <p className="text-gray-600 mb-6">
           Type a new sentence and see if the AI can guess correctly! You have {5 - questionsAsked} questions left.
@@ -501,7 +564,7 @@ const TestingMode = ({
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
               className="text-center space-y-4"
-                      >
+            >
               <div className={`p-6 rounded-lg border-2 ${
                 prediction 
                   ? 'bg-green-50 border-green-200' 
@@ -540,9 +603,9 @@ const TestingMode = ({
                         </motion.div>
                       )}
                           </div>
-                        </Card>
+                          </div>
 
-      <Card className="p-4 bg-blue-50 border-blue-200">
+      <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
         <div className="flex items-center justify-between">
           <p className="text-sm text-blue-800">
             The AI learned from {examples.length} examples you taught it!
@@ -557,7 +620,7 @@ const TestingMode = ({
             Add More Examples
           </Button>
                           </div>
-                        </Card>
+      </div>
     </div>
   );
 };

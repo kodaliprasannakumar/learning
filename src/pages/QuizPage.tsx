@@ -7,9 +7,11 @@ import { useCreditSystem } from '@/hooks/useCreditSystem';
 import { useToast } from '@/components/ui/use-toast';
 
 // Default quiz URL - will be configurable
-const DEFAULT_QUIZ_URL = "https://app.sli.do/event/3G9c35AcPFbyqaK8oiyD4Z/live/polls";
+const DEFAULT_QUIZ_URL = "https://app.sli.do/event/u5USjRsqjiMya13WGLrDoj/live/polls";
+// https://app.sli.do/event/nZJaVEcosnuKyv8tthQnes
 //https://app.sli.do/event/s76aTosMeKSyekQU5dGqAQ
 // https://app.sli.do/event/3G9c35AcPFbyqaK8oiyD4Z
+// https://app.sli.do/event/u5USjRsqjiMya13WGLrDoj
 const QUIZ_COMPLETION_REWARD = 5;
 
 export default function QuizPage() {

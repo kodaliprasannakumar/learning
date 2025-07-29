@@ -432,10 +432,6 @@ export default function QuotePage() {
                   <span>Complete a quote correctly</span>
                   <span className="font-bold text-green-600">+{CORRECT_ANSWER_REWARD}</span>
                 </li>
-                <li className="flex justify-between text-sm">
-                  <span>Daily login bonus</span>
-                  <span className="font-bold text-green-600">+2</span>
-                </li>
               </ul>
             </div>
             
