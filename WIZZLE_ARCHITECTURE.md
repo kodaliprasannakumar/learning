@@ -49,7 +49,8 @@ Wizzle is a comprehensive AI-powered creative platform for children, offering 8 
 ├─────────────────────────────────────────────────────────────────────────────────────┤
 │     AWS Lambda (Primary AI)            │        OpenAI (Direct)                     │
 │  ┌─────────────────────────────────┐   │   ┌─────────────────────────────────┐      │
-│  │ xxxfx/                          │   │   │ chat/completions                │      │
+│  │ kxjju6abc5.execute-api.         │   │   │ api.openai.com/v1/              │      │
+│  │ us-west-2.amazonaws.com/        │   │   │ chat/completions                │      │
 │  │ default/generate-media          │   │   └─────────────────────────────────┘      │
 │  │                                 │   │   Used by: Space Explorer                  │
 │  │ Handles:                        │   │                                            │
@@ -424,47 +425,3 @@ compositions:
 ---
 
 *This architecture supports a scalable, educational platform designed to grow with users' learning needs while maintaining high performance and security standards.*
-
-## OpenAI API Setup
-
-This project uses the OpenAI API for generating stories and images. To set up the API:
-
-1. Sign up for an OpenAI account at [https://platform.openai.com/signup](https://platform.openai.com/signup)
-2. Generate an API key at [https://platform.openai.com/api-keys](https://platform.openai.com/api-keys)
-3. Create a `.env` file in the project root and add your API key:
-   ```
-   VITE_OPENAI_API_KEY=your_openai_api_key_here
-   ```
-4. Restart the development server if it's already running
-
-> **Note**: Keep your API key secure and never commit it to version control.
-
-## Stability AI Setup
-
-For image generation, this project uses Stability AI's Stable Diffusion models. To set up:
-
-1. Create an account at [https://stability.ai/](https://stability.ai/)
-2. Generate an API key from your account dashboard
-3. Add the API key to your `.env` file:
-   ```
-   VITE_STABILITY_API_KEY=your_stability_api_key_here
-   ```
-
-## Amazon Bedrock Alternative Setup
-
-As an alternative to direct Stability AI API integration, you can use Stable Diffusion models through Amazon Bedrock:
-
-1. Create an AWS account if you don't have one
-2. Enable access to Stability AI models in Amazon Bedrock (console → Amazon Bedrock → Model access)
-3. Create IAM credentials with Bedrock access permissions
-4. Add AWS credentials to your `.env` file:
-   ```
-   VITE_AWS_ACCESS_KEY_ID=your_aws_access_key
-   VITE_AWS_SECRET_ACCESS_KEY=your_aws_secret_key
-   VITE_AWS_REGION=us-west-2  # or your preferred region where Stability models are available
-   ```
-5. Install the AWS SDK:
-   ```
-   npm install @aws-sdk/client-bedrock-runtime
-   ```
-6. Modify the `src/integrations/stabilityai/index.ts` file to use the Amazon Bedrock integration by uncommenting the relevant code

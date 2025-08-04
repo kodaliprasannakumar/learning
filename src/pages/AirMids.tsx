@@ -5,7 +5,6 @@ import {
   Calculator,
   Sparkles,
   ArrowRight,
-  Clock,
   Brain,
   Target,
   Zap
@@ -25,42 +24,6 @@ export default function AirMids() {
       gradient: 'from-orange-500 via-red-500 to-pink-600',
       bgGradient: 'from-orange-50 via-red-50 to-pink-100',
       delay: '0ms'
-    },
-    {
-      id: 'advanced-ai',
-      title: 'Advanced AI Lab',
-      description: 'Dive deeper into machine learning concepts and build more sophisticated AI models',
-      icon: Brain,
-      path: '/advanced-ai',
-      color: 'purple',
-      gradient: 'from-purple-500 via-indigo-500 to-blue-600',
-      bgGradient: 'from-purple-50 via-indigo-50 to-blue-100',
-      delay: '100ms',
-      comingSoon: true
-    },
-    {
-      id: 'logic-puzzles',
-      title: 'Logic & Reasoning',
-      description: 'Challenge your critical thinking with complex puzzles and logical reasoning problems',
-      icon: Target,
-      path: '/logic',
-      color: 'green',
-      gradient: 'from-green-500 via-emerald-500 to-teal-600',
-      bgGradient: 'from-green-50 via-emerald-50 to-teal-100',
-      delay: '200ms',
-      comingSoon: true
-    },
-    {
-      id: 'coding-basics',
-      title: 'Coding Fundamentals',
-      description: 'Learn programming basics through fun, interactive coding challenges and projects',
-      icon: Zap,
-      path: '/coding',
-      color: 'blue',
-      gradient: 'from-blue-500 via-cyan-500 to-indigo-600',
-      bgGradient: 'from-blue-50 via-cyan-50 to-indigo-100',
-      delay: '300ms',
-      comingSoon: true
     }
   ];
 
@@ -124,53 +87,35 @@ export default function AirMids() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
           {activities.map((activity) => {
             const IconComponent = activity.icon;
-            const isComingSoon = activity.comingSoon;
             return (
               <div
                 key={activity.id}
-                className={`group relative ${isComingSoon ? 'opacity-75' : ''}`}
+                className="group relative"
                 style={{ animationDelay: activity.delay }}
               >
-                <div className={`relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg ${!isComingSoon ? 'hover:shadow-xl hover:scale-105' : ''} transition-all duration-300 border border-white/20 ${isComingSoon ? 'cursor-not-allowed' : ''}`}>
-                  {/* Coming Soon Badge */}
-                  {isComingSoon && (
-                    <div className="absolute top-3 right-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                      Coming Soon
-                    </div>
-                  )}
-                  
+                <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 border border-white/20">
                   {/* Icon */}
                   <div className="mb-4">
-                    <div className={`w-16 h-16 bg-gradient-to-br ${activity.gradient} rounded-xl flex items-center justify-center mb-3 ${isComingSoon ? 'opacity-60' : ''}`}>
+                    <div className={`w-16 h-16 bg-gradient-to-br ${activity.gradient} rounded-xl flex items-center justify-center mb-3`}>
                       <IconComponent className="h-8 w-8 text-white" />
                     </div>
                   </div>
 
                   {/* Content */}
-                  <h4 className={`text-xl font-bold mb-3 ${isComingSoon ? 'text-gray-600' : 'text-gray-800'}`}>
+                  <h4 className="text-xl font-bold mb-3 text-gray-800">
                     {activity.title}
                   </h4>
-                  <p className={`mb-6 leading-relaxed text-sm ${isComingSoon ? 'text-gray-500' : 'text-gray-600'}`}>
+                  <p className="mb-6 leading-relaxed text-sm text-gray-600">
                     {activity.description}
                   </p>
 
                   {/* CTA Button */}
-                  {isComingSoon ? (
-                    <Button 
-                      disabled 
-                      className="w-full bg-gray-300 text-gray-500 py-3 rounded-xl font-semibold cursor-not-allowed opacity-60 text-sm"
-                    >
-                      Coming Soon
-                      <Clock className="ml-2 h-4 w-4" />
+                  <Link to={activity.path}>
+                    <Button className={`w-full bg-gradient-to-r ${activity.gradient} hover:opacity-90 text-white py-3 rounded-xl font-semibold transition-all duration-200 shadow-md text-sm`}>
+                      Get Started
+                      <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
-                  ) : (
-                    <Link to={activity.path}>
-                      <Button className={`w-full bg-gradient-to-r ${activity.gradient} hover:opacity-90 text-white py-3 rounded-xl font-semibold transition-all duration-200 shadow-md text-sm`}>
-                        Get Started
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </Link>
-                  )}
+                  </Link>
                 </div>
               </div>
             );
@@ -217,4 +162,4 @@ export default function AirMids() {
       </section>
     </div>
   );
-} 
+}

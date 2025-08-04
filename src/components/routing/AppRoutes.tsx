@@ -122,4 +122,4 @@ export const AppRoutes: React.FC = () => {
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
-}; 
+};

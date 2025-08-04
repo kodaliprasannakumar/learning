@@ -1,0 +1,421 @@
+/* Wizzle Design System - Enhanced Global Styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS Variables for Wizzle Design System */
+:root {
+  /* Primary Colors */
+  --wizzle-primary: #f59e0b;
+  --wizzle-secondary: #8b5cf6;
+  --wizzle-accent: #ec4899;
+  
+  /* Enhanced Background Gradients */
+  --wizzle-bg-gradient: linear-gradient(135deg, 
+    #fef3c7 0%, 
+    #fed7aa 25%, 
+    #fbbf24 50%, 
+    #f59e0b 75%, 
+    #d97706 100%);
+  
+  --wizzle-bg-gradient-soft: linear-gradient(135deg, 
+    #fff7ed 0%, 
+    #fed7aa 30%, 
+    #fdba74 60%, 
+    #fbbf24 100%);
+  
+  --wizzle-bg-gradient-vibrant: linear-gradient(135deg, 
+    #fef3c7 0%, 
+    #fde68a 20%, 
+    #fbbf24 40%, 
+    #f59e0b 60%, 
+    #d97706 80%, 
+    #b45309 100%);
+  
+  /* Hero Background */
+  --wizzle-hero-bg: radial-gradient(ellipse at top, 
+    rgba(251, 191, 36, 0.3) 0%, 
+    rgba(245, 158, 11, 0.2) 30%, 
+    rgba(217, 119, 6, 0.1) 60%, 
+    transparent 100%),
+    linear-gradient(135deg, #fffbeb 0%, #fef3c7 50%, #fed7aa 100%);
+  
+  /* Section Backgrounds */
+  --wizzle-section-bg-1: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.9) 0%, 
+    rgba(254, 243, 199, 0.8) 50%, 
+    rgba(253, 242, 242, 0.9) 100%);
+  
+  --wizzle-section-bg-2: linear-gradient(135deg, 
+    #fef3c7 0%, 
+    #fed7aa 25%, 
+    #fbbf24 50%, 
+    #fed7aa 75%, 
+    #fef3c7 100%);
+  
+  --wizzle-section-bg-3: conic-gradient(
+    from 0deg at 50% 50%,
+    #fef3c7 0deg,
+    #fed7aa 60deg,
+    #fbbf24 120deg,
+    #f59e0b 180deg,
+    #fed7aa 240deg,
+    #fef3c7 300deg,
+    #fef3c7 360deg
+  );
+  
+  /* Card Background */
+  --wizzle-card-bg: rgba(255, 255, 255, 0.85);
+  --wizzle-card-border: rgba(255, 255, 255, 0.3);
+  
+  /* Enhanced Shadows */
+  --wizzle-shadow: 0 8px 32px rgba(245, 158, 11, 0.15);
+  --wizzle-shadow-lg: 0 16px 48px rgba(245, 158, 11, 0.25);
+  --wizzle-shadow-xl: 0 24px 64px rgba(245, 158, 11, 0.35);
+  
+  /* Border Radius */
+  --wizzle-radius: 1rem;
+  --wizzle-radius-lg: 1.5rem;
+  --wizzle-radius-xl: 2rem;
+}
+
+/* Enhanced Global Background */
+body {
+  background: var(--wizzle-bg-gradient-soft);
+  background-attachment: fixed;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Animated Background Elements */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(251, 191, 36, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Enhanced Hero Background */
+.wizzle-hero-bg {
+  background: var(--wizzle-hero-bg);
+  position: relative;
+  overflow: hidden;
+}
+
+.wizzle-hero-bg::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: 
+    radial-gradient(circle at 30% 40%, rgba(251, 191, 36, 0.2) 0%, transparent 40%),
+    radial-gradient(circle at 70% 60%, rgba(139, 92, 246, 0.15) 0%, transparent 40%);
+  animation: float 20s ease-in-out infinite;
+}
+
+/* Enhanced Section Backgrounds */
+.wizzle-section-bg {
+  background: var(--wizzle-section-bg-1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.wizzle-section-bg-vibrant {
+  background: var(--wizzle-section-bg-2);
+  position: relative;
+}
+
+.wizzle-section-bg-vibrant::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--wizzle-section-bg-3);
+  opacity: 0.1;
+  animation: rotate 30s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Wizzle Container */
+.wizzle-container {
+  background: var(--wizzle-bg-gradient-soft);
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Enhanced Wizzle Card */
+.wizzle-card {
+  background: var(--wizzle-card-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--wizzle-card-border);
+  border-radius: var(--wizzle-radius-lg);
+  box-shadow: var(--wizzle-shadow);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.wizzle-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s;
+}
+
+.wizzle-card:hover::before {
+  left: 100%;
+}
+
+.wizzle-card:hover {
+  box-shadow: var(--wizzle-shadow-lg);
+  transform: translateY(-4px) scale(1.02);
+}
+
+/* Enhanced Wizzle Button */
+.wizzle-button {
+  background: linear-gradient(135deg, var(--wizzle-primary), #f97316, var(--wizzle-accent));
+  border: none;
+  border-radius: var(--wizzle-radius);
+  color: white;
+  font-weight: 700;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--wizzle-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.wizzle-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.wizzle-button:hover::before {
+  left: 100%;
+}
+
+.wizzle-button:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: var(--wizzle-shadow-xl);
+}
+
+/* Enhanced Gradient Text */
+.wizzle-gradient-text {
+  background: linear-gradient(135deg, var(--wizzle-primary), var(--wizzle-secondary), var(--wizzle-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Enhanced Wizzle Icon */
+.wizzle-icon {
+  background: linear-gradient(135deg, var(--wizzle-primary), var(--wizzle-secondary));
+  border-radius: var(--wizzle-radius-lg);
+  color: white;
+  box-shadow: var(--wizzle-shadow);
+  transition: all 0.3s ease;
+}
+
+.wizzle-icon:hover {
+  transform: rotate(5deg) scale(1.1);
+  box-shadow: var(--wizzle-shadow-lg);
+}
+
+/* Enhanced Animations */
+.wizzle-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-10px) rotate(2deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-10px) rotate(-2deg);
+  }
+}
+
+.wizzle-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+.wizzle-hover-lift {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.wizzle-hover-lift:hover {
+  transform: translateY(-8px) rotate(2deg);
+}
+
+/* Enhanced Responsive Grid */
+.wizzle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+/* Enhanced Loading States */
+.wizzle-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  background: var(--wizzle-section-bg-1);
+  border-radius: var(--wizzle-radius-lg);
+}
+
+.wizzle-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(245, 158, 11, 0.2);
+  border-top: 4px solid var(--wizzle-primary);
+  border-right: 4px solid var(--wizzle-secondary);
+  border-bottom: 4px solid var(--wizzle-accent);
+  border-radius: 50%;
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Enhanced Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: linear-gradient(135deg, #fef3c7, #fed7aa);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--wizzle-primary), var(--wizzle-secondary), var(--wizzle-accent));
+  border-radius: 5px;
+  box-shadow: var(--wizzle-shadow);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--wizzle-secondary), var(--wizzle-accent));
+}
+
+/* Enhanced Focus Styles */
+*:focus-visible {
+  outline: 2px solid var(--wizzle-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
+}
+
+/* Enhanced Print Styles */
+@media print {
+  body {
+    background: white !important;
+  }
+  
+  .wizzle-card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid #e5e7eb !important;
+  }
+}
+
+/* Enhanced Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wizzle-bg-gradient: linear-gradient(135deg, 
+      #1e293b 0%, 
+      #334155 25%, 
+      #475569 50%, 
+      #334155 75%, 
+      #1e293b 100%);
+    
+    --wizzle-bg-gradient-soft: linear-gradient(135deg, 
+      #1e293b 0%, 
+      #334155 50%, 
+      #475569 100%);
+    
+    --wizzle-card-bg: rgba(30, 41, 59, 0.9);
+    --wizzle-card-border: rgba(255, 255, 255, 0.15);
+    --wizzle-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Additional Visual Enhancements */
+.wizzle-glow {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+}
+
+.wizzle-glow-lg {
+  box-shadow: 0 0 40px rgba(245, 158, 11, 0.5);
+}
+
+/* Text Glow Effects */
+.wizzle-text-glow {
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+}
+
+/* Border Glow */
+.wizzle-border-glow {
+  border: 2px solid rgba(245, 158, 11, 0.3);
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
+}
