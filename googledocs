@@ -1,1 +1,39 @@
-https://docs.google.com/document/d/1FyMNOncbggslWR6qMBo49kogxyNah8L_gF-xTz3U6Rk/edit?tab=t.0
+AI/GenAI Tech Stack
+LLM & Agent Frameworks:
+LangChain,
+OpenAI API, Claude
+AWS Bedrock
+RAG & Vector Databases:
+Pinecone
+Multi-Agent & Orchestration:
+Model Context Protocol (MCP), Agent-to-Agent (A2A)
+Prompt Engineering & Evaluation:
+PromptLayer, Chain-of-Thought, ReAct
+SageMaker Clarify, TruLens, Weights & Biases
+BLEU, ROUGE metrics
+MLOps & Model Serving:
+AWS SageMaker,
+NVIDIA Triton Inference Server
+
+Non-AI Tech Stack
+Programming Languages:
+Python,  Bash, PowerShell,
+API Development:
+FastAPI, 
+REST, AWS API Gateway
+Cloud Platforms:
+AWS: EKS, Lambda, S3, EC2.
+Containers 
+Docker
+Data Engineering:
+Pandas, SQL, Kafka, Airflow
+CI/CD & IaC:
+GitHub, GitLab CI/CD,
+Terraform, CloudFormation
+Databases:
+PostgreSQL, MySQL,
+Monitoring & Observability:
+Prometheus, Grafana, ELK Stack .CloudWatch
+Visualization:
+Tableau, Power BI, 
+
